@@ -43,7 +43,10 @@
   --chart-3: 150 60% 35%;
   --chart-4: 280 70% 45%;
   --chart-5: 30 85% 45%;
-  --font-sans: Open Sans, sans-serif;
+  --train-intercity: 45 100% 50%;
+  --train-sprinter: 210 100% 50%;
+  --train-other: 142 71% 45%;
+  --font-sans: Inter, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: .5rem;
@@ -127,6 +130,9 @@
   --chart-3: 150 60% 60%;
   --chart-4: 280 70% 65%;
   --chart-5: 30 85% 65%;
+  --train-intercity: 45 100% 55%;
+  --train-sprinter: 210 100% 55%;
+  --train-other: 142 71% 50%;
   --shadow-2xs: 0px 2px 0px 0px hsl(210 10% 5% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(210 10% 5% / 0.00);
   --shadow-sm: 0px 2px 0px 0px hsl(210 10% 5% / 0.00), 0px 1px 2px -1px hsl(210 10% 5% / 0.00);
