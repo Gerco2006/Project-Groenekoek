@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { MapIcon, Clock, MoreHorizontal, Train } from "lucide-react";
+import { MapIcon, Clock, Search, MoreHorizontal, Train } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function TopNav() {
@@ -8,6 +8,7 @@ export default function TopNav() {
   const navItems = [
     { path: "/", icon: MapIcon, label: "Reisplanner" },
     { path: "/vertrektijden", icon: Clock, label: "Vertrektijden" },
+    { path: "/treininfo", icon: Search, label: "Treininfo" },
     { path: "/meer", icon: MoreHorizontal, label: "Meer" },
   ];
 
