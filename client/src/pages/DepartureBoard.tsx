@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StationSearch from "@/components/StationSearch";
 import DepartureRow from "@/components/DepartureRow";
@@ -83,7 +83,7 @@ export default function DepartureBoard() {
           </Button>
         </div>
 
-        <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 border">
+        <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
           <StationSearch
             label="Station"
             value={station}
@@ -91,6 +91,15 @@ export default function DepartureBoard() {
             placeholder="Bijv. Amsterdam Centraal"
             testId="input-station"
           />
+          <Button 
+            className="w-full" 
+            size="lg"
+            disabled={!station.trim()}
+            data-testid="button-search-departures"
+          >
+            <Search className="w-4 h-4 mr-2" />
+            Zoek vertrektijden
+          </Button>
         </div>
 
         {station && (

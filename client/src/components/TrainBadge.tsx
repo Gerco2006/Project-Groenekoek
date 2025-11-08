@@ -8,6 +8,13 @@ interface TrainBadgeProps {
 }
 
 export default function TrainBadge({ type, number, className = "" }: TrainBadgeProps) {
+  const isNonNS = (trainNumber: string = "") => {
+    const num = trainNumber.toLowerCase();
+    return !num.includes("ic") && !num.includes("spr") && 
+           !type.toLowerCase().includes("intercity") && 
+           !type.toLowerCase().includes("sprinter");
+  };
+
   const getTrainColor = () => {
     const normalized = type.toLowerCase();
     if (normalized.includes("ic") || normalized.includes("intercity")) {
@@ -15,6 +22,9 @@ export default function TrainBadge({ type, number, className = "" }: TrainBadgeP
     }
     if (normalized.includes("spr") || normalized.includes("sprinter")) {
       return "bg-train-sprinter/10 text-train-sprinter border-train-sprinter/20";
+    }
+    if (isNonNS(number || type)) {
+      return "bg-train-other/10 text-train-other border-train-other/20";
     }
     return "bg-train-other/10 text-train-other border-train-other/20";
   };
