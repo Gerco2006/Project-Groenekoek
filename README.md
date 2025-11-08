@@ -1,4 +1,4 @@
-# Project Groenekoek
+# TravNL
 **TravNL (Project Groenekoek) is een reisplanner zoals de 9292 en NS app gericht op treinreizigers die net wat meer willen.** Je kan meer filters instellen als in de andere reisplanners en meer informatie vinden over specifieke treinen zoals een plattegrond.
 Het is een open-source project dat de NS api gebruikt gericht op rail hobbyisten die graag ook een volledige reisplanner alternatief willen als bijvoorbeeld treinposities die ook meer gebruiksvriendelijk is.
 
