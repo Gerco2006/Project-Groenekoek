@@ -81,6 +81,11 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        train: {
+          intercity: "hsl(var(--train-intercity) / <alpha-value>)",
+          sprinter: "hsl(var(--train-sprinter) / <alpha-value>)",
+          other: "hsl(var(--train-other) / <alpha-value>)",
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
