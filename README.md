@@ -59,15 +59,9 @@ Of je nu ontwikkelaar, reiziger, hobbyist of ontwerper bent — elke bijdrage te
 
 - Nieuwe ideeën of bugmeldingen kun je delen via de Issues-sectie.
 
-## Licentie
+## Licentie – Apache 2.0
+Dit project is gelicentieerd onder de Apache License 2.0. wat betekent dat je de code mag gebruiken, kopiëren, aanpassen en verspreiden, ook voor commerciële doeleinden. Als je de code wijzigt of verspreidt, moet je de originele copyrightvermelding en licentietekst behouden en aangeven welke wijzigingen je hebt gedaan. Je mag geen merknamen of logo’s van het project gebruiken zonder toestemming. De code wordt geleverd “as is”, zonder enige garantie.
 
-Dit project valt onder de Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0).
-Je mag het project gebruiken, aanpassen en delen, zolang je:
+_Voor commerciële toepassingen kun je momenteel wel beter bestaande diensten gebruiken, zoals 9292 of ProRail._
 
-- De originele bron vermeldt
-
-- Het niet commercieel gebruikt
-
-**_Voor commerciële toepassingen kun je beter bestaande diensten gebruiken, zoals 9292 of ProRail._**
-
-Meer informatie in het LICENSE bestand of op: https://creativecommons.org/licenses/by-nc/4.0/
+Meer informatie in het LICENSE bestand.
