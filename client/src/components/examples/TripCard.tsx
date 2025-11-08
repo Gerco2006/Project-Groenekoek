@@ -1,6 +1,10 @@
+import { useState } from "react";
 import TripCard from "../TripCard";
+import TrainDialog from "../TrainDialog";
 
 export default function TripCardExample() {
+  const [selectedTrain, setSelectedTrain] = useState<any>(null);
+
   const mockTrip = {
     departureTime: "10:23",
     arrivalTime: "11:47",
@@ -28,12 +32,28 @@ export default function TripCardExample() {
     ]
   };
 
+  const mockStops = [
+    { name: "Amsterdam Centraal", arrival: null, departure: "10:23", platform: "5" },
+    { name: "Utrecht Centraal", arrival: "10:52", departure: null, platform: "8b" }
+  ];
+
   return (
     <div className="max-w-2xl p-8">
       <TripCard 
         {...mockTrip} 
-        onTrainClick={(leg) => console.log("Train clicked:", leg)}
+        onTrainClick={(leg) => setSelectedTrain(leg)}
       />
+      {selectedTrain && (
+        <TrainDialog
+          open={!!selectedTrain}
+          onOpenChange={(open) => !open && setSelectedTrain(null)}
+          trainType={selectedTrain.trainType}
+          trainNumber={selectedTrain.trainNumber}
+          from={selectedTrain.from}
+          to={selectedTrain.to}
+          stops={mockStops}
+        />
+      )}
     </div>
   );
 }

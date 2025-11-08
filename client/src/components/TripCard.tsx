@@ -33,6 +33,8 @@ export default function TripCard({
 }: TripCardProps) {
   const [expanded, setExpanded] = useState(false);
 
+  const uniqueTrainTypes = Array.from(new Set(legs.map(leg => leg.trainType)));
+
   return (
     <Card className="overflow-hidden hover-elevate" data-testid="card-trip">
       <button
@@ -40,8 +42,8 @@ export default function TripCard({
         className="w-full text-left p-4 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
         data-testid="button-expand-trip"
       >
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4 flex-1 min-w-[300px]">
             <div className="text-center">
               <div className="text-2xl font-bold" data-testid="text-departure-time">{departureTime}</div>
             </div>
@@ -60,7 +62,12 @@ export default function TripCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex gap-1.5">
+              {uniqueTrainTypes.map((type, idx) => (
+                <TrainBadge key={idx} type={type} />
+              ))}
+            </div>
             <div className="text-sm text-muted-foreground">
               {transfers === 0 ? "Direct" : `${transfers} overstap${transfers > 1 ? 'pen' : ''}`}
             </div>
@@ -74,13 +81,16 @@ export default function TripCard({
       </button>
 
       {expanded && (
-        <div className="border-t bg-muted/30 p-4 space-y-4" data-testid="section-trip-details">
+        <div className="border-t bg-muted/30 p-4 space-y-2" data-testid="section-trip-details">
           {legs.map((leg, idx) => (
             <div key={idx} className="space-y-2">
               <Button
                 variant="ghost"
                 className="w-full justify-start p-3 h-auto hover-elevate"
-                onClick={() => onTrainClick?.(leg)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTrainClick?.(leg);
+                }}
                 data-testid={`button-train-${idx}`}
               >
                 <div className="flex items-start gap-3 w-full">
@@ -106,6 +116,22 @@ export default function TripCard({
                   </div>
                 </div>
               </Button>
+              
+              {idx < legs.length - 1 && (
+                <div className="pl-3 py-2 text-sm text-muted-foreground flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  <span>
+                    Overstap in <span className="font-semibold">{leg.to}</span> 
+                    {" - "}
+                    {(() => {
+                      const arrivalTime = new Date(`2000-01-01T${leg.arrival}`);
+                      const nextDeparture = new Date(`2000-01-01T${legs[idx + 1].departure}`);
+                      const diffMinutes = Math.round((nextDeparture.getTime() - arrivalTime.getTime()) / 60000);
+                      return `${diffMinutes} minuten overstaptijd`;
+                    })()}
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>
