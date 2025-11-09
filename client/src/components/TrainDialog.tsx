@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MapPin, Clock, AlertCircle, Navigation, Loader2, Info, Train, Wifi, Component } from "lucide-react";
+import { MapPin, Clock, AlertCircle, Navigation, Loader2, Info, Train, Wifi, Component, UtensilsCrossed, Accessibility, BatteryCharging, ChevronDown, ChevronUp, Droplet, Bike } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useState, useEffect } from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface TrainDialogProps {
   open: boolean;
@@ -31,10 +36,12 @@ export default function TrainDialog({
   to,
 }: TrainDialogProps) {
   const [showAllStations, setShowAllStations] = useState(false);
+  const [trainInfoOpen, setTrainInfoOpen] = useState(true);
   
   useEffect(() => {
     if (!open) {
       setShowAllStations(false);
+      setTrainInfoOpen(true);
     }
   }, [open]);
   
@@ -116,6 +123,30 @@ export default function TrainDialog({
     trainType.toLowerCase().includes('tram') ||
     trainType.toLowerCase().includes('metro')
   );
+
+  // Map facility names to icons
+  const getFacilityIcon = (facilityName: string) => {
+    const name = facilityName.toLowerCase();
+    if (name.includes('wifi') || name.includes('internet')) {
+      return <Wifi className="w-3.5 h-3.5" />;
+    }
+    if (name.includes('toilet') || name.includes('wc')) {
+      return <Droplet className="w-3.5 h-3.5" />;
+    }
+    if (name.includes('bistro') || name.includes('restaurant') || name.includes('eten')) {
+      return <UtensilsCrossed className="w-3.5 h-3.5" />;
+    }
+    if (name.includes('toegankelijk') || name.includes('rolstoel')) {
+      return <Accessibility className="w-3.5 h-3.5" />;
+    }
+    if (name.includes('fiets')) {
+      return <Bike className="w-3.5 h-3.5" />;
+    }
+    if (name.includes('stopcontact') || name.includes('stroom')) {
+      return <BatteryCharging className="w-3.5 h-3.5" />;
+    }
+    return null;
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -129,20 +160,6 @@ export default function TrainDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {!isLoading && !isNonTrainTransport && (
-          <div className="flex justify-end -mt-2 mb-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAllStations(!showAllStations)}
-              className="gap-2"
-              data-testid="button-toggle-all-stations"
-            >
-              <Info className="w-4 h-4" />
-              {showAllStations ? "Toon alleen stops" : "Toon alle stations"}
-            </Button>
-          </div>
-        )}
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -163,70 +180,119 @@ export default function TrainDialog({
           <>
             {/* Train Material Information */}
             {(actualStock || plannedStock) && (
-              <Card className="p-4 mb-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-semibold">
-                    <Train className="w-4 h-4" />
-                    <span>Treinsamenstelling</span>
-                  </div>
+              <Collapsible open={trainInfoOpen} onOpenChange={setTrainInfoOpen} className="mb-4">
+                <Card className="p-4">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full p-0 h-auto hover:bg-transparent no-default-hover-elevate" data-testid="button-toggle-train-info">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <Train className="w-4 h-4" />
+                          <span>Treinsamenstelling</span>
+                        </div>
+                        {trainInfoOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </div>
+                    </Button>
+                  </CollapsibleTrigger>
                   
-                  {(actualStock?.trainType || plannedStock?.trainType) && (
-                    <div className="flex items-center gap-2">
-                      <Component className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">Materieeltype:</span>
-                      <Badge variant="secondary">{actualStock?.trainType || plannedStock?.trainType}</Badge>
-                    </div>
-                  )}
-                  
-                  {(actualStock?.numberOfParts || plannedStock?.numberOfParts) && (
-                    <div className="flex items-center gap-4 text-sm flex-wrap">
-                      {actualStock?.numberOfParts ? (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">Actueel aantal bakken:</span>
-                            <span className="font-medium">{actualStock.numberOfParts}</span>
-                          </div>
-                          {plannedStock?.numberOfParts && actualStock.numberOfParts !== plannedStock.numberOfParts && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground">Gepland aantal bakken:</span>
-                              <span className="font-medium">{plannedStock.numberOfParts}</span>
-                            </div>
-                          )}
-                        </>
-                      ) : plannedStock?.numberOfParts && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Gepland aantal bakken:</span>
-                          <span className="font-medium">{plannedStock.numberOfParts}</span>
+                  <CollapsibleContent className="pt-3">
+                    <div className="space-y-3">
+                      {(actualStock?.trainType || plannedStock?.trainType) && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Component className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Materieeltype:</span>
+                          <Badge variant="secondary">{actualStock?.trainType || plannedStock?.trainType}</Badge>
+                          <span className="text-sm text-muted-foreground">•</span>
+                          <span className="text-sm text-muted-foreground">Treinnummer:</span>
+                          <Badge variant="secondary">{trainNumber}</Badge>
                         </div>
                       )}
-                    </div>
-                  )}
-                  
-                  {(() => {
-                    const trainParts = actualStock?.trainParts || plannedStock?.trainParts || [];
-                    const hasFacilities = trainParts.some((part: any) => part.facilities && part.facilities.length > 0);
-                    
-                    return hasFacilities && (
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <Wifi className="w-4 h-4 text-muted-foreground mt-0.5" />
-                          <div className="flex flex-wrap gap-1.5">
-                            {Array.from(new Set(
-                              trainParts
-                                .flatMap((part: any) => part.facilities || [])
-                                .map((facility: any) => facility.name || facility.code || facility)
-                            )).map((facility, fIdx: number) => (
-                              <Badge key={fIdx} variant="outline" className="text-xs">
-                                {String(facility)}
-                              </Badge>
-                            ))}
+                      
+                      {(actualStock?.numberOfParts || plannedStock?.numberOfParts) && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-4 text-sm flex-wrap">
+                            {plannedStock?.numberOfParts && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">Gepland aantal bakken:</span>
+                                <span className="font-medium">{plannedStock.numberOfParts}</span>
+                              </div>
+                            )}
+                            {actualStock?.numberOfParts && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">Actueel aantal bakken:</span>
+                                <Badge 
+                                  variant="secondary" 
+                                  className={
+                                    plannedStock?.numberOfParts 
+                                      ? actualStock.numberOfParts > plannedStock.numberOfParts
+                                        ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
+                                        : actualStock.numberOfParts < plannedStock.numberOfParts
+                                        ? "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
+                                        : ""
+                                      : ""
+                                  }
+                                >
+                                  {actualStock.numberOfParts}
+                                </Badge>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </Card>
+                      )}
+                      
+                      {(() => {
+                        const trainParts = actualStock?.trainParts || plannedStock?.trainParts || [];
+                        const uniqueFacilities = Array.from(new Set(
+                          trainParts
+                            .flatMap((part: any) => part.facilities || [])
+                            .map((facility: any) => facility.name || facility.code || facility)
+                        ));
+                        
+                        return uniqueFacilities.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="flex items-start gap-2">
+                              <span className="text-sm text-muted-foreground">Faciliteiten:</span>
+                              <div className="flex flex-wrap gap-2">
+                                {uniqueFacilities.map((facility, fIdx: number) => {
+                                  const icon = getFacilityIcon(String(facility));
+                                  return icon ? (
+                                    <div 
+                                      key={fIdx} 
+                                      className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/50 text-secondary-foreground"
+                                      title={String(facility)}
+                                    >
+                                      {icon}
+                                      <span className="text-xs">{String(facility)}</span>
+                                    </div>
+                                  ) : (
+                                    <Badge key={fIdx} variant="outline" className="text-xs">
+                                      {String(facility)}
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            )}
+
+            {!isNonTrainTransport && (
+              <div className="flex justify-end mb-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAllStations(!showAllStations)}
+                  className="gap-2"
+                  data-testid="button-toggle-all-stations"
+                >
+                  <Info className="w-4 h-4" />
+                  {showAllStations ? "Toon alleen stops" : "Toon alle stations"}
+                </Button>
+              </div>
             )}
 
             <ScrollArea className="max-h-[60vh] pr-4">
