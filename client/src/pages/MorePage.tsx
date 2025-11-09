@@ -57,10 +57,8 @@ export default function MorePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground leading-relaxed">
-              TravNL is een moderne, open-source Nederlandse treinreisplanner. 
-              Deze applicatie maakt gebruik van de officiële NS API's om je de meest actuele 
-              reisinformatie te bieden. Van reisadviezen tot vertrektijden en gedetailleerde 
-              treininfo - alles wat je nodig hebt voor een vlotte reis.
+              TravNL is een open-source webapp die werkt als een moderne reisplanner, vergelijkbaar met de NS- en 9292-app maar dan met extra functies. 
+              Het gebruikt de NS-API om treinreizen te plannen, vertrektijden te tonen en actuele ritinformatie weer te geven.
             </p>
             
             <div className="pt-4 border-t space-y-3">
@@ -76,7 +74,7 @@ export default function MorePage() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => window.open('https://github.com/travnl/travnl', '_blank')}
+                onClick={() => window.open('https://github.com/Gerco2006/Project-Groenekoek', '_blank')}
                 data-testid="button-github"
               >
                 <Github className="w-4 h-4 mr-2" />
