@@ -1,0 +1,52 @@
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import TrainBadge from "./TrainBadge";
+
+interface DepartureRowProps {
+  time: string;
+  destination: string;
+  platform: string;
+  trainType: string;
+  trainNumber: string;
+  delay?: number;
+  onClick?: () => void;
+}
+
+export default function DepartureRow({
+  time,
+  destination,
+  platform,
+  trainType,
+  trainNumber,
+  delay,
+  onClick
+}: DepartureRowProps) {
+  return (
+    <Button
+      variant="ghost"
+      className="w-full justify-start p-4 h-auto hover-elevate"
+      onClick={onClick}
+      data-testid="button-departure"
+    >
+      <div className="flex items-center gap-4 w-full">
+        <div className="text-2xl font-bold min-w-[80px]" data-testid="text-departure-time">
+          {time}
+          {delay && delay > 0 && (
+            <span className="text-sm text-destructive ml-2">+{delay}'</span>
+          )}
+        </div>
+
+        <TrainBadge type={trainType} number={trainNumber} />
+
+        <div className="flex-1 flex items-center gap-2">
+          <ArrowRight className="w-4 h-4 text-muted-foreground" />
+          <span className="font-medium" data-testid="text-destination">{destination}</span>
+        </div>
+
+        <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-bold min-w-[60px] text-center" data-testid="text-platform">
+          Spoor {platform}
+        </div>
+      </div>
+    </Button>
+  );
+}

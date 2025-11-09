@@ -39,13 +39,21 @@ De basis van de app is nog in ontwikkeling.
 ### De plannen:
 
 - Meer vervoerders naast NS
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> origin/replit-agent
 - Geavanceerde ritweergave met o.a:
     - Locatie van 1e klas, toiletten, fietsplaatsen rolstoelplaatsen
     - Treintype
     - Aantal fietsplekken
 - Kaartweergave met realtime treinen
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> origin/replit-agent
 - Optie om je favoriete trajecten op te slaan
 
 ## Meewerken
