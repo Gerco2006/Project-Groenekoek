@@ -36,10 +36,9 @@ export default function Disruptions() {
   const [selectedDisruption, setSelectedDisruption] = useState<Disruption | null>(null);
 
   const { data: disruptionsData, isLoading } = useQuery<any>({
-    queryKey: ["/api/disruptions", activeFilter],
+    queryKey: ["/api/disruptions"],
     queryFn: async () => {
-      const isActive = activeFilter === "active" ? "true" : "false";
-      const response = await fetch(`/api/disruptions?isActive=${isActive}`);
+      const response = await fetch(`/api/disruptions`);
       if (!response.ok) {
         throw new Error("Failed to fetch disruptions");
       }
@@ -47,7 +46,15 @@ export default function Disruptions() {
     },
   });
 
-  const disruptions: Disruption[] = Array.isArray(disruptionsData) ? disruptionsData : (disruptionsData?.payload || []);
+  const allDisruptions: Disruption[] = Array.isArray(disruptionsData) ? disruptionsData : (disruptionsData?.payload || []);
+  
+  const disruptions = allDisruptions.filter(d => {
+    if (activeFilter === "active") {
+      return d.isActive === true;
+    } else {
+      return d.isActive === false;
+    }
+  });
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return null;
