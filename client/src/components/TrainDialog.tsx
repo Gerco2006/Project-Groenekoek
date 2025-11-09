@@ -4,12 +4,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MapPin, Clock, AlertCircle, Navigation, Loader2, Info } from "lucide-react";
+import { MapPin, Clock, AlertCircle, Navigation, Loader2, Info, Train, Wifi, Component } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 
 interface TrainDialogProps {
@@ -104,6 +105,11 @@ export default function TrainDialog({
     ? allStops 
     : allStops.filter((stop: any) => stop.status !== "PASSING");
   
+  // Get train composition from first stop with stock data
+  const firstStopWithStock = allStops.find((stop: any) => stop.actualStock || stop.plannedStock);
+  const actualStock = firstStopWithStock?.actualStock;
+  const plannedStock = firstStopWithStock?.plannedStock;
+  
   // Check if this is a bus, tram, or metro
   const isNonTrainTransport = trainType && (
     trainType.toLowerCase().includes('bus') ||
@@ -154,8 +160,77 @@ export default function TrainDialog({
             </div>
           </div>
         ) : (
-          <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-2">
+          <>
+            {/* Train Material Information */}
+            {(actualStock || plannedStock) && (
+              <Card className="p-4 mb-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <Train className="w-4 h-4" />
+                    <span>Treinsamenstelling</span>
+                  </div>
+                  
+                  {(actualStock?.trainType || plannedStock?.trainType) && (
+                    <div className="flex items-center gap-2">
+                      <Component className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Materieeltype:</span>
+                      <Badge variant="secondary">{actualStock?.trainType || plannedStock?.trainType}</Badge>
+                    </div>
+                  )}
+                  
+                  {(actualStock?.numberOfParts || plannedStock?.numberOfParts) && (
+                    <div className="flex items-center gap-4 text-sm flex-wrap">
+                      {actualStock?.numberOfParts ? (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">Actueel aantal bakken:</span>
+                            <span className="font-medium">{actualStock.numberOfParts}</span>
+                          </div>
+                          {plannedStock?.numberOfParts && actualStock.numberOfParts !== plannedStock.numberOfParts && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground">Gepland aantal bakken:</span>
+                              <span className="font-medium">{plannedStock.numberOfParts}</span>
+                            </div>
+                          )}
+                        </>
+                      ) : plannedStock?.numberOfParts && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Gepland aantal bakken:</span>
+                          <span className="font-medium">{plannedStock.numberOfParts}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {(() => {
+                    const trainParts = actualStock?.trainParts || plannedStock?.trainParts || [];
+                    const hasFacilities = trainParts.some((part: any) => part.facilities && part.facilities.length > 0);
+                    
+                    return hasFacilities && (
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Wifi className="w-4 h-4 text-muted-foreground mt-0.5" />
+                          <div className="flex flex-wrap gap-1.5">
+                            {Array.from(new Set(
+                              trainParts
+                                .flatMap((part: any) => part.facilities || [])
+                                .map((facility: any) => facility.name || facility.code || facility)
+                            )).map((facility, fIdx: number) => (
+                              <Badge key={fIdx} variant="outline" className="text-xs">
+                                {String(facility)}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </Card>
+            )}
+
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-2">
               {displayedStops.map((stop: any, displayIdx: number) => {
                 const isPassing = stop.status === "PASSING";
                 const originalIdx = allStops.indexOf(stop);
@@ -268,6 +343,7 @@ export default function TrainDialog({
               })}
             </div>
           </ScrollArea>
+          </>
         )}
       </DialogContent>
     </Dialog>
