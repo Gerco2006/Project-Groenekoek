@@ -51,6 +51,22 @@ export default function StationSearch({
           station.namen.middel.toLowerCase().includes(value.toLowerCase()) ||
           station.code.toLowerCase().includes(value.toLowerCase())
         )
+        .sort((a, b) => {
+          const searchLower = value.toLowerCase();
+          const aCodeMatch = a.code.toLowerCase().startsWith(searchLower);
+          const bCodeMatch = b.code.toLowerCase().startsWith(searchLower);
+          
+          if (aCodeMatch && !bCodeMatch) return -1;
+          if (!aCodeMatch && bCodeMatch) return 1;
+          
+          const aCodeIncludes = a.code.toLowerCase().includes(searchLower);
+          const bCodeIncludes = b.code.toLowerCase().includes(searchLower);
+          
+          if (aCodeIncludes && !bCodeIncludes) return -1;
+          if (!aCodeIncludes && bCodeIncludes) return 1;
+          
+          return a.namen.lang.localeCompare(b.namen.lang);
+        })
         .slice(0, 10)
     : [];
 
@@ -74,7 +90,7 @@ export default function StationSearch({
         />
         
         {filteredStations.length > 0 && (
-          <div className="absolute top-full mt-1 w-full bg-card/95 backdrop-blur-sm border rounded-lg shadow-lg z-50 max-h-60 overflow-auto">
+          <div className="absolute top-full mt-1 w-full bg-card/95 backdrop-blur-sm border rounded-lg shadow-lg z-[100] max-h-60 overflow-auto">
             {filteredStations.map((station, idx) => (
               <button
                 key={idx}

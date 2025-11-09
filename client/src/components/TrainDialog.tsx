@@ -22,7 +22,7 @@ interface TrainDialogProps {
   trainNumber: string;
   from: string;
   to: string;
-  stops: TrainStop[];
+  stops?: TrainStop[];
 }
 
 export default function TrainDialog({
@@ -32,7 +32,7 @@ export default function TrainDialog({
   trainNumber,
   from,
   to,
-  stops,
+  stops = [],
 }: TrainDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
