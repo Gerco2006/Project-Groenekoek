@@ -13,11 +13,14 @@ export default function TopNav() {
   ];
 
   return (
-    <nav className="hidden md:block sticky top-0 bg-card/95 backdrop-blur-lg border-b z-50">
+    <nav className="hidden md:block sticky top-0 bg-card/95 backdrop-blur-md border-b z-50">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link href="/">
-            <button className="flex items-center gap-2 text-xl font-bold" data-testid="link-logo">
+            <button
+              className="flex items-center gap-2 text-xl font-bold"
+              data-testid="link-logo"
+            >
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Train className="w-5 h-5 text-primary-foreground" />
               </div>
@@ -29,7 +32,7 @@ export default function TopNav() {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.path;
-              
+
               return (
                 <Link key={item.path} href={item.path}>
                   <Button
