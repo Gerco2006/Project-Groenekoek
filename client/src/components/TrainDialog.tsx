@@ -143,6 +143,10 @@ export default function TrainDialog({
                 const originalIdx = allStops.indexOf(stop);
                 const isCurrentLocation = currentLocationIndex === originalIdx;
                 const isBetweenStops = currentLocationIndex === originalIdx - 0.5;
+                const isPast = currentLocationIndex !== null && 
+                              !isBetweenStops && 
+                              !isCurrentLocation && 
+                              originalIdx < Math.floor(currentLocationIndex);
                 
                 // Get arrival and departure info from arrays
                 const arrival = stop.arrivals?.[0];
@@ -167,12 +171,12 @@ export default function TrainDialog({
                     )}
                     <div
                       className={`flex items-center gap-4 p-3 rounded-lg ${
-                        isPassing ? "opacity-60" : "hover-elevate"
+                        isPassing ? "opacity-60" : isPast ? "opacity-50" : "hover-elevate"
                       } ${isCurrentLocation ? "bg-primary/10 border-2 border-primary" : ""}`}
                       data-testid={`row-stop-${originalIdx}`}
                     >
                       <div className="flex items-center gap-3 flex-1">
-                        <div className="relative">
+                        <div className="relative flex items-center justify-center w-4">
                           {isCurrentLocation ? (
                             <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
                           ) : originalIdx === 0 ? (
@@ -185,9 +189,9 @@ export default function TrainDialog({
                             <div className="w-3 h-3 rounded-full border-2 border-primary bg-background" />
                           )}
                           {originalIdx < allStops.length - 1 && (
-                            <div className={`absolute top-3 left-1/2 -translate-x-1/2 w-0.5 h-[52px] ${
-                              isPassing ? "bg-border/50" : "bg-border"
-                            }`} />
+                            <div className={`absolute left-1/2 -translate-x-1/2 w-0.5 bg-border ${
+                              isPassing ? "opacity-50" : ""
+                            }`} style={{ top: '1rem', height: '3.25rem' }} />
                           )}
                         </div>
 
