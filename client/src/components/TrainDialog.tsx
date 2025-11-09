@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -37,6 +37,7 @@ export default function TrainDialog({
 }: TrainDialogProps) {
   const [showAllStations, setShowAllStations] = useState(false);
   const [trainInfoOpen, setTrainInfoOpen] = useState(true);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     if (!open) {
@@ -150,17 +151,26 @@ export default function TrainDialog({
   
   // Scroll to current location when dialog opens
   useEffect(() => {
-    if (open && journeyData?.payload?.stops && currentLocationIndex !== null) {
+    if (open && journeyData?.payload?.stops && currentLocationIndex !== null && currentLocationIndex >= 0) {
       setTimeout(() => {
-        const element = document.querySelector(`[data-testid="row-stop-${Math.floor(currentLocationIndex)}"]`);
-        element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 150);
+        const stopElement = document.querySelector(`[data-testid="row-stop-${Math.floor(currentLocationIndex)}"]`) as HTMLElement;
+        const scrollViewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+        
+        if (stopElement && scrollViewport) {
+          const scrollOffset = stopElement.offsetTop - scrollViewport.clientHeight / 4;
+          
+          scrollViewport.scrollTo({
+            top: scrollOffset,
+            behavior: 'smooth'
+          });
+        }
+      }, 200);
     }
   }, [open, journeyData, currentLocationIndex]);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh]" data-testid="dialog-train-details">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col" data-testid="dialog-train-details">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <TrainBadge type={trainType} number={trainNumber} />
@@ -306,7 +316,7 @@ export default function TrainDialog({
               </div>
             )}
 
-            <ScrollArea className="flex-1 pr-4" style={{ maxHeight: 'calc(85vh - 280px)' }}>
+            <ScrollArea ref={scrollAreaRef} className="flex-1 pr-4 overflow-auto">
               <div className="space-y-2">
               {displayedStops.map((stop: any, displayIdx: number) => {
                 const isPassing = stop.status === "PASSING";
