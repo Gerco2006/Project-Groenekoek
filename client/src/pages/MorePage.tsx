@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Github, Moon, Sun, Info, Heart } from "lucide-react";
@@ -13,7 +19,9 @@ export default function MorePage() {
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Meer</h1>
-          <p className="text-muted-foreground">Instellingen en projectinformatie</p>
+          <p className="text-muted-foreground">
+            Instellingen en projectinformatie
+          </p>
         </div>
 
         <Card data-testid="card-theme">
@@ -51,30 +59,40 @@ export default function MorePage() {
               <Info className="w-5 h-5 text-primary" />
               <div>
                 <CardTitle>Over TravNL</CardTitle>
-                <CardDescription>De open-source reisplanner die net wat meer kan</CardDescription>
+                <CardDescription>
+                  De open-source reisplanner die net wat meer kan
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground leading-relaxed">
-              TravNL is een open-source webapp die werkt als een moderne reisplanner, vergelijkbaar met de NS- en 9292-app maar dan met extra functies. 
-              Het gebruikt de NS-API om treinreizen te plannen, vertrektijden te tonen en actuele ritinformatie weer te geven.
+              TravNL is een open-source webapp die werkt als een moderne
+              reisplanner, vergelijkbaar met de NS- en 9292-app maar dan met
+              extra functies. Het gebruikt de NS-API om treinreiz en te plannen,
+              vertrektijden te tonen en actuele ritinformatie weer te geven.
             </p>
-            
+
             <div className="pt-4 border-t space-y-3">
               <h3 className="font-semibold flex items-center gap-2">
                 <Heart className="w-4 h-4 text-destructive fill-destructive" />
                 Open Source
               </h3>
               <p className="text-sm text-muted-foreground">
-                Dit project is volledig open-source en verwelkomt bijdragen van de community. 
-                Heb je ideeën, suggesties of wil je meehelpen? Bekijk onze GitHub repository!
+                Dit project is volledig open-source en verwelkomt bijdragen van
+                de community. Heb je ideeën, suggesties of wil je meehelpen?
+                Bekijk onze GitHub repository!
               </p>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 className="w-full"
-                onClick={() => window.open('https://github.com/Gerco2006/Project-Groenekoek', '_blank')}
+                onClick={() =>
+                  window.open(
+                    "https://github.com/Gerco2006/Project-Groenekoek",
+                    "_blank",
+                  )
+                }
                 data-testid="button-github"
               >
                 <Github className="w-4 h-4 mr-2" />
@@ -87,7 +105,9 @@ export default function MorePage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">Versie 1.0.0</p>
+              <p className="text-sm text-muted-foreground">
+                Versie 0.1.0-Alpha
+              </p>
               <p className="text-xs text-muted-foreground">
                 Gemaakt met React, TypeScript en de NS API
               </p>
