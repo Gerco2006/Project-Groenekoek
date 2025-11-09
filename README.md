@@ -43,7 +43,7 @@ De basis van de app is nog in ontwikkeling.
 
 - Geavanceerde ritweergave met o.a:
     - Visuele diagram van trein
-    - Locatie van 1e klas, toiletten, fietsplaatsen rolstoelplaatsen
+    - Locatie van 1e klas, toiletten, fietsplaatsen en rolstoelplaatsen
     - Specifiek materieel
     - Aantal fietsplekken
 
