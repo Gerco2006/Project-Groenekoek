@@ -32,6 +32,7 @@ export default function StationSearch({
   testId = "input-station"
 }: StationSearchProps) {
   const [focused, setFocused] = useState(false);
+  const [inputValue, setInputValue] = useState(value);
 
   const { data: stationsData } = useQuery<any>({
     queryKey: ["/api/stations"],
@@ -44,15 +45,34 @@ export default function StationSearch({
 
   const stations: Station[] = stationsData?.payload || [];
 
-  const filteredStations = value && focused
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (!inputValue || inputValue.length < 2 || focused) return;
+
+    const trimmedInput = inputValue.trim();
+    const matchedStation = stations.find(s => 
+      s.code.toLowerCase() === trimmedInput.toLowerCase() ||
+      s.namen.kort.toLowerCase() === trimmedInput.toLowerCase()
+    );
+
+    if (matchedStation && matchedStation.namen.lang !== inputValue) {
+      setInputValue(matchedStation.namen.lang);
+      onChange(matchedStation.namen.lang);
+    }
+  }, [inputValue, focused, stations, onChange]);
+
+  const filteredStations = inputValue && focused
     ? stations
         .filter(station => 
-          station.namen.lang.toLowerCase().includes(value.toLowerCase()) ||
-          station.namen.middel.toLowerCase().includes(value.toLowerCase()) ||
-          station.code.toLowerCase().includes(value.toLowerCase())
+          station.namen.lang.toLowerCase().includes(inputValue.toLowerCase()) ||
+          station.namen.middel.toLowerCase().includes(inputValue.toLowerCase()) ||
+          station.code.toLowerCase().includes(inputValue.toLowerCase())
         )
         .sort((a, b) => {
-          const searchLower = value.toLowerCase();
+          const searchLower = inputValue.toLowerCase();
           const aCodeMatch = a.code.toLowerCase().startsWith(searchLower);
           const bCodeMatch = b.code.toLowerCase().startsWith(searchLower);
           
@@ -81,8 +101,11 @@ export default function StationSearch({
           id={testId}
           data-testid={testId}
           type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={inputValue}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            onChange(e.target.value);
+          }}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 200)}
           placeholder={placeholder}
@@ -96,7 +119,8 @@ export default function StationSearch({
                 key={idx}
                 type="button"
                 onClick={() => {
-                  onChange(station.code);
+                  setInputValue(station.namen.lang);
+                  onChange(station.namen.lang);
                   setFocused(false);
                 }}
                 className="w-full text-left px-4 py-2 hover-elevate flex items-center justify-between"

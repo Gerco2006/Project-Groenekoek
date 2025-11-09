@@ -58,6 +58,43 @@ async function fetchNSDisruptions(endpoint: string, params: Record<string, strin
   return response.json();
 }
 
+let stationsCache: any = null;
+let stationsCacheTime: number = 0;
+const STATIONS_CACHE_TTL = 3600000;
+
+async function getStationCode(stationInput: string): Promise<string | null> {
+  if (!stationInput) return stationInput;
+
+  const trimmedInput = stationInput.trim();
+  if (!trimmedInput) return null;
+
+  const now = Date.now();
+  if (!stationsCache || now - stationsCacheTime > STATIONS_CACHE_TTL) {
+    try {
+      const data = await fetchNS("/v2/stations", {});
+      stationsCache = data.payload || [];
+      stationsCacheTime = now;
+    } catch (error) {
+      console.error("Failed to fetch stations for code lookup:", error);
+      throw new Error("Station lookup service unavailable");
+    }
+  }
+
+  const matchedStation = stationsCache.find((s: any) => 
+    s.code?.toLowerCase() === trimmedInput.toLowerCase() ||
+    s.namen?.lang?.toLowerCase() === trimmedInput.toLowerCase() ||
+    s.namen?.middel?.toLowerCase() === trimmedInput.toLowerCase() ||
+    s.namen?.kort?.toLowerCase() === trimmedInput.toLowerCase()
+  );
+
+  if (!matchedStation) {
+    console.warn(`Station not found: ${trimmedInput}`);
+    return null;
+  }
+
+  return matchedStation.code;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/departures", async (req, res) => {
     try {
@@ -67,8 +104,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Station parameter is required" });
       }
 
+      const stationCode = await getStationCode(station as string);
+      if (!stationCode) {
+        return res.status(400).json({ error: `Station not found: ${station}` });
+      }
+
       const data = await fetchNS("/v2/departures", {
-        station: station as string,
+        station: stationCode,
         maxJourneys: maxJourneys as string,
         lang: lang as string,
       });
@@ -93,7 +135,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lang: lang as string,
       };
 
-      if (station) params.station = station as string;
+      if (station) {
+        const stationCode = await getStationCode(station as string);
+        if (!stationCode) {
+          return res.status(400).json({ error: `Station not found: ${station}` });
+        }
+        params.station = stationCode;
+      }
       if (uicCode) params.uicCode = uicCode as string;
       if (dateTime) params.dateTime = dateTime as string;
 
@@ -121,9 +169,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "fromStation and toStation parameters are required" });
       }
 
+      const fromCode = await getStationCode(fromStation as string);
+      if (!fromCode) {
+        return res.status(400).json({ error: `From station not found: ${fromStation}` });
+      }
+
+      const toCode = await getStationCode(toStation as string);
+      if (!toCode) {
+        return res.status(400).json({ error: `To station not found: ${toStation}` });
+      }
+
+      const viaCodes: string[] = [];
+      if (viaStation) {
+        const viaArray = Array.isArray(viaStation) ? viaStation : [viaStation];
+        for (const via of viaArray) {
+          const viaCode = await getStationCode(via as string);
+          if (!viaCode) {
+            return res.status(400).json({ error: `Via station not found: ${via}` });
+          }
+          viaCodes.push(viaCode);
+        }
+      }
+
       const params: Record<string, string | string[]> = {
-        fromStation: fromStation as string,
-        toStation: toStation as string,
+        fromStation: fromCode,
+        toStation: toCode,
         lang: lang as string,
       };
 
@@ -135,12 +205,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         params.searchForArrival = "true";
       }
 
-      if (viaStation) {
-        if (Array.isArray(viaStation)) {
-          params.viaStation = viaStation.filter(v => v) as string[];
-        } else {
-          params.viaStation = viaStation as string;
-        }
+      if (viaCodes.length > 0) {
+        params.viaStation = viaCodes.length === 1 ? viaCodes[0] : viaCodes;
       }
 
       const data = await fetchNS("/v3/trips", params);
@@ -209,24 +275,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Station code is required" });
       }
 
-      let actualStationCode = stationCode;
-
-      if (stationCode.length > 4 || stationCode.includes(" ")) {
-        try {
-          const stationsData = await fetchNS("/v2/stations", {});
-          const stations = stationsData.payload || [];
-          const matchedStation = stations.find((s: any) => 
-            s.namen?.lang?.toLowerCase() === stationCode.toLowerCase() ||
-            s.namen?.middel?.toLowerCase() === stationCode.toLowerCase() ||
-            s.namen?.kort?.toLowerCase() === stationCode.toLowerCase()
-          );
-          
-          if (matchedStation) {
-            actualStationCode = matchedStation.code || matchedStation.UICCode;
-          }
-        } catch (lookupError) {
-          console.error("Station lookup failed, trying original code:", lookupError);
-        }
+      const actualStationCode = await getStationCode(stationCode);
+      if (!actualStationCode) {
+        return res.status(400).json({ error: `Station not found: ${stationCode}` });
       }
 
       const data = await fetchNSDisruptions(`/v3/station/${actualStationCode}`);
