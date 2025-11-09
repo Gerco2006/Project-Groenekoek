@@ -1,29 +1,71 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Hash } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import TrainDialog from "@/components/TrainDialog";
 
 export default function TrainLookup() {
   const [journeyNumber, setJourneyNumber] = useState("");
-  const [showDialog, setShowDialog] = useState(false);
+  const [searchedNumber, setSearchedNumber] = useState("");
+  const { toast } = useToast();
+
+  const { data: journeyData, isLoading, error } = useQuery({
+    queryKey: ["/api/journey", searchedNumber],
+    enabled: !!searchedNumber,
+    queryFn: async () => {
+      const response = await fetch(`/api/journey?train=${searchedNumber}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch journey details");
+      }
+      return response.json();
+    },
+    retry: 1,
+  });
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Fout bij ophalen treininfo",
+        description: error instanceof Error ? error.message : "Er is een fout opgetreden",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   const handleSearch = () => {
-    if (journeyNumber.trim()) {
-      setShowDialog(true);
+    if (!journeyNumber.trim()) {
+      toast({
+        title: "Ritnummer vereist",
+        description: "Voer een ritnummer in om de treininfo op te zoeken",
+        variant: "destructive",
+      });
+      return;
     }
+    setSearchedNumber(journeyNumber);
   };
 
-  const mockTrainStops = [
-    { name: "Amsterdam Centraal", arrival: null, departure: "10:23", platform: "5" },
-    { name: "Amsterdam Sloterdijk", arrival: "10:28", departure: "10:29", platform: "3" },
-    { name: "Schiphol Airport", arrival: "10:37", departure: "10:38", platform: "1" },
-    { name: "Leiden Centraal", arrival: "10:52", departure: "10:53", platform: "4" },
-    { name: "Den Haag Centraal", arrival: "11:05", departure: "11:07", platform: "8" },
-    { name: "Delft", arrival: "11:15", departure: "11:16", platform: "2" },
-    { name: "Rotterdam Centraal", arrival: "11:27", departure: null, platform: "7" }
-  ];
+  const formatTime = (dateTime: string) => {
+    if (!dateTime) return null;
+    const date = new Date(dateTime);
+    return date.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const trainStops = journeyData?.payload?.stops
+    ?.filter((stop: any) => stop.stop?.name)
+    ?.map((stop: any) => ({
+      name: stop.stop.name,
+      arrival: stop.actualArrivalTime ? formatTime(stop.actualArrivalTime) : (stop.plannedArrivalTime ? formatTime(stop.plannedArrivalTime) : null),
+      departure: stop.actualDepartureTime ? formatTime(stop.actualDepartureTime) : (stop.plannedDepartureTime ? formatTime(stop.plannedDepartureTime) : null),
+      platform: stop.actualArrivalTrack || stop.plannedArrivalTrack || stop.actualDepartureTrack || stop.plannedDepartureTrack || "",
+    })) || [];
+
+  const trainInfo = journeyData?.payload;
+  const origin = trainStops.find((stop: any) => stop.departure && !stop.arrival);
+  const destination = trainStops.length > 0 ? trainStops[trainStops.length - 1] : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -60,29 +102,43 @@ export default function TrainLookup() {
             className="w-full" 
             size="lg" 
             onClick={handleSearch}
-            disabled={!journeyNumber.trim()}
+            disabled={!journeyNumber.trim() || isLoading}
             data-testid="button-search-journey"
           >
             <Search className="w-4 h-4 mr-2" />
-            Zoek rit
+            {isLoading ? "Laden..." : "Zoek rit"}
           </Button>
         </div>
 
-        <div className="backdrop-blur-sm bg-muted/50 rounded-xl p-6 border border-dashed">
-          <p className="text-sm text-muted-foreground text-center">
-            Voer een ritnummer in om de volledige route en actuele informatie te bekijken
-          </p>
-        </div>
+        {isLoading && (
+          <div className="backdrop-blur-sm bg-card/80 rounded-xl p-8 border text-center text-muted-foreground">
+            <p>Treininfo laden...</p>
+          </div>
+        )}
 
-        {showDialog && (
+        {!isLoading && searchedNumber && !journeyData && (
+          <div className="backdrop-blur-sm bg-card/80 rounded-xl p-8 border text-center text-muted-foreground">
+            <p>Geen treininfo gevonden voor ritnummer {searchedNumber}</p>
+          </div>
+        )}
+
+        {!isLoading && !searchedNumber && (
+          <div className="backdrop-blur-sm bg-muted/50 rounded-xl p-6 border border-dashed">
+            <p className="text-sm text-muted-foreground text-center">
+              Voer een ritnummer in om de volledige route en actuele informatie te bekijken
+            </p>
+          </div>
+        )}
+
+        {trainInfo && trainStops.length > 0 && (
           <TrainDialog
-            open={showDialog}
-            onOpenChange={setShowDialog}
-            trainType="Intercity"
-            trainNumber={journeyNumber}
-            from="Amsterdam Centraal"
-            to="Rotterdam Centraal"
-            stops={mockTrainStops}
+            open={!!searchedNumber && !!trainInfo}
+            onOpenChange={(open) => !open && setSearchedNumber("")}
+            trainType={trainInfo.product?.longCategoryName || "Trein"}
+            trainNumber={searchedNumber}
+            from={origin?.name || "Onbekend"}
+            to={destination?.name || "Onbekend"}
+            stops={trainStops}
           />
         )}
       </div>

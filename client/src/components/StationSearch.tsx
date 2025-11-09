@@ -1,7 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 interface StationSearchProps {
   label: string;
@@ -12,8 +13,15 @@ interface StationSearchProps {
 }
 
 interface Station {
-  name: string;
+  namen: {
+    lang: string;
+    middel: string;
+    kort: string;
+  };
   code: string;
+  UICCode: string;
+  stationType: string;
+  land: string;
 }
 
 export default function StationSearch({ 
@@ -25,32 +33,25 @@ export default function StationSearch({
 }: StationSearchProps) {
   const [focused, setFocused] = useState(false);
 
-  const stations: Station[] = [
-    { name: "Amsterdam Centraal", code: "ASD" },
-    { name: "Amsterdam Sloterdijk", code: "ASL" },
-    { name: "Rotterdam Centraal", code: "RTD" },
-    { name: "Utrecht Centraal", code: "UT" },
-    { name: "Den Haag Centraal", code: "GVC" },
-    { name: "Schiphol Airport", code: "SPL" },
-    { name: "Eindhoven Centraal", code: "EHV" },
-    { name: "Groningen", code: "GN" },
-    { name: "Maastricht", code: "MT" },
-    { name: "Leiden Centraal", code: "LDN" },
-    { name: "Delft", code: "DT" },
-    { name: "Haarlem", code: "HLM" },
-    { name: "Arnhem Centraal", code: "AH" },
-    { name: "Tilburg", code: "TB" },
-    { name: "Breda", code: "BD" },
-    { name: "Nijmegen", code: "NM" },
-    { name: "Zwolle", code: "ZWL" },
-    { name: "Amersfoort Centraal", code: "AMF" },
-  ];
+  const { data: stationsData } = useQuery<any>({
+    queryKey: ["/api/stations"],
+    queryFn: async () => {
+      const response = await fetch("/api/stations");
+      if (!response.ok) throw new Error("Failed to fetch stations");
+      return response.json();
+    },
+  });
+
+  const stations: Station[] = stationsData?.payload || [];
 
   const filteredStations = value && focused
-    ? stations.filter(station => 
-        station.name.toLowerCase().includes(value.toLowerCase()) ||
-        station.code.toLowerCase().includes(value.toLowerCase())
-      )
+    ? stations
+        .filter(station => 
+          station.namen.lang.toLowerCase().includes(value.toLowerCase()) ||
+          station.namen.middel.toLowerCase().includes(value.toLowerCase()) ||
+          station.code.toLowerCase().includes(value.toLowerCase())
+        )
+        .slice(0, 10)
     : [];
 
   return (
@@ -79,13 +80,13 @@ export default function StationSearch({
                 key={idx}
                 type="button"
                 onClick={() => {
-                  onChange(station.name);
+                  onChange(station.code);
                   setFocused(false);
                 }}
                 className="w-full text-left px-4 py-2 hover-elevate flex items-center justify-between"
                 data-testid={`option-station-${idx}`}
               >
-                <span>{station.name}</span>
+                <span>{station.namen.lang}</span>
                 <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                   {station.code}
                 </span>

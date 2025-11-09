@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import StationSearch from "@/components/StationSearch";
 import DepartureRow from "@/components/DepartureRow";
 import TrainDialog from "@/components/TrainDialog";
@@ -10,60 +12,126 @@ interface SelectedTrain {
   trainType: string;
   trainNumber: string;
   destination: string;
+  journeyId?: string;
+}
+
+interface Departure {
+  direction: string;
+  name: string;
+  plannedDateTime: string;
+  actualDateTime?: string;
+  plannedTrack: string;
+  actualTrack?: string;
+  product: {
+    number: string;
+    categoryCode: string;
+    shortCategoryName: string;
+    longCategoryName: string;
+  };
+  trainCategory: string;
+  cancelled: boolean;
+  routeStations?: Array<{ uicCode: string; mediumName: string }>;
+  departureStatus?: string;
+  messages?: Array<{ message: string }>;
 }
 
 export default function DepartureBoard() {
   const [station, setStation] = useState("");
+  const [searchedStation, setSearchedStation] = useState("");
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
+  const { toast } = useToast();
 
-  const mockDepartures = [
-    {
-      time: "10:23",
-      destination: "Rotterdam Centraal",
-      platform: "5",
-      trainType: "Intercity",
-      trainNumber: "1234"
+  const { data: departuresData, isLoading, refetch, error: departuresError } = useQuery<any>({
+    queryKey: ["/api/departures", searchedStation],
+    enabled: !!searchedStation,
+    queryFn: async () => {
+      const response = await fetch(`/api/departures?station=${encodeURIComponent(searchedStation)}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch departures");
+      }
+      return response.json();
     },
-    {
-      time: "10:27",
-      destination: "Utrecht Centraal",
-      platform: "8b",
-      trainType: "Sprinter",
-      trainNumber: "5678",
-      delay: 3
+  });
+
+  const { data: journeyData, error: journeyError } = useQuery<any>({
+    queryKey: ["/api/journey", selectedTrain?.trainNumber],
+    enabled: !!selectedTrain?.trainNumber,
+    queryFn: async () => {
+      const response = await fetch(`/api/journey?train=${selectedTrain?.trainNumber}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch journey details");
+      }
+      return response.json();
     },
-    {
-      time: "10:35",
-      destination: "Den Haag Centraal",
-      platform: "12",
-      trainType: "Intercity",
-      trainNumber: "2345"
-    },
-    {
-      time: "10:42",
-      destination: "Eindhoven Centraal",
-      platform: "7",
-      trainType: "Intercity",
-      trainNumber: "3456"
-    },
-    {
-      time: "10:45",
-      destination: "Schiphol Airport",
-      platform: "3",
-      trainType: "Sprinter",
-      trainNumber: "4567"
+    retry: 1,
+  });
+
+  const departures: Departure[] = departuresData?.payload?.departures || [];
+
+  useEffect(() => {
+    if (departuresError) {
+      toast({
+        title: "Fout bij ophalen vertrektijden",
+        description: departuresError instanceof Error ? departuresError.message : "Er is een fout opgetreden",
+        variant: "destructive",
+      });
     }
-  ];
+  }, [departuresError, toast]);
 
-  const mockTrainStops = [
-    { name: "Amsterdam Centraal", arrival: null, departure: "10:23", platform: "5" },
-    { name: "Amsterdam Sloterdijk", arrival: "10:28", departure: "10:29", platform: "3" },
-    { name: "Schiphol Airport", arrival: "10:37", departure: "10:38", platform: "1" },
-    { name: "Leiden Centraal", arrival: "10:52", departure: "10:53", platform: "4" },
-    { name: "Den Haag Centraal", arrival: "11:05", departure: "11:07", platform: "8" },
-    { name: "Delft", arrival: "11:15", departure: "11:16", platform: "2" },
-    { name: "Rotterdam Centraal", arrival: "11:27", departure: null, platform: "7" }
-  ];
+  useEffect(() => {
+    if (journeyError) {
+      toast({
+        title: "Fout bij ophalen treininfo",
+        description: journeyError instanceof Error ? journeyError.message : "Er is een fout opgetreden",
+        variant: "destructive",
+      });
+    }
+  }, [journeyError, toast]);
+
+  const handleSearch = () => {
+    if (!station.trim()) {
+      toast({
+        title: "Station vereist",
+        description: "Voer een station in om vertrektijden te zoeken",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSearchedStation(station);
+  };
+
+  const handleRefresh = () => {
+    if (searchedStation) {
+      refetch();
+      toast({
+        title: "Vernieuwd",
+        description: "Vertrektijden zijn bijgewerkt",
+      });
+    }
+  };
+
+  const formatTime = (dateTime: string) => {
+    const date = new Date(dateTime);
+    return date.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const calculateDelay = (planned: string, actual?: string) => {
+    if (!actual) return 0;
+    const plannedTime = new Date(planned).getTime();
+    const actualTime = new Date(actual).getTime();
+    return Math.round((actualTime - plannedTime) / 60000);
+  };
+
+  const trainStops = journeyData?.payload?.stops
+    ?.filter((stop: any) => stop.stop?.name)
+    ?.map((stop: any) => ({
+      name: stop.stop.name,
+      arrival: stop.actualArrivalTime ? formatTime(stop.actualArrivalTime) : (stop.plannedArrivalTime ? formatTime(stop.plannedArrivalTime) : null),
+      departure: stop.actualDepartureTime ? formatTime(stop.actualDepartureTime) : (stop.plannedDepartureTime ? formatTime(stop.plannedDepartureTime) : null),
+      platform: stop.actualArrivalTrack || stop.plannedArrivalTrack || stop.actualDepartureTrack || stop.plannedDepartureTrack || "",
+    })) || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,16 +153,18 @@ export default function DepartureBoard() {
             <Button 
               className="flex-1" 
               size="lg"
-              disabled={!station.trim()}
+              disabled={!station.trim() || isLoading}
+              onClick={handleSearch}
               data-testid="button-search-departures"
             >
               <Search className="w-4 h-4 mr-2" />
-              Zoek vertrektijden
+              {isLoading ? "Laden..." : "Zoek vertrektijden"}
             </Button>
             <Button 
               variant="outline" 
               size="lg"
-              onClick={() => console.log("Refresh departures")}
+              onClick={handleRefresh}
+              disabled={!searchedStation || isLoading}
               data-testid="button-refresh"
             >
               <RefreshCw className="w-4 h-4" />
@@ -102,19 +172,39 @@ export default function DepartureBoard() {
           </div>
         </div>
 
-        {station && (
+        {isLoading && (
+          <Card className="p-8 text-center text-muted-foreground">
+            <p>Vertrektijden laden...</p>
+          </Card>
+        )}
+
+        {!isLoading && searchedStation && departures.length === 0 && (
+          <Card className="p-8 text-center text-muted-foreground">
+            <p>Geen vertrektijden gevonden voor {searchedStation}</p>
+          </Card>
+        )}
+
+        {!isLoading && departures.length > 0 && (
           <Card className="divide-y">
-            {mockDepartures.map((departure, idx) => (
-              <DepartureRow
-                key={idx}
-                {...departure}
-                onClick={() => setSelectedTrain({
-                  trainType: departure.trainType,
-                  trainNumber: departure.trainNumber,
-                  destination: departure.destination
-                })}
-              />
-            ))}
+            {departures.map((departure, idx) => {
+              const delay = calculateDelay(departure.plannedDateTime, departure.actualDateTime);
+              return (
+                <DepartureRow
+                  key={idx}
+                  time={formatTime(departure.actualDateTime || departure.plannedDateTime)}
+                  destination={departure.direction}
+                  platform={departure.actualTrack || departure.plannedTrack}
+                  trainType={departure.product.longCategoryName}
+                  trainNumber={departure.product.number}
+                  delay={delay > 0 ? delay : undefined}
+                  onClick={() => setSelectedTrain({
+                    trainType: departure.product.longCategoryName,
+                    trainNumber: departure.product.number,
+                    destination: departure.direction,
+                  })}
+                />
+              );
+            })}
           </Card>
         )}
 
@@ -124,9 +214,9 @@ export default function DepartureBoard() {
             onOpenChange={(open) => !open && setSelectedTrain(null)}
             trainType={selectedTrain.trainType}
             trainNumber={selectedTrain.trainNumber}
-            from={station || "Amsterdam Centraal"}
+            from={searchedStation || station}
             to={selectedTrain.destination}
-            stops={mockTrainStops}
+            stops={trainStops}
           />
         )}
       </div>
