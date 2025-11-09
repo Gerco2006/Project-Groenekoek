@@ -3,6 +3,9 @@
 Project Groenekoek is een open-source reisplanner voor reizigers en spoorliefhebbers die net wat meer willen dan een standaard app.
 Waar bestaande reisplanners vooral praktisch zijn, richt TravNL zich op meer inzicht, detail en vrijheid ontwikkeld door en voor reizigers.
 
+![TravNL Screenshot](https://i.imgur.com/VKh4K3y.png)
+
+
 ## Over het project
 
 De meeste reisapps laten je zien hoe je ergens komt.
