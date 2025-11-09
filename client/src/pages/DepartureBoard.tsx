@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { RefreshCw, Search } from "lucide-react";
+import { RefreshCw, Search, AlertTriangle, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 import StationSearch from "@/components/StationSearch";
 import DepartureRow from "@/components/DepartureRow";
 import TrainDialog from "@/components/TrainDialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SelectedTrain {
   trainType: string;

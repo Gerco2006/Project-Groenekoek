@@ -9,6 +9,7 @@ import BottomNav from "@/components/BottomNav";
 import JourneyPlanner from "@/pages/JourneyPlanner";
 import DepartureBoard from "@/pages/DepartureBoard";
 import TrainLookup from "@/pages/TrainLookup";
+import Disruptions from "@/pages/Disruptions";
 import MorePage from "@/pages/MorePage";
 import NotFound from "@/pages/not-found";
 
@@ -21,6 +22,7 @@ function Router() {
           <Route path="/" component={JourneyPlanner} />
           <Route path="/vertrektijden" component={DepartureBoard} />
           <Route path="/treininfo" component={TrainLookup} />
+          <Route path="/storingen" component={Disruptions} />
           <Route path="/meer" component={MorePage} />
           <Route component={NotFound} />
         </Switch>
