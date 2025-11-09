@@ -69,7 +69,7 @@ export default function MorePage() {
             <p className="text-sm text-muted-foreground leading-relaxed">
               TravNL is een open-source webapp die werkt als een moderne
               reisplanner, vergelijkbaar met de NS- en 9292-app maar dan met
-              extra functies. Het gebruikt de NS-API om treinreiz en te plannen,
+              extra functies. Het gebruikt de NS-API om treinreizen te plannen,
               vertrektijden te tonen en actuele ritinformatie weer te geven.
             </p>
 
