@@ -151,22 +151,31 @@ export default function TrainDialog({
   
   // Scroll to current location when dialog opens
   useEffect(() => {
-    if (open && journeyData?.payload?.stops && currentLocationIndex !== null && currentLocationIndex >= 0) {
-      setTimeout(() => {
-        const stopElement = document.querySelector(`[data-testid="row-stop-${Math.floor(currentLocationIndex)}"]`) as HTMLElement;
-        const scrollViewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
-        
-        if (stopElement && scrollViewport) {
-          const scrollOffset = stopElement.offsetTop - scrollViewport.clientHeight / 4;
-          
-          scrollViewport.scrollTo({
-            top: scrollOffset,
-            behavior: 'smooth'
-          });
-        }
-      }, 200);
+    if (!open || !journeyData?.payload?.stops || currentLocationIndex === null || currentLocationIndex < 0) {
+      return;
     }
-  }, [open, journeyData, currentLocationIndex]);
+
+    const scrollToCurrentStop = () => {
+      const targetIndex = Math.floor(currentLocationIndex);
+      const stopElement = document.querySelector(`[data-testid="row-stop-${targetIndex}"]`) as HTMLElement;
+      const scrollViewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+      
+      if (stopElement && scrollViewport) {
+        // Calculate position to scroll the current stop to roughly 1/4 from top
+        const elementTop = stopElement.offsetTop;
+        const viewportHeight = scrollViewport.clientHeight;
+        const scrollPosition = Math.max(0, elementTop - viewportHeight / 4);
+        
+        scrollViewport.scrollTop = scrollPosition;
+      }
+    };
+
+    // Try multiple times to ensure DOM is ready
+    const timeouts = [100, 300, 500];
+    timeouts.forEach(delay => {
+      setTimeout(scrollToCurrentStop, delay);
+    });
+  }, [open, journeyData?.payload?.stops, currentLocationIndex]);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
