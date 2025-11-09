@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Clock, ArrowRight } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock, ArrowRight, Train } from "lucide-react";
 import { useState } from "react";
 import TrainBadge from "./TrainBadge";
+import { Badge } from "@/components/ui/badge";
 
 interface TripLeg {
   trainType: string;
@@ -39,95 +40,118 @@ export default function TripCard({
     <Card className="overflow-hidden hover-elevate" data-testid="card-trip">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full text-left p-4 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
+        className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
         data-testid="button-expand-trip"
       >
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4 flex-1 min-w-[300px]">
-            <div className="text-center">
-              <div className="text-2xl font-bold" data-testid="text-departure-time">{departureTime}</div>
-            </div>
-            
-            <div className="flex-1 flex items-center gap-2">
-              <div className="h-px bg-border flex-1" />
-              <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {duration}
-              </div>
-              <div className="h-px bg-border flex-1" />
-            </div>
-            
-            <div className="text-center">
-              <div className="text-2xl font-bold" data-testid="text-arrival-time">{arrivalTime}</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex gap-1.5">
+        {/* Header with key information */}
+        <div className="p-4 pb-3">
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <div className="flex gap-1.5 flex-wrap">
               {uniqueTrainTypes.map((type, idx) => (
                 <TrainBadge key={idx} type={type} />
               ))}
             </div>
-            <div className="text-sm text-muted-foreground">
-              {transfers === 0 ? "Direct" : `${transfers} overstap${transfers > 1 ? 'pen' : ''}`}
-            </div>
             {expanded ? (
-              <ChevronUp className="w-5 h-5 text-muted-foreground" />
+              <ChevronUp className="w-5 h-5 text-muted-foreground shrink-0" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-muted-foreground" />
+              <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
             )}
+          </div>
+          
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="text-center">
+                <div className="text-2xl font-bold" data-testid="text-departure-time">{departureTime}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{legs[0]?.from}</div>
+              </div>
+              
+              <div className="flex-1 flex items-center gap-2 min-w-[100px]">
+                <div className="h-px bg-border flex-1" />
+                <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                <div className="h-px bg-border flex-1" />
+              </div>
+              
+              <div className="text-center">
+                <div className="text-2xl font-bold" data-testid="text-arrival-time">{arrivalTime}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{legs[legs.length - 1]?.to}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Info bar */}
+        <div className="px-4 pb-4 flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-4 h-4" />
+            <span className="font-medium">{duration}</span>
+          </div>
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-1.5">
+            <Train className="w-4 h-4" />
+            <span className="font-medium">
+              {transfers === 0 ? "Direct" : `${transfers} overstap${transfers > 1 ? 'pen' : ''}`}
+            </span>
           </div>
         </div>
       </button>
 
       {expanded && (
-        <div className="border-t bg-muted/30 p-4 space-y-2" data-testid="section-trip-details">
+        <div className="border-t bg-muted/20 p-4 space-y-3" data-testid="section-trip-details">
           {legs.map((leg, idx) => (
-            <div key={idx} className="space-y-2">
-              <Button
-                variant="ghost"
-                className="w-full justify-start p-3 h-auto hover-elevate"
+            <div key={idx} className="space-y-3">
+              <Card 
+                className="hover-elevate cursor-pointer overflow-hidden"
                 onClick={(e) => {
                   e.stopPropagation();
                   onTrainClick?.(leg);
                 }}
                 data-testid={`button-train-${idx}`}
               >
-                <div className="flex items-start gap-3 w-full">
-                  <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                <div className="p-4">
+                  <div className="flex items-start gap-3 mb-3">
+                    <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                    {leg.platform && (
+                      <Badge variant="outline" className="ml-auto">
+                        Spoor {leg.platform}
+                      </Badge>
+                    )}
+                  </div>
                   
-                  <div className="flex-1 space-y-1 text-left">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-semibold">{leg.departure}</span>
-                      <span className="text-muted-foreground">{leg.from}</span>
-                      {leg.platform && (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                          Spoor {leg.platform}
-                        </span>
-                      )}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                      <div className="flex-1">
+                        <div className="font-semibold">{leg.departure}</div>
+                        <div className="text-sm text-muted-foreground">{leg.from}</div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                    
+                    <div className="flex items-center gap-3 pl-[7px]">
+                      <div className="w-px h-6 bg-border" />
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-semibold">{leg.arrival}</span>
-                      <span className="text-muted-foreground">{leg.to}</span>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-border shrink-0" />
+                      <div className="flex-1">
+                        <div className="font-semibold">{leg.arrival}</div>
+                        <div className="text-sm text-muted-foreground">{leg.to}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </Button>
+              </Card>
               
               {idx < legs.length - 1 && (
-                <div className="pl-3 py-2 text-sm text-muted-foreground flex items-center gap-2">
+                <div className="flex items-center gap-2 px-2 py-1 text-sm text-muted-foreground">
                   <Clock className="w-4 h-4" />
                   <span>
                     Overstap in <span className="font-semibold">{leg.to}</span> 
-                    {" - "}
+                    {" • "}
                     {(() => {
                       const arrivalTime = new Date(`2000-01-01T${leg.arrival}`);
                       const nextDeparture = new Date(`2000-01-01T${legs[idx + 1].departure}`);
                       const diffMinutes = Math.round((nextDeparture.getTime() - arrivalTime.getTime()) / 60000);
-                      return `${diffMinutes} minuten overstaptijd`;
+                      return `${diffMinutes} min`;
                     })()}
                   </span>
                 </div>

@@ -155,7 +155,7 @@ export default function TrainDialog({
           </div>
         ) : (
           <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-1">
+            <div className="space-y-2">
               {displayedStops.map((stop: any, displayIdx: number) => {
                 const isPassing = stop.status === "PASSING";
                 const originalIdx = allStops.indexOf(stop);
@@ -180,7 +180,7 @@ export default function TrainDialog({
                 return (
                   <div key={originalIdx}>
                     {isBetweenStops && (
-                      <div className="flex items-center gap-2 py-2 px-3 bg-primary/10 rounded-lg mb-1">
+                      <div className="flex items-center gap-2 py-2 px-3 bg-primary/10 rounded-lg mb-2">
                         <Navigation className="w-4 h-4 text-primary" />
                         <span className="text-sm font-medium text-primary">
                           Trein rijdt nu tussen stations
@@ -188,39 +188,33 @@ export default function TrainDialog({
                       </div>
                     )}
                     <div
-                      className={`flex items-center gap-4 p-3 rounded-lg ${
+                      className={`bg-card border rounded-lg p-3 ${
                         isPassing ? "opacity-60" : isPast ? "opacity-50" : "hover-elevate"
-                      } ${isCurrentLocation ? "bg-primary/10 border-2 border-primary" : ""}`}
+                      } ${isCurrentLocation ? "border-primary border-2 bg-primary/5" : ""}`}
                       data-testid={`row-stop-${originalIdx}`}
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="relative flex items-center justify-center w-4">
+                      <div className="flex items-start gap-4 w-full">
+                        <div className="flex flex-col items-center pt-1">
                           {isCurrentLocation ? (
-                            <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
+                            <div className="w-4 h-4 rounded-full bg-primary animate-pulse shrink-0" />
                           ) : originalIdx === 0 ? (
-                            <div className="w-3 h-3 rounded-full bg-primary" />
+                            <div className="w-3 h-3 rounded-full bg-primary shrink-0" />
                           ) : originalIdx === allStops.length - 1 ? (
-                            <div className="w-3 h-3 rounded-full bg-primary" />
+                            <div className="w-3 h-3 rounded-full bg-primary shrink-0" />
                           ) : isPassing ? (
-                            <div className="w-2 h-2 rounded-full bg-muted-foreground" />
+                            <div className="w-2 h-2 rounded-full bg-muted-foreground shrink-0" />
                           ) : (
-                            <div className="w-3 h-3 rounded-full border-2 border-primary bg-background" />
-                          )}
-                          {originalIdx < allStops.length - 1 && (
-                            <div className={`absolute left-1/2 -translate-x-1/2 w-0.5 bg-border ${
-                              isPassing ? "opacity-50" : ""
-                            }`} style={{ top: '1rem', height: '3.25rem' }} />
+                            <div className="w-3 h-3 rounded-full border-2 border-primary bg-background shrink-0" />
                           )}
                         </div>
 
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <MapPin className={`w-4 h-4 ${isPassing ? "text-muted-foreground/50" : "text-muted-foreground"}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
                             <span className={`font-semibold ${isPassing ? "text-muted-foreground" : ""}`}>
                               {stop.stop?.name}
                             </span>
                             {isCurrentLocation && (
-                              <Badge variant="default" className="ml-2">
+                              <Badge variant="default" className="shrink-0">
                                 <Navigation className="w-3 h-3 mr-1" />
                                 Nu hier
                               </Badge>
@@ -228,30 +222,32 @@ export default function TrainDialog({
                           </div>
                           
                           {isPassing ? (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <AlertCircle className="w-3 h-3" />
                               <span>Trein stopt hier niet</span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                            <div className="space-y-1">
                               {arrivalTime && (
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  Aankomst: {arrivalTime}
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                                  <span className="text-muted-foreground">Aankomst:</span>
+                                  <span className="font-medium">{arrivalTime}</span>
                                   {arrivalDelay > 0 && (
-                                    <span className="text-destructive font-semibold ml-1">
-                                      +{arrivalDelay}
+                                    <span className="text-destructive font-semibold">
+                                      +{arrivalDelay} min
                                     </span>
                                   )}
                                 </div>
                               )}
                               {departureTime && (
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  Vertrek: {departureTime}
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                                  <span className="text-muted-foreground">Vertrek:</span>
+                                  <span className="font-medium">{departureTime}</span>
                                   {departureDelay > 0 && (
-                                    <span className="text-destructive font-semibold ml-1">
-                                      +{departureDelay}
+                                    <span className="text-destructive font-semibold">
+                                      +{departureDelay} min
                                     </span>
                                   )}
                                 </div>
@@ -261,9 +257,9 @@ export default function TrainDialog({
                         </div>
 
                         {platform && !isPassing && (
-                          <div className="bg-primary/10 text-primary px-3 py-1 rounded font-semibold text-sm">
+                          <Badge variant="outline" className="shrink-0">
                             Spoor {platform}
-                          </div>
+                          </Badge>
                         )}
                       </div>
                     </div>
