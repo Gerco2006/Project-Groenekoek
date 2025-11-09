@@ -68,19 +68,9 @@ export default function DepartureBoard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Vertrektijden</h1>
-            <p className="text-muted-foreground">Bekijk actuele vertrektijden</p>
-          </div>
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => console.log("Refresh departures")}
-            data-testid="button-refresh"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </Button>
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Vertrektijden</h1>
+          <p className="text-muted-foreground">Bekijk actuele vertrektijden</p>
         </div>
 
         <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
@@ -91,15 +81,25 @@ export default function DepartureBoard() {
             placeholder="Bijv. Amsterdam Centraal"
             testId="input-station"
           />
-          <Button 
-            className="w-full" 
-            size="lg"
-            disabled={!station.trim()}
-            data-testid="button-search-departures"
-          >
-            <Search className="w-4 h-4 mr-2" />
-            Zoek vertrektijden
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              className="flex-1" 
+              size="lg"
+              disabled={!station.trim()}
+              data-testid="button-search-departures"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              Zoek vertrektijden
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={() => console.log("Refresh departures")}
+              data-testid="button-refresh"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {station && (
