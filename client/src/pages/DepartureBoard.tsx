@@ -108,12 +108,16 @@ export default function DepartureBoard() {
   const departures: Departure[] = departuresData?.payload?.departures || [];
   const arrivals: Arrival[] = arrivalsData?.payload?.arrivals || [];
   const isLoading = activeTab === "departures" ? isDeparturesLoading : isArrivalsLoading;
+  
+  const fullStationName = activeTab === "departures" 
+    ? (departures[0]?.routeStations?.[0]?.mediumName || searchedStation)
+    : (arrivals[0]?.routeStations?.[arrivals[0]?.routeStations?.length - 1]?.mediumName || searchedStation);
 
   const { data: disruptionsData } = useQuery<any>({
-    queryKey: ["/api/disruptions/station", searchedStation],
-    enabled: !!searchedStation,
+    queryKey: ["/api/disruptions/station", fullStationName],
+    enabled: !!fullStationName,
     queryFn: async () => {
-      const response = await fetch(`/api/disruptions/station/${encodeURIComponent(searchedStation)}`);
+      const response = await fetch(`/api/disruptions/station/${encodeURIComponent(fullStationName)}`);
       if (!response.ok) {
         return [];
       }
@@ -264,7 +268,7 @@ export default function DepartureBoard() {
                   </span>
                   {' '}op dit station
                 </div>
-                <Link href={`/storingen?station=${encodeURIComponent(searchedStation)}`}>
+                <Link href={`/storingen?station=${encodeURIComponent(fullStationName)}`}>
                   <Button variant="outline" size="sm" className="gap-2" data-testid="button-view-disruptions">
                     Bekijk details
                     <ChevronRight className="w-4 h-4" />
