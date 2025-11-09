@@ -4,16 +4,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MapPin, Clock } from "lucide-react";
+import { MapPin, Clock, AlertCircle, Navigation, Loader2 } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface TrainStop {
-  name: string;
-  arrival: string | null;
-  departure: string | null;
-  platform?: string;
-}
+import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 
 interface TrainDialogProps {
   open: boolean;
@@ -22,7 +17,6 @@ interface TrainDialogProps {
   trainNumber: string;
   from: string;
   to: string;
-  stops?: TrainStop[];
 }
 
 export default function TrainDialog({
@@ -32,8 +26,66 @@ export default function TrainDialog({
   trainNumber,
   from,
   to,
-  stops = [],
 }: TrainDialogProps) {
+  const { data: journeyData, isLoading } = useQuery<any>({
+    queryKey: ["/api/journey", trainNumber],
+    enabled: open && !!trainNumber,
+    queryFn: async () => {
+      const response = await fetch(`/api/journey?train=${trainNumber}`);
+      if (!response.ok) throw new Error("Failed to fetch journey details");
+      return response.json();
+    },
+    retry: 1,
+  });
+
+  const formatTime = (dateTime: string) => {
+    if (!dateTime) return null;
+    const date = new Date(dateTime);
+    return date.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const calculateDelay = (planned: string, actual: string) => {
+    if (!planned || !actual) return 0;
+    const plannedTime = new Date(planned).getTime();
+    const actualTime = new Date(actual).getTime();
+    return Math.round((actualTime - plannedTime) / 60000);
+  };
+
+  const getCurrentLocation = () => {
+    if (!journeyData?.payload?.stops) return null;
+    const now = new Date();
+    const stops = journeyData.payload.stops;
+    
+    for (let i = 0; i < stops.length; i++) {
+      const stop = stops[i];
+      const departureTime = stop.actualDepartureTime || stop.plannedDepartureTime;
+      const arrivalTime = stop.actualArrivalTime || stop.plannedArrivalTime;
+      
+      // Check if we haven't arrived at this stop yet
+      if (arrivalTime && new Date(arrivalTime) > now) {
+        if (i === 0) return null; // Haven't started yet
+        // Between previous stop and this stop
+        return i - 0.5;
+      }
+      
+      // Check if we're at this stop (arrived but not departed)
+      if (departureTime && new Date(departureTime) > now) {
+        return i;
+      }
+    }
+    
+    // If we've passed all departure times, we're at the final destination
+    const lastStop = stops[stops.length - 1];
+    const lastArrival = lastStop?.actualArrivalTime || lastStop?.plannedArrivalTime;
+    if (lastArrival && new Date(lastArrival) <= now) {
+      return stops.length - 1;
+    }
+    
+    return null;
+  };
+
+  const currentLocationIndex = getCurrentLocation();
+  const allStops = journeyData?.payload?.stops || [];
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh]" data-testid="dialog-train-details">
@@ -46,59 +98,121 @@ export default function TrainDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] pr-4">
-          <div className="space-y-1">
-            {stops.map((stop, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-4 p-3 rounded-lg hover-elevate"
-                data-testid={`row-stop-${idx}`}
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="relative">
-                    {idx === 0 ? (
-                      <div className="w-3 h-3 rounded-full bg-primary" />
-                    ) : idx === stops.length - 1 ? (
-                      <div className="w-3 h-3 rounded-full bg-primary" />
-                    ) : (
-                      <div className="w-3 h-3 rounded-full border-2 border-primary bg-background" />
-                    )}
-                    {idx < stops.length - 1 && (
-                      <div className="absolute top-3 left-1/2 -translate-x-1/2 w-0.5 h-[52px] bg-border" />
-                    )}
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <span className="font-semibold">{stop.name}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                      {stop.arrival && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          Aankomst: {stop.arrival}
-                        </div>
-                      )}
-                      {stop.departure && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          Vertrek: {stop.departure}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {stop.platform && (
-                    <div className="bg-primary/10 text-primary px-3 py-1 rounded font-semibold text-sm">
-                      Spoor {stop.platform}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
-        </ScrollArea>
+        ) : (
+          <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-1">
+              {allStops.map((stop: any, idx: number) => {
+                const isPassing = stop.stopType === "PASSING";
+                const isCurrentLocation = currentLocationIndex === idx;
+                const isBetweenStops = currentLocationIndex === idx - 0.5;
+                
+                const arrivalTime = formatTime(stop.actualArrivalTime || stop.plannedArrivalTime);
+                const departureTime = formatTime(stop.actualDepartureTime || stop.plannedDepartureTime);
+                const arrivalDelay = calculateDelay(stop.plannedArrivalTime, stop.actualArrivalTime);
+                const departureDelay = calculateDelay(stop.plannedDepartureTime, stop.actualDepartureTime);
+                const platform = stop.actualArrivalTrack || stop.plannedArrivalTrack || 
+                                stop.actualDepartureTrack || stop.plannedDepartureTrack;
+
+                return (
+                  <div key={idx}>
+                    {isBetweenStops && (
+                      <div className="flex items-center gap-2 py-2 px-3 bg-primary/10 rounded-lg mb-1">
+                        <Navigation className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium text-primary">
+                          Trein rijdt nu tussen stations
+                        </span>
+                      </div>
+                    )}
+                    <div
+                      className={`flex items-center gap-4 p-3 rounded-lg ${
+                        isPassing ? "opacity-60" : "hover-elevate"
+                      } ${isCurrentLocation ? "bg-primary/10 border-2 border-primary" : ""}`}
+                      data-testid={`row-stop-${idx}`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="relative">
+                          {isCurrentLocation ? (
+                            <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
+                          ) : idx === 0 ? (
+                            <div className="w-3 h-3 rounded-full bg-primary" />
+                          ) : idx === allStops.length - 1 ? (
+                            <div className="w-3 h-3 rounded-full bg-primary" />
+                          ) : isPassing ? (
+                            <div className="w-2 h-2 rounded-full bg-muted-foreground" />
+                          ) : (
+                            <div className="w-3 h-3 rounded-full border-2 border-primary bg-background" />
+                          )}
+                          {idx < allStops.length - 1 && (
+                            <div className={`absolute top-3 left-1/2 -translate-x-1/2 w-0.5 h-[52px] ${
+                              isPassing ? "bg-border/50" : "bg-border"
+                            }`} />
+                          )}
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <MapPin className={`w-4 h-4 ${isPassing ? "text-muted-foreground/50" : "text-muted-foreground"}`} />
+                            <span className={`font-semibold ${isPassing ? "text-muted-foreground" : ""}`}>
+                              {stop.stop?.name}
+                            </span>
+                            {isCurrentLocation && (
+                              <Badge variant="default" className="ml-2">
+                                <Navigation className="w-3 h-3 mr-1" />
+                                Nu hier
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          {isPassing ? (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                              <AlertCircle className="w-3 h-3" />
+                              <span>Trein stopt hier niet</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                              {arrivalTime && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  Aankomst: {arrivalTime}
+                                  {arrivalDelay > 0 && (
+                                    <span className="text-destructive font-semibold ml-1">
+                                      +{arrivalDelay}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {departureTime && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  Vertrek: {departureTime}
+                                  {departureDelay > 0 && (
+                                    <span className="text-destructive font-semibold ml-1">
+                                      +{departureDelay}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {platform && !isPassing && (
+                          <div className="bg-primary/10 text-primary px-3 py-1 rounded font-semibold text-sm">
+                            Spoor {platform}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        )}
       </DialogContent>
     </Dialog>
   );

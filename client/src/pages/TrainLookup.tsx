@@ -130,7 +130,7 @@ export default function TrainLookup() {
           </div>
         )}
 
-        {trainInfo && trainStops.length > 0 && (
+        {trainInfo && (
           <TrainDialog
             open={!!searchedNumber && !!trainInfo}
             onOpenChange={(open) => !open && setSearchedNumber("")}
@@ -138,7 +138,6 @@ export default function TrainLookup() {
             trainNumber={searchedNumber}
             from={origin?.name || "Onbekend"}
             to={destination?.name || "Onbekend"}
-            stops={trainStops}
           />
         )}
       </div>

@@ -216,7 +216,6 @@ export default function DepartureBoard() {
             trainNumber={selectedTrain.trainNumber}
             from={searchedStation || station}
             to={selectedTrain.destination}
-            stops={trainStops}
           />
         )}
       </div>
