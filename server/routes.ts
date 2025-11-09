@@ -5,10 +5,16 @@ import { storage } from "./storage";
 const NS_API_KEY = process.env.NS_API_KEY;
 const NS_BASE_URL = "https://gateway.apiportal.ns.nl/reisinformatie-api/api";
 
-async function fetchNS(endpoint: string, params: Record<string, string> = {}) {
+async function fetchNS(endpoint: string, params: Record<string, string | string[]> = {}) {
   const url = new URL(`${NS_BASE_URL}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
-    if (value) url.searchParams.append(key, value);
+    if (Array.isArray(value)) {
+      value.forEach(v => {
+        if (v) url.searchParams.append(key, v);
+      });
+    } else if (value) {
+      url.searchParams.append(key, value);
+    }
   });
 
   const response = await fetch(url.toString(), {
@@ -53,6 +59,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fromStation, 
         toStation, 
         dateTime,
+        searchForArrival,
+        viaStation,
         lang = "nl" 
       } = req.query;
       
@@ -60,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "fromStation and toStation parameters are required" });
       }
 
-      const params: Record<string, string> = {
+      const params: Record<string, string | string[]> = {
         fromStation: fromStation as string,
         toStation: toStation as string,
         lang: lang as string,
@@ -68,6 +76,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (dateTime) {
         params.dateTime = dateTime as string;
+      }
+
+      if (searchForArrival === "true") {
+        params.searchForArrival = "true";
+      }
+
+      if (viaStation) {
+        if (Array.isArray(viaStation)) {
+          params.viaStation = viaStation.filter(v => v) as string[];
+        } else {
+          params.viaStation = viaStation as string;
+        }
       }
 
       const data = await fetchNS("/v3/trips", params);

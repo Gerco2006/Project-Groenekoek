@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2 } from "lucide-react";
+import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import StationSearch from "@/components/StationSearch";
 import TripCard from "@/components/TripCard";
 import TrainDialog from "@/components/TrainDialog";
@@ -23,8 +24,11 @@ interface SelectedTrain {
 export default function JourneyPlanner() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [viaStations, setViaStations] = useState<string[]>([]);
   const [searchedFrom, setSearchedFrom] = useState("");
   const [searchedTo, setSearchedTo] = useState("");
+  const [searchedViaStations, setSearchedViaStations] = useState<string[]>([]);
+  const [searchMode, setSearchMode] = useState<"departure" | "arrival">("departure");
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState(() => {
@@ -39,19 +43,47 @@ export default function JourneyPlanner() {
     setTo(temp);
   };
 
+  const addViaStation = () => {
+    setViaStations([...viaStations, ""]);
+  };
+
+  const removeViaStation = (index: number) => {
+    setViaStations(viaStations.filter((_, i) => i !== index));
+  };
+
+  const updateViaStation = (index: number, value: string) => {
+    const updated = [...viaStations];
+    updated[index] = value;
+    setViaStations(updated);
+  };
+
   const buildDateTime = () => {
     const dateStr = format(date, 'yyyy-MM-dd');
     return `${dateStr}T${time}:00`;
   };
 
   const { data: tripsData, isLoading, error } = useQuery<any>({
-    queryKey: ["/api/trips", searchedFrom, searchedTo, date, time],
+    queryKey: ["/api/trips", searchedFrom, searchedTo, searchedViaStations, searchMode, date, time],
     enabled: !!searchedFrom && !!searchedTo,
     queryFn: async () => {
       const dateTime = buildDateTime();
-      const response = await fetch(
-        `/api/trips?fromStation=${encodeURIComponent(searchedFrom)}&toStation=${encodeURIComponent(searchedTo)}&dateTime=${encodeURIComponent(dateTime)}`
-      );
+      const params = new URLSearchParams({
+        fromStation: searchedFrom,
+        toStation: searchedTo,
+        dateTime: dateTime,
+      });
+
+      if (searchMode === "arrival") {
+        params.append("searchForArrival", "true");
+      }
+
+      searchedViaStations.forEach((via) => {
+        if (via.trim()) {
+          params.append("viaStation", via);
+        }
+      });
+
+      const response = await fetch(`/api/trips?${params.toString()}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to fetch trips");
@@ -82,6 +114,7 @@ export default function JourneyPlanner() {
     }
     setSearchedFrom(from);
     setSearchedTo(to);
+    setSearchedViaStations(viaStations.filter(v => v.trim() !== ""));
   };
 
   const formatTime = (dateTime: string) => {
@@ -169,6 +202,44 @@ export default function JourneyPlanner() {
             />
           </div>
 
+          {viaStations.length > 0 && (
+            <div className="space-y-3">
+              {viaStations.map((via, index) => (
+                <div key={index} className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <StationSearch
+                      label={`Via station ${index + 1}`}
+                      value={via}
+                      onChange={(value) => updateViaStation(index, value)}
+                      placeholder="Bijv. Utrecht Centraal"
+                      testId={`input-via-station-${index}`}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeViaStation(index)}
+                    className="shrink-0 mb-0"
+                    data-testid={`button-remove-via-${index}`}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addViaStation}
+            className="gap-2"
+            data-testid="button-add-via-station"
+          >
+            <Plus className="w-4 h-4" />
+            Tussenstation toevoegen
+          </Button>
+
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Datum</Label>
@@ -196,16 +267,32 @@ export default function JourneyPlanner() {
 
             <div className="space-y-2">
               <Label htmlFor="time-input" className="text-sm font-medium">Tijd</Label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="time-input"
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="pl-9"
-                  data-testid="input-time"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="time-input"
+                    type="time"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="pl-9"
+                    data-testid="input-time"
+                  />
+                </div>
+                <ToggleGroup 
+                  type="single" 
+                  value={searchMode}
+                  onValueChange={(value) => value && setSearchMode(value as "departure" | "arrival")}
+                  className="border rounded-md"
+                  data-testid="toggle-search-mode"
+                >
+                  <ToggleGroupItem value="departure" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" data-testid="toggle-departure">
+                    Vertrek
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="arrival" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" data-testid="toggle-arrival">
+                    Aankomst
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
             </div>
           </div>
