@@ -34,7 +34,7 @@ export default function DisruptionDialog({
     retry: 1,
   });
 
-  const disruption = disruptionData?.payload;
+  const disruption = disruptionData?.payload || disruptionData;
 
   const formatDateTime = (dateString?: string) => {
     if (!dateString) return null;

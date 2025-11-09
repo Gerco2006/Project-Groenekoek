@@ -115,14 +115,15 @@ export default function DepartureBoard() {
     queryFn: async () => {
       const response = await fetch(`/api/disruptions/station/${encodeURIComponent(searchedStation)}`);
       if (!response.ok) {
-        return { payload: [] };
+        return [];
       }
       return response.json();
     },
     retry: 1,
   });
 
-  const activeDisruptions = (disruptionsData?.payload || []).filter((d: any) => d.isActive);
+  const disruptions = Array.isArray(disruptionsData) ? disruptionsData : (disruptionsData?.payload || []);
+  const activeDisruptions = disruptions.filter((d: any) => d.isActive);
 
   useEffect(() => {
     if (departuresError) {

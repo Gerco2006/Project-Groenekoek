@@ -47,7 +47,7 @@ export default function Disruptions() {
     },
   });
 
-  const disruptions: Disruption[] = disruptionsData?.payload || [];
+  const disruptions: Disruption[] = Array.isArray(disruptionsData) ? disruptionsData : (disruptionsData?.payload || []);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return null;
