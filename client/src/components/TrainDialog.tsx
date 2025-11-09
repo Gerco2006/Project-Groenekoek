@@ -4,11 +4,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MapPin, Clock, AlertCircle, Navigation, Loader2 } from "lucide-react";
+import { MapPin, Clock, AlertCircle, Navigation, Loader2, Info } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
 interface TrainDialogProps {
   open: boolean;
@@ -27,6 +29,14 @@ export default function TrainDialog({
   from,
   to,
 }: TrainDialogProps) {
+  const [showAllStations, setShowAllStations] = useState(false);
+  
+  useEffect(() => {
+    if (!open) {
+      setShowAllStations(false);
+    }
+  }, [open]);
+  
   const { data: journeyData, isLoading } = useQuery<any>({
     queryKey: ["/api/journey", trainNumber],
     enabled: open && !!trainNumber,
@@ -86,6 +96,10 @@ export default function TrainDialog({
 
   const currentLocationIndex = getCurrentLocation();
   const allStops = journeyData?.payload?.stops || [];
+  const displayedStops = showAllStations 
+    ? allStops 
+    : allStops.filter((stop: any) => stop.stopType !== "PASSING");
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh]" data-testid="dialog-train-details">
@@ -98,6 +112,21 @@ export default function TrainDialog({
           </DialogTitle>
         </DialogHeader>
 
+        {!isLoading && (
+          <div className="flex justify-end -mt-2 mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAllStations(!showAllStations)}
+              className="gap-2"
+              data-testid="button-toggle-all-stations"
+            >
+              <Info className="w-4 h-4" />
+              {showAllStations ? "Toon alleen stops" : "Toon alle stations"}
+            </Button>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -105,10 +134,11 @@ export default function TrainDialog({
         ) : (
           <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-1">
-              {allStops.map((stop: any, idx: number) => {
+              {displayedStops.map((stop: any, displayIdx: number) => {
                 const isPassing = stop.stopType === "PASSING";
-                const isCurrentLocation = currentLocationIndex === idx;
-                const isBetweenStops = currentLocationIndex === idx - 0.5;
+                const originalIdx = allStops.indexOf(stop);
+                const isCurrentLocation = currentLocationIndex === originalIdx;
+                const isBetweenStops = currentLocationIndex === originalIdx - 0.5;
                 
                 const arrivalTime = formatTime(stop.actualArrivalTime || stop.plannedArrivalTime);
                 const departureTime = formatTime(stop.actualDepartureTime || stop.plannedDepartureTime);
@@ -118,7 +148,7 @@ export default function TrainDialog({
                                 stop.actualDepartureTrack || stop.plannedDepartureTrack;
 
                 return (
-                  <div key={idx}>
+                  <div key={originalIdx}>
                     {isBetweenStops && (
                       <div className="flex items-center gap-2 py-2 px-3 bg-primary/10 rounded-lg mb-1">
                         <Navigation className="w-4 h-4 text-primary" />
@@ -131,22 +161,22 @@ export default function TrainDialog({
                       className={`flex items-center gap-4 p-3 rounded-lg ${
                         isPassing ? "opacity-60" : "hover-elevate"
                       } ${isCurrentLocation ? "bg-primary/10 border-2 border-primary" : ""}`}
-                      data-testid={`row-stop-${idx}`}
+                      data-testid={`row-stop-${originalIdx}`}
                     >
                       <div className="flex items-center gap-3 flex-1">
                         <div className="relative">
                           {isCurrentLocation ? (
                             <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
-                          ) : idx === 0 ? (
+                          ) : originalIdx === 0 ? (
                             <div className="w-3 h-3 rounded-full bg-primary" />
-                          ) : idx === allStops.length - 1 ? (
+                          ) : originalIdx === allStops.length - 1 ? (
                             <div className="w-3 h-3 rounded-full bg-primary" />
                           ) : isPassing ? (
                             <div className="w-2 h-2 rounded-full bg-muted-foreground" />
                           ) : (
                             <div className="w-3 h-3 rounded-full border-2 border-primary bg-background" />
                           )}
-                          {idx < allStops.length - 1 && (
+                          {originalIdx < allStops.length - 1 && (
                             <div className={`absolute top-3 left-1/2 -translate-x-1/2 w-0.5 h-[52px] ${
                               isPassing ? "bg-border/50" : "bg-border"
                             }`} />
