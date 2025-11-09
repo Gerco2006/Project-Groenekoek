@@ -209,7 +209,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Station code is required" });
       }
 
-      const data = await fetchNSDisruptions(`/v3/station/${stationCode}`);
+      let actualStationCode = stationCode;
+
+      if (stationCode.length > 4 || stationCode.includes(" ")) {
+        try {
+          const stationsData = await fetchNS("/v2/stations", {});
+          const stations = stationsData.payload || [];
+          const matchedStation = stations.find((s: any) => 
+            s.namen?.lang?.toLowerCase() === stationCode.toLowerCase() ||
+            s.namen?.middel?.toLowerCase() === stationCode.toLowerCase() ||
+            s.namen?.kort?.toLowerCase() === stationCode.toLowerCase()
+          );
+          
+          if (matchedStation) {
+            actualStationCode = matchedStation.code || matchedStation.UICCode;
+          }
+        } catch (lookupError) {
+          console.error("Station lookup failed, trying original code:", lookupError);
+        }
+      }
+
+      const data = await fetchNSDisruptions(`/v3/station/${actualStationCode}`);
       res.json(data);
     } catch (error) {
       console.error("Error fetching station disruptions:", error);

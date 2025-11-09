@@ -7,9 +7,10 @@ import {
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Github, Moon, Sun, Info, Heart } from "lucide-react";
+import { Github, Moon, Sun, Info, Heart, AlertTriangle, ChevronRight } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 export default function MorePage() {
   const { theme, toggleTheme } = useTheme();
@@ -23,6 +24,23 @@ export default function MorePage() {
             Instellingen en projectinformatie
           </p>
         </div>
+
+        <Link href="/storingen">
+          <Card className="hover-elevate cursor-pointer" data-testid="card-disruptions-link">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="w-5 h-5 text-primary" />
+                  <div>
+                    <CardTitle>Storingen & Werkzaamheden</CardTitle>
+                    <CardDescription>Bekijk actuele storingen en geplande werkzaamheden</CardDescription>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
 
         <Card data-testid="card-theme">
           <CardHeader>

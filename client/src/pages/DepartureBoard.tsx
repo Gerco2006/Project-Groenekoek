@@ -109,6 +109,21 @@ export default function DepartureBoard() {
   const arrivals: Arrival[] = arrivalsData?.payload?.arrivals || [];
   const isLoading = activeTab === "departures" ? isDeparturesLoading : isArrivalsLoading;
 
+  const { data: disruptionsData } = useQuery<any>({
+    queryKey: ["/api/disruptions/station", searchedStation],
+    enabled: !!searchedStation,
+    queryFn: async () => {
+      const response = await fetch(`/api/disruptions/station/${encodeURIComponent(searchedStation)}`);
+      if (!response.ok) {
+        return { payload: [] };
+      }
+      return response.json();
+    },
+    retry: 1,
+  });
+
+  const activeDisruptions = (disruptionsData?.payload || []).filter((d: any) => d.isActive);
+
   useEffect(() => {
     if (departuresError) {
       toast({
@@ -236,6 +251,28 @@ export default function DepartureBoard() {
             </Button>
           </div>
         </div>
+
+        {!isLoading && searchedStation && activeDisruptions.length > 0 && (
+          <Alert className="border-yellow-500/50 bg-yellow-500/10" data-testid="alert-disruptions">
+            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+            <AlertDescription className="ml-2">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <span className="font-semibold">
+                    {activeDisruptions.length} {activeDisruptions.length === 1 ? 'storing' : 'storingen'}
+                  </span>
+                  {' '}op dit station
+                </div>
+                <Link href="/storingen">
+                  <Button variant="outline" size="sm" className="gap-2" data-testid="button-view-disruptions">
+                    Bekijk details
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {isLoading && (
           <Card className="p-8 text-center text-muted-foreground">
