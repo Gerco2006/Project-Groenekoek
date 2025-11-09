@@ -104,6 +104,13 @@ export default function TrainDialog({
     ? allStops 
     : allStops.filter((stop: any) => stop.status !== "PASSING");
   
+  // Check if this is a bus, tram, or metro
+  const isNonTrainTransport = trainType && (
+    trainType.toLowerCase().includes('bus') ||
+    trainType.toLowerCase().includes('tram') ||
+    trainType.toLowerCase().includes('metro')
+  );
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh]" data-testid="dialog-train-details">
@@ -116,7 +123,7 @@ export default function TrainDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {!isLoading && (
+        {!isLoading && !isNonTrainTransport && (
           <div className="flex justify-end -mt-2 mb-2">
             <Button
               variant="outline"
@@ -134,6 +141,17 @@ export default function TrainDialog({
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : isNonTrainTransport ? (
+          <div className="flex flex-col items-center justify-center py-12 px-6 text-center gap-4">
+            <AlertCircle className="w-12 h-12 text-muted-foreground" />
+            <div className="space-y-2">
+              <p className="text-lg font-semibold">Geen gegevens beschikbaar</p>
+              <p className="text-sm text-muted-foreground max-w-md">
+                De NS API geeft helaas geen journey-informatie voor bussen, trams en metro's. 
+                Het is onduidelijk of deze functionaliteit in de toekomst beschikbaar komt.
+              </p>
+            </div>
           </div>
         ) : (
           <ScrollArea className="max-h-[60vh] pr-4">
