@@ -68,8 +68,11 @@ export default function TrainDialog({
     
     for (let i = 0; i < stops.length; i++) {
       const stop = stops[i];
-      const departureTime = stop.actualDepartureTime || stop.plannedDepartureTime;
-      const arrivalTime = stop.actualArrivalTime || stop.plannedArrivalTime;
+      const departure = stop.departures?.[0];
+      const arrival = stop.arrivals?.[0];
+      
+      const departureTime = departure?.actualTime || departure?.plannedTime;
+      const arrivalTime = arrival?.actualTime || arrival?.plannedTime;
       
       // Check if we haven't arrived at this stop yet
       if (arrivalTime && new Date(arrivalTime) > now) {
@@ -86,8 +89,9 @@ export default function TrainDialog({
     
     // If we've passed all departure times, we're at the final destination
     const lastStop = stops[stops.length - 1];
-    const lastArrival = lastStop?.actualArrivalTime || lastStop?.plannedArrivalTime;
-    if (lastArrival && new Date(lastArrival) <= now) {
+    const lastArrival = lastStop?.arrivals?.[0];
+    const lastArrivalTime = lastArrival?.actualTime || lastArrival?.plannedTime;
+    if (lastArrivalTime && new Date(lastArrivalTime) <= now) {
       return stops.length - 1;
     }
     
@@ -98,7 +102,7 @@ export default function TrainDialog({
   const allStops = journeyData?.payload?.stops || [];
   const displayedStops = showAllStations 
     ? allStops 
-    : allStops.filter((stop: any) => stop.stopType !== "PASSING");
+    : allStops.filter((stop: any) => stop.status !== "PASSING");
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -135,17 +139,21 @@ export default function TrainDialog({
           <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-1">
               {displayedStops.map((stop: any, displayIdx: number) => {
-                const isPassing = stop.stopType === "PASSING";
+                const isPassing = stop.status === "PASSING";
                 const originalIdx = allStops.indexOf(stop);
                 const isCurrentLocation = currentLocationIndex === originalIdx;
                 const isBetweenStops = currentLocationIndex === originalIdx - 0.5;
                 
-                const arrivalTime = formatTime(stop.actualArrivalTime || stop.plannedArrivalTime);
-                const departureTime = formatTime(stop.actualDepartureTime || stop.plannedDepartureTime);
-                const arrivalDelay = calculateDelay(stop.plannedArrivalTime, stop.actualArrivalTime);
-                const departureDelay = calculateDelay(stop.plannedDepartureTime, stop.actualDepartureTime);
-                const platform = stop.actualArrivalTrack || stop.plannedArrivalTrack || 
-                                stop.actualDepartureTrack || stop.plannedDepartureTrack;
+                // Get arrival and departure info from arrays
+                const arrival = stop.arrivals?.[0];
+                const departure = stop.departures?.[0];
+                
+                const arrivalTime = formatTime(arrival?.actualTime || arrival?.plannedTime);
+                const departureTime = formatTime(departure?.actualTime || departure?.plannedTime);
+                const arrivalDelay = calculateDelay(arrival?.plannedTime, arrival?.actualTime);
+                const departureDelay = calculateDelay(departure?.plannedTime, departure?.actualTime);
+                const platform = arrival?.actualTrack || arrival?.plannedTrack || 
+                                departure?.actualTrack || departure?.plannedTrack;
 
                 return (
                   <div key={originalIdx}>
