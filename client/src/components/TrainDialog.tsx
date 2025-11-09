@@ -148,6 +148,16 @@ export default function TrainDialog({
     return null;
   };
   
+  // Scroll to current location when dialog opens
+  useEffect(() => {
+    if (open && journeyData?.payload?.stops && currentLocationIndex !== null) {
+      setTimeout(() => {
+        const element = document.querySelector(`[data-testid="row-stop-${Math.floor(currentLocationIndex)}"]`);
+        element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }
+  }, [open, journeyData, currentLocationIndex]);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh]" data-testid="dialog-train-details">
@@ -180,65 +190,68 @@ export default function TrainDialog({
           <>
             {/* Train Material Information */}
             {(actualStock || plannedStock) && (
-              <Collapsible open={trainInfoOpen} onOpenChange={setTrainInfoOpen} className="mb-4">
-                <Card className="p-4">
+              <Collapsible open={trainInfoOpen} onOpenChange={setTrainInfoOpen} className="mb-3">
+                <Card className="overflow-hidden">
                   <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full p-0 h-auto hover:bg-transparent no-default-hover-elevate" data-testid="button-toggle-train-info">
+                    <Button variant="ghost" className="w-full p-4 h-auto hover:bg-transparent no-default-hover-elevate justify-start" data-testid="button-toggle-train-info">
                       <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                          <Train className="w-4 h-4" />
+                        <div className="flex items-center gap-2 font-semibold">
+                          <Train className="w-5 h-5" />
                           <span>Treinsamenstelling</span>
                         </div>
-                        {trainInfoOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        {trainInfoOpen ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
                       </div>
                     </Button>
                   </CollapsibleTrigger>
                   
-                  <CollapsibleContent className="pt-3">
-                    <div className="space-y-3">
-                      {(actualStock?.trainType || plannedStock?.trainType) && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Component className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">Materieeltype:</span>
-                          <Badge variant="secondary">{actualStock?.trainType || plannedStock?.trainType}</Badge>
-                          <span className="text-sm text-muted-foreground">•</span>
-                          <span className="text-sm text-muted-foreground">Treinnummer:</span>
-                          <Badge variant="secondary">{trainNumber}</Badge>
-                        </div>
-                      )}
-                      
-                      {(actualStock?.numberOfParts || plannedStock?.numberOfParts) && (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-4 text-sm flex-wrap">
-                            {plannedStock?.numberOfParts && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground">Gepland aantal bakken:</span>
-                                <span className="font-medium">{plannedStock.numberOfParts}</span>
-                              </div>
-                            )}
-                            {actualStock?.numberOfParts && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground">Actueel aantal bakken:</span>
-                                <Badge 
-                                  variant="secondary" 
-                                  className={
-                                    plannedStock?.numberOfParts 
-                                      ? actualStock.numberOfParts > plannedStock.numberOfParts
-                                        ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
-                                        : actualStock.numberOfParts < plannedStock.numberOfParts
-                                        ? "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
-                                        : ""
-                                      : ""
-                                  }
-                                >
-                                  {actualStock.numberOfParts}
-                                </Badge>
-                              </div>
-                            )}
+                  <CollapsibleContent>
+                    <div className="px-4 pb-4 space-y-4">
+                      {/* Train Type and Number */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {(actualStock?.trainType || plannedStock?.trainType) && (
+                          <div className="space-y-1.5">
+                            <div className="text-xs text-muted-foreground font-medium">Materieeltype</div>
+                            <Badge variant="secondary" className="text-sm">{actualStock?.trainType || plannedStock?.trainType}</Badge>
                           </div>
+                        )}
+                        <div className="space-y-1.5">
+                          <div className="text-xs text-muted-foreground font-medium">Treinnummer</div>
+                          <Badge variant="secondary" className="text-sm">{trainNumber}</Badge>
+                        </div>
+                      </div>
+
+                      {/* Number of Parts */}
+                      {(actualStock?.numberOfParts || plannedStock?.numberOfParts) && (
+                        <div className="grid grid-cols-2 gap-3">
+                          {plannedStock?.numberOfParts && (
+                            <div className="space-y-1.5">
+                              <div className="text-xs text-muted-foreground font-medium">Gepland aantal bakken</div>
+                              <div className="text-lg font-semibold">{plannedStock.numberOfParts}</div>
+                            </div>
+                          )}
+                          {actualStock?.numberOfParts && (
+                            <div className="space-y-1.5">
+                              <div className="text-xs text-muted-foreground font-medium">Actueel aantal bakken</div>
+                              <Badge 
+                                variant="secondary"
+                                className={`text-lg font-semibold h-auto py-1 ${
+                                  plannedStock?.numberOfParts 
+                                    ? actualStock.numberOfParts > plannedStock.numberOfParts
+                                      ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
+                                      : actualStock.numberOfParts < plannedStock.numberOfParts
+                                      ? "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
+                                      : ""
+                                    : ""
+                                }`}
+                              >
+                                {actualStock.numberOfParts}
+                              </Badge>
+                            </div>
+                          )}
                         </div>
                       )}
                       
+                      {/* Facilities */}
                       {(() => {
                         const trainParts = actualStock?.trainParts || plannedStock?.trainParts || [];
                         const uniqueFacilities = Array.from(new Set(
@@ -249,27 +262,25 @@ export default function TrainDialog({
                         
                         return uniqueFacilities.length > 0 && (
                           <div className="space-y-2">
-                            <div className="flex items-start gap-2">
-                              <span className="text-sm text-muted-foreground">Faciliteiten:</span>
-                              <div className="flex flex-wrap gap-2">
-                                {uniqueFacilities.map((facility, fIdx: number) => {
-                                  const icon = getFacilityIcon(String(facility));
-                                  return icon ? (
-                                    <div 
-                                      key={fIdx} 
-                                      className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/50 text-secondary-foreground"
-                                      title={String(facility)}
-                                    >
-                                      {icon}
-                                      <span className="text-xs">{String(facility)}</span>
-                                    </div>
-                                  ) : (
-                                    <Badge key={fIdx} variant="outline" className="text-xs">
-                                      {String(facility)}
-                                    </Badge>
-                                  );
-                                })}
-                              </div>
+                            <div className="text-xs text-muted-foreground font-medium">Faciliteiten</div>
+                            <div className="flex flex-wrap gap-2">
+                              {uniqueFacilities.map((facility, fIdx: number) => {
+                                const icon = getFacilityIcon(String(facility));
+                                return icon ? (
+                                  <div 
+                                    key={fIdx} 
+                                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-secondary text-secondary-foreground"
+                                    title={String(facility)}
+                                  >
+                                    {icon}
+                                    <span className="text-xs font-medium">{String(facility)}</span>
+                                  </div>
+                                ) : (
+                                  <Badge key={fIdx} variant="outline" className="text-xs">
+                                    {String(facility)}
+                                  </Badge>
+                                );
+                              })}
                             </div>
                           </div>
                         );
@@ -281,7 +292,7 @@ export default function TrainDialog({
             )}
 
             {!isNonTrainTransport && (
-              <div className="flex justify-end mb-2">
+              <div className="flex justify-start mb-3">
                 <Button
                   variant="outline"
                   size="sm"
@@ -295,7 +306,7 @@ export default function TrainDialog({
               </div>
             )}
 
-            <ScrollArea className="max-h-[60vh] pr-4">
+            <ScrollArea className="flex-1 pr-4" style={{ maxHeight: 'calc(85vh - 280px)' }}>
               <div className="space-y-2">
               {displayedStops.map((stop: any, displayIdx: number) => {
                 const isPassing = stop.status === "PASSING";
