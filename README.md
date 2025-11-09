@@ -42,9 +42,11 @@ De basis van de app is nog in ontwikkeling.
 - Meer vervoerders naast NS
 
 - Geavanceerde ritweergave met o.a:
+    - Visuele diagram van trein
     - Locatie van 1e klas, toiletten, fietsplaatsen rolstoelplaatsen
-    - Treintype
+    - Specifiek materieel
     - Aantal fietsplekken
+
 - Kaartweergave met realtime treinen
 
 - Optie om je favoriete trajecten op te slaan
