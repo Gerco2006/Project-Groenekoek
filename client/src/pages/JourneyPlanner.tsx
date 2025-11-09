@@ -208,7 +208,7 @@ export default function JourneyPlanner() {
                 <div key={index} className="flex gap-2 items-end">
                   <div className="flex-1">
                     <StationSearch
-                      label={`Via station ${index + 1}`}
+                      label="Via station (optioneel)"
                       value={via}
                       onChange={(value) => updateViaStation(index, value)}
                       placeholder="Bijv. Utrecht Centraal"
@@ -229,16 +229,18 @@ export default function JourneyPlanner() {
             </div>
           )}
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={addViaStation}
-            className="gap-2"
-            data-testid="button-add-via-station"
-          >
-            <Plus className="w-4 h-4" />
-            Tussenstation toevoegen
-          </Button>
+          {viaStations.length === 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={addViaStation}
+              className="gap-2"
+              data-testid="button-add-via-station"
+            >
+              <Plus className="w-4 h-4" />
+              Tussenstation toevoegen
+            </Button>
+          )}
 
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
