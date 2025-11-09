@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, Construction, ChevronRight } from "lucide-react";
+import { AlertTriangle, Construction, ChevronRight, MapPin, Clock, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import DisruptionDialog from "@/components/DisruptionDialog";
+import StationSearch from "@/components/StationSearch";
 
 interface Disruption {
   id: string;
@@ -34,6 +36,15 @@ interface Disruption {
 export default function Disruptions() {
   const [activeFilter, setActiveFilter] = useState<"active" | "inactive">("active");
   const [selectedDisruption, setSelectedDisruption] = useState<Disruption | null>(null);
+  const [stationFilter, setStationFilter] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const station = params.get("station");
+    if (station) {
+      setStationFilter(station);
+    }
+  }, []);
 
   const { data: disruptionsData, isLoading } = useQuery<any>({
     queryKey: ["/api/disruptions"],
@@ -49,11 +60,19 @@ export default function Disruptions() {
   const allDisruptions: Disruption[] = Array.isArray(disruptionsData) ? disruptionsData : (disruptionsData?.payload || []);
   
   const disruptions = allDisruptions.filter(d => {
-    if (activeFilter === "active") {
-      return d.isActive === true;
-    } else {
-      return d.isActive === false;
+    const activeMatch = activeFilter === "active" ? d.isActive === true : d.isActive === false;
+    
+    if (!stationFilter) {
+      return activeMatch;
     }
+    
+    const stationMatch = d.publicationSections?.some(section => 
+      section.section.stations?.some(station => 
+        station.name.toLowerCase().includes(stationFilter.toLowerCase())
+      )
+    ) || d.title.toLowerCase().includes(stationFilter.toLowerCase());
+    
+    return activeMatch && stationMatch;
   });
 
   const formatDate = (dateString?: string) => {
@@ -89,6 +108,32 @@ export default function Disruptions() {
         <div>
           <h1 className="text-3xl font-bold mb-2">Storingen & Werkzaamheden</h1>
           <p className="text-muted-foreground">Bekijk actuele en geplande verstoringen</p>
+        </div>
+
+        <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
+          <StationSearch
+            label="Filter op station (optioneel)"
+            value={stationFilter}
+            onChange={setStationFilter}
+            placeholder="Bijv. Amsterdam Centraal"
+            testId="input-station-filter"
+          />
+          {stationFilter && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Storingen gefilterd op: <span className="font-semibold">{stationFilter}</span>
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setStationFilter("")}
+                data-testid="button-clear-filter"
+              >
+                <X className="w-4 h-4 mr-1" />
+                Wis filter
+              </Button>
+            </div>
+          )}
         </div>
 
         <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as "active" | "inactive")} className="w-full">

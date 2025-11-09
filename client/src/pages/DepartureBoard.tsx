@@ -264,7 +264,7 @@ export default function DepartureBoard() {
                   </span>
                   {' '}op dit station
                 </div>
-                <Link href="/storingen">
+                <Link href={`/storingen?station=${encodeURIComponent(searchedStation)}`}>
                   <Button variant="outline" size="sm" className="gap-2" data-testid="button-view-disruptions">
                     Bekijk details
                     <ChevronRight className="w-4 h-4" />
