@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import StationSearch from "@/components/StationSearch";
@@ -35,20 +36,54 @@ interface Departure {
   messages?: Array<{ message: string }>;
 }
 
+interface Arrival {
+  origin: string;
+  name: string;
+  plannedDateTime: string;
+  actualDateTime?: string;
+  plannedTrack: string;
+  actualTrack?: string;
+  product: {
+    number: string;
+    categoryCode: string;
+    shortCategoryName: string;
+    longCategoryName: string;
+  };
+  trainCategory: string;
+  cancelled: boolean;
+  routeStations?: Array<{ uicCode: string; mediumName: string }>;
+  arrivalStatus?: string;
+  messages?: Array<{ message: string }>;
+}
+
 export default function DepartureBoard() {
   const [station, setStation] = useState("");
   const [searchedStation, setSearchedStation] = useState("");
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
+  const [activeTab, setActiveTab] = useState<"departures" | "arrivals">("departures");
   const { toast } = useToast();
 
-  const { data: departuresData, isLoading, refetch, error: departuresError } = useQuery<any>({
+  const { data: departuresData, isLoading: isDeparturesLoading, refetch: refetchDepartures, error: departuresError } = useQuery<any>({
     queryKey: ["/api/departures", searchedStation],
-    enabled: !!searchedStation,
+    enabled: !!searchedStation && activeTab === "departures",
     queryFn: async () => {
       const response = await fetch(`/api/departures?station=${encodeURIComponent(searchedStation)}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to fetch departures");
+      }
+      return response.json();
+    },
+  });
+
+  const { data: arrivalsData, isLoading: isArrivalsLoading, refetch: refetchArrivals, error: arrivalsError } = useQuery<any>({
+    queryKey: ["/api/arrivals", searchedStation],
+    enabled: !!searchedStation && activeTab === "arrivals",
+    queryFn: async () => {
+      const response = await fetch(`/api/arrivals?station=${encodeURIComponent(searchedStation)}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch arrivals");
       }
       return response.json();
     },
@@ -69,6 +104,8 @@ export default function DepartureBoard() {
   });
 
   const departures: Departure[] = departuresData?.payload?.departures || [];
+  const arrivals: Arrival[] = arrivalsData?.payload?.arrivals || [];
+  const isLoading = activeTab === "departures" ? isDeparturesLoading : isArrivalsLoading;
 
   useEffect(() => {
     if (departuresError) {
@@ -79,6 +116,16 @@ export default function DepartureBoard() {
       });
     }
   }, [departuresError, toast]);
+
+  useEffect(() => {
+    if (arrivalsError) {
+      toast({
+        title: "Fout bij ophalen aankomsttijden",
+        description: arrivalsError instanceof Error ? arrivalsError.message : "Er is een fout opgetreden",
+        variant: "destructive",
+      });
+    }
+  }, [arrivalsError, toast]);
 
   useEffect(() => {
     if (journeyError) {
@@ -104,11 +151,19 @@ export default function DepartureBoard() {
 
   const handleRefresh = () => {
     if (searchedStation) {
-      refetch();
-      toast({
-        title: "Vernieuwd",
-        description: "Vertrektijden zijn bijgewerkt",
-      });
+      if (activeTab === "departures") {
+        refetchDepartures();
+        toast({
+          title: "Vernieuwd",
+          description: "Vertrektijden zijn bijgewerkt",
+        });
+      } else {
+        refetchArrivals();
+        toast({
+          title: "Vernieuwd",
+          description: "Aankomsttijden zijn bijgewerkt",
+        });
+      }
     }
   };
 
@@ -137,8 +192,8 @@ export default function DepartureBoard() {
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Vertrektijden</h1>
-          <p className="text-muted-foreground">Bekijk actuele vertrektijden</p>
+          <h1 className="text-3xl font-bold mb-2">Vertrektijden & Aankomsten</h1>
+          <p className="text-muted-foreground">Bekijk actuele trein informatie</p>
         </div>
 
         <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
@@ -149,16 +204,24 @@ export default function DepartureBoard() {
             placeholder="Bijv. Amsterdam Centraal"
             testId="input-station"
           />
+          
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "departures" | "arrivals")} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="departures" data-testid="tab-departures">Vertrek</TabsTrigger>
+              <TabsTrigger value="arrivals" data-testid="tab-arrivals">Aankomst</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           <div className="flex gap-2">
             <Button 
               className="flex-1" 
               size="lg"
               disabled={!station.trim() || isLoading}
               onClick={handleSearch}
-              data-testid="button-search-departures"
+              data-testid="button-search"
             >
               <Search className="w-4 h-4 mr-2" />
-              {isLoading ? "Laden..." : "Zoek vertrektijden"}
+              {isLoading ? "Laden..." : activeTab === "departures" ? "Zoek vertrektijden" : "Zoek aankomsten"}
             </Button>
             <Button 
               variant="outline" 
@@ -174,17 +237,23 @@ export default function DepartureBoard() {
 
         {isLoading && (
           <Card className="p-8 text-center text-muted-foreground">
-            <p>Vertrektijden laden...</p>
+            <p>{activeTab === "departures" ? "Vertrektijden laden..." : "Aankomsttijden laden..."}</p>
           </Card>
         )}
 
-        {!isLoading && searchedStation && departures.length === 0 && (
+        {!isLoading && searchedStation && activeTab === "departures" && departures.length === 0 && (
           <Card className="p-8 text-center text-muted-foreground">
             <p>Geen vertrektijden gevonden voor {searchedStation}</p>
           </Card>
         )}
 
-        {!isLoading && departures.length > 0 && (
+        {!isLoading && searchedStation && activeTab === "arrivals" && arrivals.length === 0 && (
+          <Card className="p-8 text-center text-muted-foreground">
+            <p>Geen aankomsten gevonden voor {searchedStation}</p>
+          </Card>
+        )}
+
+        {!isLoading && activeTab === "departures" && departures.length > 0 && (
           <Card className="divide-y">
             {departures.map((departure, idx) => {
               const delay = calculateDelay(departure.plannedDateTime, departure.actualDateTime);
@@ -197,11 +266,39 @@ export default function DepartureBoard() {
                   trainType={departure.product.longCategoryName}
                   trainNumber={departure.product.number}
                   delay={delay > 0 ? delay : undefined}
+                  mode="departure"
                   onClick={() => setSelectedTrain({
                     trainType: departure.product.longCategoryName,
                     trainNumber: departure.product.number,
                     destination: departure.direction,
                   })}
+                  data-testid={`row-departure-${idx}`}
+                />
+              );
+            })}
+          </Card>
+        )}
+
+        {!isLoading && activeTab === "arrivals" && arrivals.length > 0 && (
+          <Card className="divide-y">
+            {arrivals.map((arrival, idx) => {
+              const delay = calculateDelay(arrival.plannedDateTime, arrival.actualDateTime);
+              return (
+                <DepartureRow
+                  key={idx}
+                  time={formatTime(arrival.actualDateTime || arrival.plannedDateTime)}
+                  destination={arrival.origin}
+                  platform={arrival.actualTrack || arrival.plannedTrack}
+                  trainType={arrival.product.longCategoryName}
+                  trainNumber={arrival.product.number}
+                  delay={delay > 0 ? delay : undefined}
+                  mode="arrival"
+                  onClick={() => setSelectedTrain({
+                    trainType: arrival.product.longCategoryName,
+                    trainNumber: arrival.product.number,
+                    destination: arrival.origin,
+                  })}
+                  data-testid={`row-arrival-${idx}`}
                 />
               );
             })}

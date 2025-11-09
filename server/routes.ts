@@ -53,6 +53,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/arrivals", async (req, res) => {
+    try {
+      const { station, uicCode, dateTime, maxJourneys = "10", lang = "nl" } = req.query;
+      
+      if (!station && !uicCode) {
+        return res.status(400).json({ error: "Station or uicCode parameter is required" });
+      }
+
+      const params: Record<string, string> = {
+        maxJourneys: maxJourneys as string,
+        lang: lang as string,
+      };
+
+      if (station) params.station = station as string;
+      if (uicCode) params.uicCode = uicCode as string;
+      if (dateTime) params.dateTime = dateTime as string;
+
+      const data = await fetchNS("/v2/arrivals", params);
+
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching arrivals:", error);
+      res.status(500).json({ error: "Failed to fetch arrivals" });
+    }
+  });
+
   app.get("/api/trips", async (req, res) => {
     try {
       const { 
