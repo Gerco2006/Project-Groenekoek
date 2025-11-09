@@ -13,7 +13,7 @@ export default function TopNav() {
   ];
 
   return (
-    <nav className="hidden md:block sticky top-0 bg-card/95 backdrop-blur-md border-b z-50">
+    <nav className="hidden md:block sticky top-0 bg-card/75 backdrop-blur-lg border-b z-50">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link href="/">
