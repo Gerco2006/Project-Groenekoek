@@ -124,7 +124,7 @@ export default function MorePage() {
           <CardContent className="pt-6">
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
-                Versie 0.1.0-Alpha
+                Versie 0.1.0-Beta.1
               </p>
               <p className="text-xs text-muted-foreground">
                 Gemaakt met React, TypeScript en de NS API
