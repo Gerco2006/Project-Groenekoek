@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { MapIcon, Clock, Search, MoreHorizontal } from "lucide-react";
+import { MapIcon, Clock, Train, MoreHorizontal } from "lucide-react";
 
 export default function BottomNav() {
   const [location] = useLocation();
@@ -7,12 +7,12 @@ export default function BottomNav() {
   const navItems = [
     { path: "/", icon: MapIcon, label: "Planner" },
     { path: "/vertrektijden", icon: Clock, label: "Vertrek" },
-    { path: "/treininfo", icon: Search, label: "Treininfo" },
+    { path: "/treininfo", icon: Train, label: "Treininfo" },
     { path: "/meer", icon: MoreHorizontal, label: "Meer" },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t z-50">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/75 backdrop-blur-md border-t z-50">
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const Icon = item.icon;

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 
 interface DepartureRowProps {
@@ -10,6 +10,7 @@ interface DepartureRowProps {
   trainNumber: string;
   delay?: number;
   onClick?: () => void;
+  mode?: "departure" | "arrival";
 }
 
 export default function DepartureRow({
@@ -19,17 +20,20 @@ export default function DepartureRow({
   trainType,
   trainNumber,
   delay,
-  onClick
+  onClick,
+  mode = "departure"
 }: DepartureRowProps) {
+  const Icon = mode === "arrival" ? ArrowLeft : ArrowRight;
+  
   return (
     <Button
       variant="ghost"
       className="w-full justify-start p-4 h-auto hover-elevate"
       onClick={onClick}
-      data-testid="button-departure"
+      data-testid={`button-${mode}`}
     >
       <div className="flex items-center gap-4 w-full">
-        <div className="text-2xl font-bold min-w-[80px]" data-testid="text-departure-time">
+        <div className="text-2xl font-bold min-w-[80px]" data-testid={`text-${mode}-time`}>
           {time}
           {delay && delay > 0 && (
             <span className="text-sm text-destructive ml-2">+{delay}'</span>
@@ -39,7 +43,7 @@ export default function DepartureRow({
         <TrainBadge type={trainType} number={trainNumber} />
 
         <div className="flex-1 flex items-center gap-2">
-          <ArrowRight className="w-4 h-4 text-muted-foreground" />
+          <Icon className="w-4 h-4 text-muted-foreground" />
           <span className="font-medium" data-testid="text-destination">{destination}</span>
         </div>
 

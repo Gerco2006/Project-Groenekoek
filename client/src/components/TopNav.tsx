@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { MapIcon, Clock, Search, MoreHorizontal, Train } from "lucide-react";
+import { MapIcon, Clock, Search, MoreHorizontal, Train, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function TopNav() {
@@ -9,15 +9,19 @@ export default function TopNav() {
     { path: "/", icon: MapIcon, label: "Reisplanner" },
     { path: "/vertrektijden", icon: Clock, label: "Vertrektijden" },
     { path: "/treininfo", icon: Search, label: "Treininfo" },
+    { path: "/storingen", icon: AlertTriangle, label: "Storingen" },
     { path: "/meer", icon: MoreHorizontal, label: "Meer" },
   ];
 
   return (
-    <nav className="hidden md:block sticky top-0 bg-card/95 backdrop-blur-lg border-b z-50">
+    <nav className="hidden md:block sticky top-0 bg-card/75 backdrop-blur-lg border-b z-50">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link href="/">
-            <button className="flex items-center gap-2 text-xl font-bold" data-testid="link-logo">
+            <button
+              className="flex items-center gap-2 text-xl font-bold"
+              data-testid="link-logo"
+            >
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Train className="w-5 h-5 text-primary-foreground" />
               </div>
@@ -29,7 +33,7 @@ export default function TopNav() {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.path;
-              
+
               return (
                 <Link key={item.path} href={item.path}>
                   <Button
