@@ -3,21 +3,14 @@
 TravNL is een open-source reisplanner voor reizigers en spoorliefhebbers die net wat meer willen dan een standaard app.
 Waar bestaande reisplanners vooral praktisch zijn, richt TravNL zich op meer inzicht, detail en vrijheid ontwikkeld door en voor reizigers.
 
-![TravNL Screenshot](https://i.imgur.com/blKoFEH.png)
-
+![TravNL Screenshot](https://i.imgur.com/IX7W0wW.png)
 
 ## Over het project
 
-De meeste reisapps laten je zien hoe je ergens komt.
-TravNL wil daarnaast laten zien wat er allemaal gebeurt onderweg. Denk aan:
+TravNL (Intern genoemd "Project Groenekoek"), is een webapp die ik ben begonnen omdat de NS- en 9292-apps te beperkt zijn qua informatie, terwijl websites zoals treinposities.nl juist te technisch zijn en geen ingebouwde reisplanner hebben.
+De bedoeling is om met TravNL alles samen te brengen in één makkelijke, overzichtelijke webapp: een plek waar je je reis kunt plannen, uitgebreide ritinformatie kan zien en data over materieel kan inzien zonder tussen verschillende apps en websites te hoeven wisselen.
 
-- Vertrektijden en actuele storingen via de NS API
-
-- Treininformatie (Materieel, lengte, faciliteiten)
-
-- Een moderne interface met licht/donkere thema (te wijzigen in instellingen)
-
-Het doel is een webapp die het plezier van reizen combineert met de kracht van het uitgebreide API van NS.
+![TravNL Screenshot](https://i.imgur.com/blKoFEH.png)
 
 ## Waarom TravNL?
 
@@ -35,9 +28,11 @@ Voor reizigers die:
 
 ## Huidige stand van zaken
 
-De basis van de app is nog in ontwikkeling.
+De basis van de app is nog in ontwikkeling. Op dit moment zijn alleen de basisfuncties (reisplanner, storingen en ritviewer) aanwezig.
 
 ### De plannen:
+
+- Aanpassingen mobiele interface (gebruiksvriendelijker en overzichterlijk)
 
 - Meer vervoerders naast NS
 
