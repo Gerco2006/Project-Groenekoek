@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Clock, AlertCircle, Navigation, Loader2, Info, Train, Wifi, UtensilsCrossed, Accessibility, BatteryCharging, ChevronDown, ChevronUp, Droplet, Bike } from "lucide-react";
 import TrainBadge from "./TrainBadge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -154,14 +153,14 @@ export default function TripDetailPanel({
     const scrollToCurrentStop = () => {
       const targetIndex = Math.floor(currentLocationIndex);
       const stopElement = document.querySelector(`[data-testid="row-stop-${targetIndex}"]`) as HTMLElement;
-      const scrollViewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+      const scrollContainer = scrollAreaRef.current;
       
-      if (stopElement && scrollViewport) {
+      if (stopElement && scrollContainer) {
         const elementTop = stopElement.offsetTop;
-        const viewportHeight = scrollViewport.clientHeight;
-        const scrollPosition = Math.max(0, elementTop - viewportHeight / 4);
+        const containerHeight = scrollContainer.clientHeight;
+        const scrollPosition = Math.max(0, elementTop - containerHeight / 4);
         
-        scrollViewport.scrollTop = scrollPosition;
+        scrollContainer.scrollTop = scrollPosition;
       }
     };
 
@@ -324,7 +323,7 @@ export default function TripDetailPanel({
             </div>
           )}
 
-          <ScrollArea ref={scrollAreaRef} className="flex-1 px-4 pb-4">
+          <div ref={scrollAreaRef} className="flex-1 px-4 pb-4 overflow-y-auto">
             <div className="space-y-2">
               {displayedStops.map((stop: any, displayIdx: number) => {
                 const isPassing = stop.status === "PASSING";
@@ -436,7 +435,7 @@ export default function TripDetailPanel({
                 );
               })}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       )}
     </div>

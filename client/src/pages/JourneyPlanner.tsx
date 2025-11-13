@@ -54,8 +54,9 @@ export default function JourneyPlanner() {
   const [searchedTo, setSearchedTo] = useState("");
   const [searchedViaStations, setSearchedViaStations] = useState<string[]>([]);
   const [searchMode, setSearchMode] = useState<"departure" | "arrival">("departure");
-  const [selectedTrip, setSelectedTrip] = useState<SelectedTrip | null>(null);
+  const [selectedTripIndex, setSelectedTripIndex] = useState<number | null>(null);
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
+  const [detailMode, setDetailMode] = useState<'trip' | 'train' | null>(null);
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState(() => {
@@ -142,8 +143,9 @@ export default function JourneyPlanner() {
     setSearchedFrom(from);
     setSearchedTo(to);
     setSearchedViaStations(viaStations.filter(v => v.trim() !== ""));
-    setSelectedTrip(null);
+    setSelectedTripIndex(null);
     setSelectedTrain(null);
+    setDetailMode(null);
     hasAutoSelectedRef.current = false;
     if (isMobile) {
       setIsSearchFormOpen(false);
@@ -199,21 +201,21 @@ export default function JourneyPlanner() {
   }) || [];
 
   useEffect(() => {
-    if (isMobile === undefined) return;
-    setIsSearchFormOpen(!isMobile);
-  }, [isMobile]);
-
-  useEffect(() => {
     hasAutoSelectedRef.current = false;
-    setSelectedTrip(null);
+    setSelectedTripIndex(null);
+    setSelectedTrain(null);
+    setDetailMode(null);
   }, [searchedFrom, searchedTo, searchedViaStations, searchMode, date, time]);
 
   useEffect(() => {
     if (isMobile === false && trips.length > 0 && !hasAutoSelectedRef.current) {
-      setSelectedTrip(trips[0]);
+      setSelectedTripIndex(0);
+      setDetailMode('trip');
       hasAutoSelectedRef.current = true;
     }
   }, [isMobile, trips]);
+  
+  const selectedTrip = selectedTripIndex !== null ? trips[selectedTripIndex] : null;
 
   const searchFormContent = (
     <>
@@ -395,8 +397,11 @@ export default function JourneyPlanner() {
               <TripListItemButton
                 key={idx}
                 {...trip}
-                onClick={() => setSelectedTrip(trip)}
-                isSelected={selectedTrip === trip}
+                onClick={() => {
+                  setSelectedTripIndex(idx);
+                  setDetailMode('trip');
+                }}
+                isSelected={selectedTripIndex === idx}
               />
             ))}
           </div>
@@ -416,38 +421,50 @@ export default function JourneyPlanner() {
       <MasterDetailLayout
         master={masterContent}
         detail={
-          selectedTrip ? (
+          detailMode === 'trip' && selectedTrip ? (
             <TripAdviceDetailPanel
               {...selectedTrip}
               open={!!selectedTrip}
-              onClose={() => setSelectedTrip(null)}
+              onClose={() => {
+                setSelectedTripIndex(null);
+                setDetailMode(null);
+              }}
               onTrainClick={(leg) => {
                 setSelectedTrain(leg);
-                setSelectedTrip(null);
+                setDetailMode('train');
               }}
             />
-          ) : selectedTrain ? (
+          ) : detailMode === 'train' && selectedTrain ? (
             <TripDetailPanel
               trainType={selectedTrain.trainType}
               trainNumber={selectedTrain.trainNumber}
               from={selectedTrain.from}
               to={selectedTrain.to}
               open={!!selectedTrain}
-              onClose={() => setSelectedTrain(null)}
+              onClose={() => {
+                setSelectedTrain(null);
+                setDetailMode(selectedTrip ? 'trip' : null);
+              }}
             />
           ) : null
         }
-        hasDetail={!!selectedTrip || !!selectedTrain}
+        hasDetail={detailMode !== null}
       />
-      {isMobile && selectedTrain && (
+      {isMobile && selectedTrain && detailMode === 'train' && (
         <TripDetailPanel
           trainType={selectedTrain.trainType}
           trainNumber={selectedTrain.trainNumber}
           from={selectedTrain.from}
           to={selectedTrain.to}
-          open={!!selectedTrain && !selectedTrip}
-          onClose={() => setSelectedTrain(null)}
-          onBack={() => setSelectedTrain(null)}
+          open={detailMode === 'train'}
+          onClose={() => {
+            setSelectedTrain(null);
+            setDetailMode(selectedTrip ? 'trip' : null);
+          }}
+          onBack={selectedTripIndex !== null ? () => {
+            setSelectedTrain(null);
+            setDetailMode('trip');
+          } : undefined}
         />
       )}
     </>

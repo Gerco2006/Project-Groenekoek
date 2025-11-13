@@ -36,7 +36,9 @@ export default function TripListItemButton({
   return (
     <Button
       variant="ghost"
-      className="w-full h-auto p-4 hover-elevate flex-col items-stretch bg-card"
+      className={`w-full h-auto p-4 hover-elevate flex-col items-stretch ${
+        isSelected ? "bg-primary/10 border-primary border-2" : "bg-card"
+      }`}
       onClick={onClick}
       data-testid="button-trip"
     >
