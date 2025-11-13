@@ -172,14 +172,14 @@ export default function TripDetailPanel({
   
   const content = (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <TrainBadge type={trainType} number={trainNumber} />
-          <span className="text-lg font-semibold truncate">
-            {from} → {to}
-          </span>
-        </div>
-        {!isMobile && (
+      {!isMobile && (
+        <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <TrainBadge type={trainType} number={trainNumber} />
+            <span className="text-lg font-semibold truncate">
+              {from} → {to}
+            </span>
+          </div>
           <Button 
             variant="ghost" 
             size="icon" 
@@ -188,8 +188,8 @@ export default function TripDetailPanel({
           >
             <X className="w-4 h-4" />
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">

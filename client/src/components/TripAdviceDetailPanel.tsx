@@ -1,6 +1,5 @@
 import { X, Clock, ArrowRight, Train, MapPin, AlertCircle } from "lucide-react";
 import TrainBadge from "./TrainBadge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -80,7 +79,7 @@ export default function TripAdviceDetailPanel({
         </div>
       )}
 
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-6">
           {/* Trip Summary Card */}
           <Card className="p-4">
@@ -182,7 +181,7 @@ export default function TripAdviceDetailPanel({
             })}
           </div>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 

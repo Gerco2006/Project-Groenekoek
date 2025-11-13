@@ -219,32 +219,38 @@ export default function JourneyPlanner() {
 
   const searchFormContent = (
     <>
-      <div className="grid md:grid-cols-[1fr,auto,1fr] gap-4 items-end">
-        <StationSearch
-          label="Van"
-          value={from}
-          onChange={setFrom}
-          placeholder="Bijv. Amsterdam Centraal"
-          testId="input-from-station"
-        />
-        
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={swapStations}
-          className="mb-0 self-end"
-          data-testid="button-swap-stations"
-        >
-          <ArrowDownUp className="w-4 h-4" />
-        </Button>
-        
-        <StationSearch
-          label="Naar"
-          value={to}
-          onChange={setTo}
-          placeholder="Bijv. Rotterdam Centraal"
-          testId="input-to-station"
-        />
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-2 items-end">
+          <div className="flex-1 min-w-0">
+            <StationSearch
+              label="Van"
+              value={from}
+              onChange={setFrom}
+              placeholder="Bijv. Amsterdam Centraal"
+              testId="input-from-station"
+            />
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={swapStations}
+            className="shrink-0"
+            data-testid="button-swap-stations"
+          >
+            <ArrowDownUp className="w-4 h-4" />
+          </Button>
+          
+          <div className="flex-1 min-w-0">
+            <StationSearch
+              label="Naar"
+              value={to}
+              onChange={setTo}
+              placeholder="Bijv. Rotterdam Centraal"
+              testId="input-to-station"
+            />
+          </div>
+        </div>
       </div>
 
       {viaStations.length > 0 && (
