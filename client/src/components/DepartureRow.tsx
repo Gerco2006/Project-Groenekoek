@@ -32,7 +32,7 @@ export default function DepartureRow({
       onClick={onClick}
       data-testid={`button-${mode}`}
     >
-      <div className="flex items-center gap-3 sm:gap-4 w-full">
+      <div className="flex items-center flex-wrap gap-3 sm:gap-4 gap-y-2 w-full">
         <div className="text-lg sm:text-2xl font-bold min-w-[60px] sm:min-w-[80px]" data-testid={`text-${mode}-time`}>
           {time}
           {delay && delay > 0 && (
@@ -52,7 +52,7 @@ export default function DepartureRow({
           }} data-testid="text-destination">{destination}</span>
         </div>
 
-        <div className="bg-primary/10 text-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold min-w-[50px] sm:min-w-[60px] text-center text-xs sm:text-sm" data-testid="text-platform">
+        <div className="bg-primary/10 text-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold min-w-[50px] sm:min-w-[60px] text-center text-sm shrink-0" data-testid="text-platform">
           Spoor {platform}
         </div>
       </div>
