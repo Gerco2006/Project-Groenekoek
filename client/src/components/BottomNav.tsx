@@ -6,7 +6,7 @@ export default function BottomNav() {
 
   const navItems = [
     { path: "/", icon: MapIcon, label: "Planner" },
-    { path: "/vertrektijden", icon: Clock, label: "Vertrek" },
+    { path: "/vertrektijden", icon: Clock, label: "station"},
     { path: "/treininfo", icon: Train, label: "Treininfo" },
     { path: "/meer", icon: MoreHorizontal, label: "Meer" },
   ];
