@@ -200,7 +200,7 @@ export default function TrainDialog({
             <div className="space-y-2">
               <p className="text-lg font-semibold">Geen gegevens beschikbaar</p>
               <p className="text-sm text-muted-foreground max-w-md">
-                De NS API geeft helaas geen journey-informatie voor bussen, trams en metro's. 
+                De NS API geeft helaas geen rit-informatie voor bussen, trams en metro's. 
                 Het is onduidelijk of deze functionaliteit in de toekomst beschikbaar komt.
               </p>
             </div>
