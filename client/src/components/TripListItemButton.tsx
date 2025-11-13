@@ -11,6 +11,8 @@ interface TripLeg {
   departure: string;
   arrival: string;
   platform?: string;
+  departureDelayMinutes?: number;
+  arrivalDelayMinutes?: number;
 }
 
 interface TripListItemButtonProps {
@@ -35,6 +37,8 @@ export default function TripListItemButton({
   delayMinutes
 }: TripListItemButtonProps) {
   const uniqueTrainTypes = Array.from(new Set(legs.map(leg => leg.trainType)));
+  const firstLeg = legs[0];
+  const lastLeg = legs[legs.length - 1];
 
   return (
     <Button
@@ -61,8 +65,15 @@ export default function TripListItemButton({
       
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="text-center">
-          <div className="text-2xl font-bold" data-testid="text-departure-time">{departureTime}</div>
-          <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-[100px]">{legs[0]?.from}</div>
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="text-2xl font-bold" data-testid="text-departure-time">{departureTime}</div>
+            {firstLeg?.departureDelayMinutes && firstLeg.departureDelayMinutes > 0 && (
+              <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
+                +{firstLeg.departureDelayMinutes}
+              </Badge>
+            )}
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-[100px]">{firstLeg?.from}</div>
         </div>
         
         <div className="flex-1 flex items-center gap-2 min-w-[60px]">
@@ -72,8 +83,15 @@ export default function TripListItemButton({
         </div>
         
         <div className="text-center">
-          <div className="text-2xl font-bold" data-testid="text-arrival-time">{arrivalTime}</div>
-          <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-[100px]">{legs[legs.length - 1]?.to}</div>
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="text-2xl font-bold" data-testid="text-arrival-time">{arrivalTime}</div>
+            {lastLeg?.arrivalDelayMinutes && lastLeg.arrivalDelayMinutes > 0 && (
+              <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
+                +{lastLeg.arrivalDelayMinutes}
+              </Badge>
+            )}
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-[100px]">{lastLeg?.to}</div>
         </div>
       </div>
 
