@@ -53,7 +53,7 @@ export default function TripAdviceDetailPanel({
   };
 
   const content = (
-    <div className="flex flex-col h-full">
+    <div className={`flex flex-col ${isMobile ? 'flex-1 overflow-hidden' : 'h-full'}`}>
       {!isMobile && (
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -192,11 +192,11 @@ export default function TripAdviceDetailPanel({
           className="max-h-[85vh] flex flex-col"
           data-testid="drawer-trip-detail"
         >
-          <DrawerHeader className="border-b shrink-0">
-            <DrawerTitle className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-                <Train className="w-5 h-5 text-primary shrink-0" />
-                <span className="text-sm truncate">{legs[0]?.from} → {legs[legs.length - 1]?.to}</span>
+          <DrawerHeader className="border-b shrink-0 px-3 py-2.5">
+            <DrawerTitle className="flex items-center justify-between gap-1.5">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+                <Train className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-xs truncate overflow-hidden text-ellipsis whitespace-nowrap">{legs[0]?.from} → {legs[legs.length - 1]?.to}</span>
               </div>
               <Button
                 variant="ghost"
@@ -205,7 +205,7 @@ export default function TripAdviceDetailPanel({
                 className="shrink-0"
                 data-testid="button-close-mobile-detail"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </Button>
             </DrawerTitle>
           </DrawerHeader>

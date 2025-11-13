@@ -171,7 +171,7 @@ export default function TripDetailPanel({
   }, [open, journeyData?.payload?.stops, currentLocationIndex]);
   
   const content = (
-    <div className="flex flex-col h-full">
+    <div className={`flex flex-col ${isMobile ? 'flex-1 overflow-hidden' : 'h-full'}`}>
       {!isMobile && (
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -457,13 +457,15 @@ export default function TripDetailPanel({
     return (
       <Drawer open={open} onOpenChange={(newOpen) => !newOpen && onClose()} shouldScaleBackground={false}>
         <DrawerContent className="max-h-[90vh] flex flex-col">
-          <DrawerHeader className="border-b shrink-0">
-            <DrawerTitle className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-                <TrainBadge type={trainType} number={trainNumber} />
-                <span className="text-sm truncate">{from} → {to}</span>
+          <DrawerHeader className="border-b shrink-0 px-3 py-2.5">
+            <DrawerTitle className="flex items-center justify-between gap-1.5">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+                <div className="shrink-0">
+                  <TrainBadge type={trainType} number={trainNumber} />
+                </div>
+                <span className="text-xs truncate overflow-hidden text-ellipsis whitespace-nowrap">{from} → {to}</span>
               </div>
-              <div className="flex items-center gap-0.5 shrink-0">
+              <div className="flex items-center gap-0 shrink-0">
                 {onBack && (
                   <Button
                     variant="ghost"
