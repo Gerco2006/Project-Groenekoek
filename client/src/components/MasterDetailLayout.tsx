@@ -27,11 +27,11 @@ export default function MasterDetailLayout({
 
   return (
     <div className={`flex flex-row h-full ${className}`}>
-      <div className={`flex-shrink-0 transition-all duration-300 ${hasDetail ? "w-[45%]" : "w-full"} overflow-hidden`}>
+      <div className={`flex-shrink-0 transition-all duration-300 ${hasDetail ? "w-[45%]" : "w-full"} overflow-hidden min-h-0`}>
         {master}
       </div>
       {hasDetail && (
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0">
           {detail}
         </div>
       )}

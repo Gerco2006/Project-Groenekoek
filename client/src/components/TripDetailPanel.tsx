@@ -180,14 +180,26 @@ export default function TripDetailPanel({
               {from} → {to}
             </span>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onClose}
-            data-testid="button-close-detail"
-          >
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-1 shrink-0">
+            {onBack && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={onBack}
+                data-testid="button-back-to-trip-desktop"
+              >
+                <ChevronDown className="w-5 h-5 rotate-90" />
+              </Button>
+            )}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onClose}
+              data-testid="button-close-detail"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -206,7 +218,7 @@ export default function TripDetailPanel({
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 flex flex-col">
           {(actualStock || plannedStock) && (
             <div className="px-4 pt-4 shrink-0">
               <Collapsible open={trainInfoOpen} onOpenChange={setTrainInfoOpen}>

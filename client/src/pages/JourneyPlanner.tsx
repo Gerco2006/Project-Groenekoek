@@ -219,8 +219,8 @@ export default function JourneyPlanner() {
 
   const searchFormContent = (
     <>
-      <div className="flex flex-col gap-4">
-        <div className="flex gap-2 items-end">
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 min-w-0">
             <StationSearch
               label="Van"
@@ -235,7 +235,7 @@ export default function JourneyPlanner() {
             variant="outline" 
             size="icon"
             onClick={swapStations}
-            className="shrink-0"
+            className="shrink-0 self-end sm:self-auto sm:mt-[26px]"
             data-testid="button-swap-stations"
           >
             <ArrowDownUp className="w-4 h-4" />
@@ -293,7 +293,7 @@ export default function JourneyPlanner() {
         </Button>
       )}
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="space-y-3">
         <div className="space-y-2">
           <Label className="text-sm font-medium">Datum</Label>
           <Popover>
@@ -319,8 +319,8 @@ export default function JourneyPlanner() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="time-input" className="text-sm font-medium">Tijd</Label>
-          <div className="flex gap-2">
+          <Label htmlFor="time-input" className="text-sm font-medium">Tijd & Richting</Label>
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -336,7 +336,7 @@ export default function JourneyPlanner() {
               type="single" 
               value={searchMode}
               onValueChange={(value) => value && setSearchMode(value as "departure" | "arrival")}
-              className="border rounded-md"
+              className="border rounded-md shrink-0"
               data-testid="toggle-search-mode"
             >
               <ToggleGroupItem value="departure" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" data-testid="toggle-departure">
@@ -451,6 +451,10 @@ export default function JourneyPlanner() {
                 setSelectedTrain(null);
                 setDetailMode(selectedTrip ? 'trip' : null);
               }}
+              onBack={selectedTripIndex !== null ? () => {
+                setSelectedTrain(null);
+                setDetailMode('trip');
+              } : undefined}
             />
           ) : null
         }
