@@ -456,7 +456,7 @@ export default function JourneyPlanner() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="accessible-toggle" className="text-sm font-medium">Alleen toegankelijke reizen</Label>
-              <p className="text-xs text-muted-foreground">Alleen reizen met NS-treinen (geen bussen of trams)</p>
+              <p className="text-xs text-muted-foreground">Alleen mogelijk met NS-treinen (geen andere vervoerders of streekvervoer)</p>
             </div>
             <Switch
               id="accessible-toggle"
