@@ -323,7 +323,7 @@ export default function JourneyPlanner() {
               data-testid="button-add-via-station"
             >
               <Plus className="w-4 h-4" />
-              Tussenstation toevoegen
+              Tussenstop toevoegen
             </Button>
           )}
         </div>
@@ -365,7 +365,7 @@ export default function JourneyPlanner() {
             data-testid="button-toggle-advanced"
           >
             <Settings2 className="w-4 h-4" />
-            {isAdvancedOpen ? "Verberg opties" : "Toon opties"}
+            {isAdvancedOpen ? "Verberg opties" : "Extra opties"}
             <span className="ml-auto text-xs text-muted-foreground">
               {!isAdvancedOpen && `${format(date, "d MMM", { locale: nl })} · ${time} · ${searchMode === "departure" ? "Vertrek" : "Aankomst"}`}
             </span>
