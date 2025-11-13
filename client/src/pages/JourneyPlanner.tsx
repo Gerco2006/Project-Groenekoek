@@ -30,6 +30,13 @@ interface TripLeg {
   departure: string;
   arrival: string;
   platform?: string;
+  plannedDeparture?: string;
+  actualDeparture?: string;
+  plannedArrival?: string;
+  actualArrival?: string;
+  departureDelayMinutes?: number;
+  arrivalDelayMinutes?: number;
+  cancelled?: boolean;
 }
 
 interface SelectedTrip {
@@ -194,21 +201,44 @@ export default function JourneyPlanner() {
     return hours > 0 ? `${hours}u ${minutes}m` : `${minutes}m`;
   };
 
+  const calculateDelayMinutes = (plannedTime: string | null, actualTime: string | null): number | undefined => {
+    if (!plannedTime || !actualTime) return undefined;
+    const planned = new Date(plannedTime);
+    const actual = new Date(actualTime);
+    const diffMs = actual.getTime() - planned.getTime();
+    const diffMins = Math.round(diffMs / 60000);
+    return diffMins > 0 ? diffMins : undefined;
+  };
+
   const trips: SelectedTrip[] = tripsData?.trips?.map((trip: any) => {
     const legs: TripLeg[] = trip.legs
       ?.filter((leg: any) => leg.product?.categoryCode)
-      ?.map((leg: any) => ({
-        trainType: leg.product.categoryCode === "SPR" ? "Sprinter" : 
-                   leg.product.categoryCode === "IC" ? "Intercity" :
-                   leg.product.categoryCode === "INT" ? "International" :
-                   leg.product.shortCategoryName || "Trein",
-        trainNumber: leg.product.number || "",
-        from: leg.origin.name,
-        to: leg.destination.name,
-        departure: formatTime(leg.origin.actualDateTime || leg.origin.plannedDateTime),
-        arrival: formatTime(leg.destination.actualDateTime || leg.destination.plannedDateTime),
-        platform: leg.origin.actualTrack || leg.origin.plannedTrack,
-      })) || [];
+      ?.map((leg: any) => {
+        const plannedDeparture = leg.origin.plannedDateTime;
+        const actualDeparture = leg.origin.actualDateTime;
+        const plannedArrival = leg.destination.plannedDateTime;
+        const actualArrival = leg.destination.actualDateTime;
+        
+        return {
+          trainType: leg.product.categoryCode === "SPR" ? "Sprinter" : 
+                     leg.product.categoryCode === "IC" ? "Intercity" :
+                     leg.product.categoryCode === "INT" ? "International" :
+                     leg.product.shortCategoryName || "Trein",
+          trainNumber: leg.product.number || "",
+          from: leg.origin.name,
+          to: leg.destination.name,
+          departure: formatTime(actualDeparture || plannedDeparture),
+          arrival: formatTime(actualArrival || plannedArrival),
+          platform: leg.origin.actualTrack || leg.origin.plannedTrack,
+          plannedDeparture,
+          actualDeparture,
+          plannedArrival,
+          actualArrival,
+          departureDelayMinutes: calculateDelayMinutes(plannedDeparture, actualDeparture),
+          arrivalDelayMinutes: calculateDelayMinutes(plannedArrival, actualArrival),
+          cancelled: leg.cancelled || false,
+        };
+      }) || [];
 
     const departureTime = formatTime(trip.legs[0]?.origin?.actualDateTime || trip.legs[0]?.origin?.plannedDateTime);
     const arrivalTime = formatTime(trip.legs[trip.legs.length - 1]?.destination?.actualDateTime || trip.legs[trip.legs.length - 1]?.destination?.plannedDateTime);
