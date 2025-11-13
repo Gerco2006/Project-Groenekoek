@@ -42,9 +42,9 @@ export default function DepartureRow({
 
         <TrainBadge type={trainType} number={trainNumber} />
 
-        <div className="flex-1 flex items-center gap-2">
-          <Icon className="w-4 h-4 text-muted-foreground" />
-          <span className="font-medium" data-testid="text-destination">{destination}</span>
+        <div className="flex-1 flex items-center gap-2 min-w-0">
+          <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+          <span className="font-medium truncate" data-testid="text-destination">{destination}</span>
         </div>
 
         <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-bold min-w-[60px] text-center" data-testid="text-platform">

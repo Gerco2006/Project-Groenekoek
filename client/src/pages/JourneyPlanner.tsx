@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,14 +8,34 @@ import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import StationSearch from "@/components/StationSearch";
-import TripCard from "@/components/TripCard";
+import TripListItemButton from "@/components/TripListItemButton";
+import TripAdviceDetailPanel from "@/components/TripAdviceDetailPanel";
 import TripDetailPanel from "@/components/TripDetailPanel";
+import CollapsibleSearchForm from "@/components/CollapsibleSearchForm";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+
+interface TripLeg {
+  trainType: string;
+  trainNumber: string;
+  from: string;
+  to: string;
+  departure: string;
+  arrival: string;
+  platform?: string;
+}
+
+interface SelectedTrip {
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  transfers: number;
+  legs: TripLeg[];
+}
 
 interface SelectedTrain {
   trainType: string;
@@ -26,7 +46,6 @@ interface SelectedTrain {
 
 export default function JourneyPlanner() {
   const isMobile = useIsMobile();
-  const hasAutoSelectedRef = useRef(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [viaStations, setViaStations] = useState<string[]>([]);
@@ -34,7 +53,9 @@ export default function JourneyPlanner() {
   const [searchedTo, setSearchedTo] = useState("");
   const [searchedViaStations, setSearchedViaStations] = useState<string[]>([]);
   const [searchMode, setSearchMode] = useState<"departure" | "arrival">("departure");
+  const [selectedTrip, setSelectedTrip] = useState<SelectedTrip | null>(null);
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState(() => {
     const now = new Date();
@@ -120,8 +141,11 @@ export default function JourneyPlanner() {
     setSearchedFrom(from);
     setSearchedTo(to);
     setSearchedViaStations(viaStations.filter(v => v.trim() !== ""));
+    setSelectedTrip(null);
     setSelectedTrain(null);
-    hasAutoSelectedRef.current = false;
+    if (isMobile) {
+      setIsSearchFormOpen(false);
+    }
   };
 
   const formatTime = (dateTime: string) => {
@@ -140,8 +164,8 @@ export default function JourneyPlanner() {
     return hours > 0 ? `${hours}u ${minutes}m` : `${minutes}m`;
   };
 
-  const trips = tripsData?.trips?.map((trip: any) => {
-    const legs = trip.legs
+  const trips: SelectedTrip[] = tripsData?.trips?.map((trip: any) => {
+    const legs: TripLeg[] = trip.legs
       ?.filter((leg: any) => leg.product?.categoryCode)
       ?.map((leg: any) => ({
         trainType: leg.product.categoryCode === "SPR" ? "Sprinter" : 
@@ -173,21 +197,12 @@ export default function JourneyPlanner() {
   }) || [];
 
   useEffect(() => {
-    hasAutoSelectedRef.current = false;
-  }, [searchedFrom, searchedTo, searchedViaStations, searchMode, date, time]);
+    if (isMobile === undefined) return;
+    setIsSearchFormOpen(!isMobile);
+  }, [isMobile]);
 
-  useEffect(() => {
-    if (isMobile === false && trips.length > 0 && !hasAutoSelectedRef.current && !selectedTrain) {
-      const firstLeg = trips[0]?.legs?.[0];
-      if (firstLeg) {
-        setSelectedTrain(firstLeg);
-        hasAutoSelectedRef.current = true;
-      }
-    }
-  }, [isMobile, trips, selectedTrain]);
-
-  const searchForm = (
-    <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
+  const searchFormContent = (
+    <>
       <div className="grid md:grid-cols-[1fr,auto,1fr] gap-4 items-end">
         <StationSearch
           label="Van"
@@ -332,7 +347,7 @@ export default function JourneyPlanner() {
           </>
         )}
       </Button>
-    </div>
+    </>
   );
 
   const masterContent = (
@@ -342,18 +357,25 @@ export default function JourneyPlanner() {
           <h1 className="text-3xl font-bold mb-2">Reisplanner</h1>
           <p className="text-muted-foreground">Plan je reis met de trein</p>
         </div>
-        {searchForm}
+        <CollapsibleSearchForm
+          isOpen={isSearchFormOpen}
+          onToggle={() => setIsSearchFormOpen(!isSearchFormOpen)}
+          title="Plan je reis"
+        >
+          {searchFormContent}
+        </CollapsibleSearchForm>
       </div>
 
       {searchedFrom && searchedTo && !isLoading && trips.length > 0 && (
         <ScrollArea className="flex-1 px-4">
-          <div className="space-y-4 pb-6">
+          <div className="space-y-3 pb-6">
             <h2 className="text-xl font-semibold">Reismogelijkheden</h2>
-            {trips.map((trip: any, idx: number) => (
-              <TripCard
+            {trips.map((trip, idx) => (
+              <TripListItemButton
                 key={idx}
                 {...trip}
-                onTrainClick={(leg) => setSelectedTrain(leg)}
+                onClick={() => setSelectedTrip(trip)}
+                isSelected={selectedTrip === trip}
               />
             ))}
           </div>
@@ -368,24 +390,41 @@ export default function JourneyPlanner() {
     </div>
   );
 
-  const detailContent = selectedTrain && (
-    <TripDetailPanel
-      trainType={selectedTrain.trainType}
-      trainNumber={selectedTrain.trainNumber}
-      from={selectedTrain.from}
-      to={selectedTrain.to}
-      open={!!selectedTrain}
-      onClose={() => setSelectedTrain(null)}
-    />
-  );
-
   return (
     <div className="h-screen bg-background overflow-hidden">
       <MasterDetailLayout
         master={masterContent}
-        detail={detailContent}
-        hasDetail={!!selectedTrain}
+        detail={
+          selectedTrip ? (
+            <TripAdviceDetailPanel
+              {...selectedTrip}
+              open={!!selectedTrip}
+              onClose={() => setSelectedTrip(null)}
+              onTrainClick={(leg) => setSelectedTrain(leg)}
+            />
+          ) : selectedTrain ? (
+            <TripDetailPanel
+              trainType={selectedTrain.trainType}
+              trainNumber={selectedTrain.trainNumber}
+              from={selectedTrain.from}
+              to={selectedTrain.to}
+              open={!!selectedTrain}
+              onClose={() => setSelectedTrain(null)}
+            />
+          ) : null
+        }
+        hasDetail={!!selectedTrip || !!selectedTrain}
       />
+      {selectedTrain && !selectedTrip && (
+        <TripDetailPanel
+          trainType={selectedTrain.trainType}
+          trainNumber={selectedTrain.trainNumber}
+          from={selectedTrain.from}
+          to={selectedTrain.to}
+          open={!!selectedTrain}
+          onClose={() => setSelectedTrain(null)}
+        />
+      )}
     </div>
   );
 }
