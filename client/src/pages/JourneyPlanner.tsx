@@ -227,8 +227,8 @@ export default function JourneyPlanner() {
           trainNumber: leg.product.number || "",
           from: leg.origin.name,
           to: leg.destination.name,
-          departure: formatTime(actualDeparture || plannedDeparture),
-          arrival: formatTime(actualArrival || plannedArrival),
+          departure: formatTime(plannedDeparture),
+          arrival: formatTime(plannedArrival),
           platform: leg.origin.actualTrack || leg.origin.plannedTrack,
           plannedDeparture,
           actualDeparture,
@@ -240,11 +240,11 @@ export default function JourneyPlanner() {
         };
       }) || [];
 
-    const departureTime = formatTime(trip.legs[0]?.origin?.actualDateTime || trip.legs[0]?.origin?.plannedDateTime);
-    const arrivalTime = formatTime(trip.legs[trip.legs.length - 1]?.destination?.actualDateTime || trip.legs[trip.legs.length - 1]?.destination?.plannedDateTime);
+    const departureTime = formatTime(trip.legs[0]?.origin?.plannedDateTime);
+    const arrivalTime = formatTime(trip.legs[trip.legs.length - 1]?.destination?.plannedDateTime);
     const duration = calculateDuration(
-      trip.legs[0]?.origin?.actualDateTime || trip.legs[0]?.origin?.plannedDateTime,
-      trip.legs[trip.legs.length - 1]?.destination?.actualDateTime || trip.legs[trip.legs.length - 1]?.destination?.plannedDateTime
+      trip.legs[0]?.origin?.plannedDateTime,
+      trip.legs[trip.legs.length - 1]?.destination?.plannedDateTime
     );
 
     const delayMinutes = trip.actualDurationInMinutes && trip.plannedDurationInMinutes 

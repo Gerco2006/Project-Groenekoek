@@ -372,7 +372,7 @@ export default function DepartureBoard() {
                 return (
                   <DepartureRow
                     key={idx}
-                    time={formatTime(departure.actualDateTime || departure.plannedDateTime)}
+                    time={formatTime(departure.plannedDateTime)}
                     destination={departure.direction}
                     platform={departure.actualTrack || departure.plannedTrack}
                     trainType={departure.product.longCategoryName}
@@ -402,7 +402,7 @@ export default function DepartureBoard() {
                 return (
                   <DepartureRow
                     key={idx}
-                    time={formatTime(arrival.actualDateTime || arrival.plannedDateTime)}
+                    time={formatTime(arrival.plannedDateTime)}
                     destination={arrival.origin}
                     platform={arrival.actualTrack || arrival.plannedTrack}
                     trainType={arrival.product.longCategoryName}
