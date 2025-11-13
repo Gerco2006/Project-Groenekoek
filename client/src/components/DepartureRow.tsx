@@ -28,7 +28,7 @@ export default function DepartureRow({
   return (
     <Button
       variant="ghost"
-      className="w-full justify-start p-4 h-auto hover-elevate"
+      className="w-full justify-start p-4 h-auto hover-elevate bg-card"
       onClick={onClick}
       data-testid={`button-${mode}`}
     >

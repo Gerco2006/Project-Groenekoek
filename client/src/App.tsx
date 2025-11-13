@@ -18,16 +18,14 @@ function Router() {
     <>
       <TopNav />
       <div className="pb-20 md:pb-0 md:pt-16">
-        <div className="max-w-4xl mx-auto h-full">
-          <Switch>
-            <Route path="/" component={JourneyPlanner} />
-            <Route path="/vertrektijden" component={DepartureBoard} />
-            <Route path="/treininfo" component={TrainLookup} />
-            <Route path="/storingen" component={Disruptions} />
-            <Route path="/meer" component={MorePage} />
-            <Route component={NotFound} />
-          </Switch>
-        </div>
+        <Switch>
+          <Route path="/" component={JourneyPlanner} />
+          <Route path="/vertrektijden" component={DepartureBoard} />
+          <Route path="/treininfo" component={TrainLookup} />
+          <Route path="/storingen" component={Disruptions} />
+          <Route path="/meer" component={MorePage} />
+          <Route component={NotFound} />
+        </Switch>
       </div>
       <BottomNav />
     </>

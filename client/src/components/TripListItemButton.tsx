@@ -35,8 +35,8 @@ export default function TripListItemButton({
 
   return (
     <Button
-      variant={isSelected ? "secondary" : "ghost"}
-      className="w-full h-auto p-4 hover-elevate flex-col items-stretch"
+      variant="ghost"
+      className="w-full h-auto p-4 hover-elevate flex-col items-stretch bg-card"
       onClick={onClick}
       data-testid="button-trip"
     >
