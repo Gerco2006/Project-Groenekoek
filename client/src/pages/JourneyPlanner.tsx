@@ -205,14 +205,15 @@ export default function JourneyPlanner() {
 
   useEffect(() => {
     hasAutoSelectedRef.current = false;
+    setSelectedTrip(null);
   }, [searchedFrom, searchedTo, searchedViaStations, searchMode, date, time]);
 
   useEffect(() => {
-    if (isMobile === false && trips.length > 0 && !hasAutoSelectedRef.current && !selectedTrip) {
+    if (isMobile === false && trips.length > 0 && !hasAutoSelectedRef.current) {
       setSelectedTrip(trips[0]);
       hasAutoSelectedRef.current = true;
     }
-  }, [isMobile, trips, selectedTrip]);
+  }, [isMobile, trips]);
 
   const searchFormContent = (
     <>
