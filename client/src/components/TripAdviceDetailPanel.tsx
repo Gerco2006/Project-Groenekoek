@@ -83,24 +83,24 @@ export default function TripAdviceDetailPanel({
         <div className="p-4 space-y-6">
           {/* Trip Summary Card */}
           <Card className="p-4">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold" data-testid="text-summary-departure">{departureTime}</div>
-                <div className="text-sm text-muted-foreground mt-1 truncate max-w-[120px]">{legs[0]?.from}</div>
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <div className="text-center min-w-0">
+                <div className="text-2xl sm:text-3xl font-bold" data-testid="text-summary-departure">{departureTime}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">{legs[0]?.from}</div>
               </div>
               
-              <div className="flex-1 flex flex-col items-center gap-1 min-w-[80px]">
+              <div className="flex-1 flex flex-col items-center gap-1 min-w-[60px] max-w-[100px]">
                 <div className="w-full h-px bg-border" />
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  <span className="font-medium">{duration}</span>
+                <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="font-medium whitespace-nowrap">{duration}</span>
                 </div>
                 <div className="w-full h-px bg-border" />
               </div>
               
-              <div className="text-center">
-                <div className="text-3xl font-bold" data-testid="text-summary-arrival">{arrivalTime}</div>
-                <div className="text-sm text-muted-foreground mt-1 truncate max-w-[120px]">{legs[legs.length - 1]?.to}</div>
+              <div className="text-center min-w-0">
+                <div className="text-2xl sm:text-3xl font-bold" data-testid="text-summary-arrival">{arrivalTime}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">{legs[legs.length - 1]?.to}</div>
               </div>
             </div>
 
@@ -187,16 +187,16 @@ export default function TripAdviceDetailPanel({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <Drawer open={open} onOpenChange={(isOpen) => !isOpen && onClose()} shouldScaleBackground={false}>
         <DrawerContent 
           className="max-h-[85vh] flex flex-col"
           data-testid="drawer-trip-detail"
         >
           <DrawerHeader className="border-b shrink-0">
             <DrawerTitle className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                 <Train className="w-5 h-5 text-primary shrink-0" />
-                <span className="truncate">{legs[0]?.from} → {legs[legs.length - 1]?.to}</span>
+                <span className="text-sm truncate">{legs[0]?.from} → {legs[legs.length - 1]?.to}</span>
               </div>
               <Button
                 variant="ghost"
@@ -209,7 +209,7 @@ export default function TripAdviceDetailPanel({
               </Button>
             </DrawerTitle>
           </DrawerHeader>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0">
             {content}
           </div>
         </DrawerContent>

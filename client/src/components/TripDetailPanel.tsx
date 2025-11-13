@@ -455,15 +455,15 @@ export default function TripDetailPanel({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={(newOpen) => !newOpen && onClose()}>
+      <Drawer open={open} onOpenChange={(newOpen) => !newOpen && onClose()} shouldScaleBackground={false}>
         <DrawerContent className="max-h-[90vh] flex flex-col">
           <DrawerHeader className="border-b shrink-0">
             <DrawerTitle className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                 <TrainBadge type={trainType} number={trainNumber} />
-                <span className="truncate">{from} → {to}</span>
+                <span className="text-sm truncate">{from} → {to}</span>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-0.5 shrink-0">
                 {onBack && (
                   <Button
                     variant="ghost"
@@ -485,7 +485,7 @@ export default function TripDetailPanel({
               </div>
             </DrawerTitle>
           </DrawerHeader>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0">
             {content}
           </div>
         </DrawerContent>
