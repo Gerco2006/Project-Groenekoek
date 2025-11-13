@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Clock, ArrowRight, Train } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Clock, ArrowRight, Train, AlertCircle } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 
 interface TripLeg {
@@ -50,6 +51,12 @@ export default function TripListItemButton({
             <TrainBadge key={idx} type={type} />
           ))}
         </div>
+        {delayMinutes && delayMinutes > 0 && (
+          <Badge variant="destructive" className="gap-1 shrink-0">
+            <AlertCircle className="w-3 h-3" />
+            +{delayMinutes} min
+          </Badge>
+        )}
       </div>
       
       <div className="flex items-center justify-between gap-3 mb-3">
@@ -74,9 +81,6 @@ export default function TripListItemButton({
         <div className="flex items-center gap-1.5">
           <Clock className="w-4 h-4" />
           <span className="font-medium">{duration}</span>
-          {delayMinutes && delayMinutes > 0 && (
-            <span className="text-destructive font-semibold">+{delayMinutes} min</span>
-          )}
         </div>
         <div className="w-px h-4 bg-border" />
         <div className="flex items-center gap-1.5">
