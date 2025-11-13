@@ -19,6 +19,13 @@ interface TripLeg {
   departure: string;
   arrival: string;
   platform?: string;
+  plannedDeparture?: string;
+  actualDeparture?: string;
+  plannedArrival?: string;
+  actualArrival?: string;
+  departureDelayMinutes?: number;
+  arrivalDelayMinutes?: number;
+  cancelled?: boolean;
 }
 
 interface TripAdviceDetailPanelProps {
@@ -48,9 +55,20 @@ export default function TripAdviceDetailPanel({
 
   const calculateTransferTime = (leg: TripLeg, nextLeg?: TripLeg) => {
     if (!nextLeg) return null;
-    const arrivalTime = new Date(`2000-01-01T${leg.arrival}`);
-    const nextDeparture = new Date(`2000-01-01T${nextLeg.departure}`);
-    const diffMinutes = Math.round((nextDeparture.getTime() - arrivalTime.getTime()) / 60000);
+    
+    const legArrival = leg.actualArrival || leg.plannedArrival;
+    const nextLegDeparture = nextLeg.actualDeparture || nextLeg.plannedDeparture;
+    
+    if (!legArrival || !nextLegDeparture) {
+      const arrivalTime = new Date(`2000-01-01T${leg.arrival}`);
+      const nextDeparture = new Date(`2000-01-01T${nextLeg.departure}`);
+      const diffMinutes = Math.round((nextDeparture.getTime() - arrivalTime.getTime()) / 60000);
+      return diffMinutes;
+    }
+    
+    const arrival = new Date(legArrival);
+    const departure = new Date(nextLegDeparture);
+    const diffMinutes = Math.round((departure.getTime() - arrival.getTime()) / 60000);
     return diffMinutes;
   };
 
@@ -137,18 +155,32 @@ export default function TripAdviceDetailPanel({
                     <div className="p-4">
                       <div className="flex items-start gap-3 mb-3">
                         <TrainBadge type={leg.trainType} number={leg.trainNumber} />
-                        {leg.platform && (
-                          <Badge variant="outline" className="ml-auto">
-                            Spoor {leg.platform}
-                          </Badge>
-                        )}
+                        <div className="ml-auto flex items-center gap-2">
+                          {leg.cancelled && (
+                            <Badge variant="destructive">
+                              Geannuleerd
+                            </Badge>
+                          )}
+                          {leg.platform && (
+                            <Badge variant="outline">
+                              Spoor {leg.platform}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
                           <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold">{leg.departure}</div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold">{leg.departure}</span>
+                              {leg.departureDelayMinutes && leg.departureDelayMinutes > 0 && (
+                                <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
+                                  +{leg.departureDelayMinutes}
+                                </Badge>
+                              )}
+                            </div>
                             <div className="text-sm text-muted-foreground truncate">{leg.from}</div>
                           </div>
                         </div>
@@ -160,7 +192,14 @@ export default function TripAdviceDetailPanel({
                         <div className="flex items-center gap-3">
                           <div className="w-2 h-2 rounded-full bg-border shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold">{leg.arrival}</div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold">{leg.arrival}</span>
+                              {leg.arrivalDelayMinutes && leg.arrivalDelayMinutes > 0 && (
+                                <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
+                                  +{leg.arrivalDelayMinutes}
+                                </Badge>
+                              )}
+                            </div>
                             <div className="text-sm text-muted-foreground truncate">{leg.to}</div>
                           </div>
                         </div>
@@ -169,17 +208,30 @@ export default function TripAdviceDetailPanel({
                   </Card>
                   
                   {transferTime !== null && (
-                    <div className="flex items-center gap-2 px-2 py-2 rounded-lg bg-muted/50">
+                    <div className={`flex items-center gap-2 px-2 py-2 rounded-lg ${
+                      transferTime < 0 ? 'bg-destructive/10' : 
+                      transferTime < 5 ? 'bg-amber-500/10' : 
+                      'bg-muted/50'
+                    }`}>
                       <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
                       <span className="text-sm text-muted-foreground flex-1 min-w-0">
                         <span className="font-semibold truncate">Overstap in {leg.to}</span>
                         {" • "}
-                        {transferTime} min
-                        {transferTime < 5 && (
-                          <span className="inline-flex items-center gap-1 ml-2 text-amber-600 dark:text-amber-500">
+                        {transferTime < 0 ? (
+                          <span className="inline-flex items-center gap-1 text-destructive">
                             <AlertCircle className="w-3.5 h-3.5" />
-                            Krap
+                            Aansluiting gemist ({Math.abs(transferTime)} min te kort)
                           </span>
+                        ) : (
+                          <>
+                            {transferTime} min
+                            {transferTime < 5 && (
+                              <span className="inline-flex items-center gap-1 ml-2 text-amber-600 dark:text-amber-500">
+                                <AlertCircle className="w-3.5 h-3.5" />
+                                Krap
+                              </span>
+                            )}
+                          </>
                         )}
                       </span>
                     </div>
