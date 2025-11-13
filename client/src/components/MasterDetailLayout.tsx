@@ -16,7 +16,7 @@ export default function MasterDetailLayout({
 }: MasterDetailLayoutProps) {
   const isMobile = useIsMobile();
 
-  if (isMobile) {
+  if (isMobile !== false) {
     return (
       <div className={`flex flex-col h-full ${className}`}>
         {master}

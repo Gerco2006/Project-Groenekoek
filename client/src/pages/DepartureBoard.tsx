@@ -1,14 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { RefreshCw, Search, AlertTriangle, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import StationSearch from "@/components/StationSearch";
 import DepartureRow from "@/components/DepartureRow";
-import TrainDialog from "@/components/TrainDialog";
+import TripDetailPanel from "@/components/TripDetailPanel";
+import MasterDetailLayout from "@/components/MasterDetailLayout";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SelectedTrain {
@@ -59,6 +62,8 @@ interface Arrival {
 }
 
 export default function DepartureBoard() {
+  const isMobile = useIsMobile();
+  const hasAutoSelectedRef = useRef(false);
   const [station, setStation] = useState("");
   const [searchedStation, setSearchedStation] = useState("");
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
@@ -169,7 +174,40 @@ export default function DepartureBoard() {
       return;
     }
     setSearchedStation(station);
+    setSelectedTrain(null);
+    hasAutoSelectedRef.current = false;
   };
+
+  useEffect(() => {
+    setSelectedTrain(null);
+    hasAutoSelectedRef.current = false;
+  }, [activeTab]);
+
+  useEffect(() => {
+    hasAutoSelectedRef.current = false;
+  }, [searchedStation]);
+
+  useEffect(() => {
+    if (isMobile === false && !hasAutoSelectedRef.current && !selectedTrain) {
+      if (activeTab === "departures" && departures.length > 0) {
+        const firstItem = departures[0];
+        setSelectedTrain({
+          trainType: firstItem.product.longCategoryName,
+          trainNumber: firstItem.product.number,
+          destination: firstItem.direction,
+        });
+        hasAutoSelectedRef.current = true;
+      } else if (activeTab === "arrivals" && arrivals.length > 0) {
+        const firstItem = arrivals[0];
+        setSelectedTrain({
+          trainType: firstItem.product.longCategoryName,
+          trainNumber: firstItem.product.number,
+          destination: firstItem.origin,
+        });
+        hasAutoSelectedRef.current = true;
+      }
+    }
+  }, [isMobile, departures, arrivals, activeTab, selectedTrain]);
 
   const handleRefresh = () => {
     if (searchedStation) {
@@ -210,54 +248,59 @@ export default function DepartureBoard() {
       platform: stop.actualArrivalTrack || stop.plannedArrivalTrack || stop.actualDepartureTrack || stop.plannedDepartureTrack || "",
     })) || [];
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+  const searchForm = (
+    <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
+      <StationSearch
+        label="Station"
+        value={station}
+        onChange={setStation}
+        placeholder="Bijv. Amsterdam Centraal"
+        testId="input-station"
+      />
+      
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "departures" | "arrivals")} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="departures" data-testid="tab-departures">Vertrek</TabsTrigger>
+          <TabsTrigger value="arrivals" data-testid="tab-arrivals">Aankomst</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <div className="flex gap-2">
+        <Button 
+          className="flex-1" 
+          size="lg"
+          disabled={!station.trim() || isLoading}
+          onClick={handleSearch}
+          data-testid="button-search"
+        >
+          <Search className="w-4 h-4 mr-2" />
+          {isLoading ? "Laden..." : activeTab === "departures" ? "Zoek vertrektijden" : "Zoek aankomsten"}
+        </Button>
+        <Button 
+          variant="outline" 
+          size="lg"
+          onClick={handleRefresh}
+          disabled={!searchedStation || isLoading}
+          data-testid="button-refresh"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const masterContent = (
+    <div className="h-full flex flex-col">
+      <div className="shrink-0 px-4 py-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Vertrektijden & Aankomsten</h1>
           <p className="text-muted-foreground">Bekijk actuele trein informatie</p>
         </div>
+        {searchForm}
+      </div>
 
-        <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
-          <StationSearch
-            label="Station"
-            value={station}
-            onChange={setStation}
-            placeholder="Bijv. Amsterdam Centraal"
-            testId="input-station"
-          />
-          
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "departures" | "arrivals")} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="departures" data-testid="tab-departures">Vertrek</TabsTrigger>
-              <TabsTrigger value="arrivals" data-testid="tab-arrivals">Aankomst</TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          <div className="flex gap-2">
-            <Button 
-              className="flex-1" 
-              size="lg"
-              disabled={!station.trim() || isLoading}
-              onClick={handleSearch}
-              data-testid="button-search"
-            >
-              <Search className="w-4 h-4 mr-2" />
-              {isLoading ? "Laden..." : activeTab === "departures" ? "Zoek vertrektijden" : "Zoek aankomsten"}
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={handleRefresh}
-              disabled={!searchedStation || isLoading}
-              data-testid="button-refresh"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {!isLoading && searchedStation && activeDisruptions.length > 0 && (
+      {!isLoading && searchedStation && activeDisruptions.length > 0 && (
+        <div className="shrink-0 px-4">
           <Alert className="border-yellow-500/50 bg-yellow-500/10" data-testid="alert-disruptions">
             <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
             <AlertDescription className="ml-2">
@@ -277,89 +320,107 @@ export default function DepartureBoard() {
               </div>
             </AlertDescription>
           </Alert>
-        )}
+        </div>
+      )}
 
-        {isLoading && (
-          <Card className="p-8 text-center text-muted-foreground">
-            <p>{activeTab === "departures" ? "Vertrektijden laden..." : "Aankomsttijden laden..."}</p>
-          </Card>
-        )}
+      {isLoading && (
+        <div className="flex-1 flex items-center justify-center px-4">
+          <p className="text-muted-foreground">{activeTab === "departures" ? "Vertrektijden laden..." : "Aankomsttijden laden..."}</p>
+        </div>
+      )}
 
-        {!isLoading && searchedStation && activeTab === "departures" && departures.length === 0 && (
-          <Card className="p-8 text-center text-muted-foreground">
-            <p>Geen vertrektijden gevonden voor {searchedStation}</p>
-          </Card>
-        )}
+      {!isLoading && searchedStation && activeTab === "departures" && departures.length === 0 && (
+        <div className="flex-1 flex items-center justify-center px-4">
+          <p className="text-muted-foreground">Geen vertrektijden gevonden voor {searchedStation}</p>
+        </div>
+      )}
 
-        {!isLoading && searchedStation && activeTab === "arrivals" && arrivals.length === 0 && (
-          <Card className="p-8 text-center text-muted-foreground">
-            <p>Geen aankomsten gevonden voor {searchedStation}</p>
-          </Card>
-        )}
+      {!isLoading && searchedStation && activeTab === "arrivals" && arrivals.length === 0 && (
+        <div className="flex-1 flex items-center justify-center px-4">
+          <p className="text-muted-foreground">Geen aankomsten gevonden voor {searchedStation}</p>
+        </div>
+      )}
 
-        {!isLoading && activeTab === "departures" && departures.length > 0 && (
-          <Card className="divide-y">
-            {departures.map((departure, idx) => {
-              const delay = calculateDelay(departure.plannedDateTime, departure.actualDateTime);
-              return (
-                <DepartureRow
-                  key={idx}
-                  time={formatTime(departure.actualDateTime || departure.plannedDateTime)}
-                  destination={departure.direction}
-                  platform={departure.actualTrack || departure.plannedTrack}
-                  trainType={departure.product.longCategoryName}
-                  trainNumber={departure.product.number}
-                  delay={delay > 0 ? delay : undefined}
-                  mode="departure"
-                  onClick={() => setSelectedTrain({
-                    trainType: departure.product.longCategoryName,
-                    trainNumber: departure.product.number,
-                    destination: departure.direction,
-                  })}
-                  data-testid={`row-departure-${idx}`}
-                />
-              );
-            })}
-          </Card>
-        )}
+      {!isLoading && activeTab === "departures" && departures.length > 0 && (
+        <ScrollArea className="flex-1">
+          <div className="px-4 pb-6">
+            <Card className="divide-y">
+              {departures.map((departure, idx) => {
+                const delay = calculateDelay(departure.plannedDateTime, departure.actualDateTime);
+                return (
+                  <DepartureRow
+                    key={idx}
+                    time={formatTime(departure.actualDateTime || departure.plannedDateTime)}
+                    destination={departure.direction}
+                    platform={departure.actualTrack || departure.plannedTrack}
+                    trainType={departure.product.longCategoryName}
+                    trainNumber={departure.product.number}
+                    delay={delay > 0 ? delay : undefined}
+                    mode="departure"
+                    onClick={() => setSelectedTrain({
+                      trainType: departure.product.longCategoryName,
+                      trainNumber: departure.product.number,
+                      destination: departure.direction,
+                    })}
+                    data-testid={`row-departure-${idx}`}
+                  />
+                );
+              })}
+            </Card>
+          </div>
+        </ScrollArea>
+      )}
 
-        {!isLoading && activeTab === "arrivals" && arrivals.length > 0 && (
-          <Card className="divide-y">
-            {arrivals.map((arrival, idx) => {
-              const delay = calculateDelay(arrival.plannedDateTime, arrival.actualDateTime);
-              return (
-                <DepartureRow
-                  key={idx}
-                  time={formatTime(arrival.actualDateTime || arrival.plannedDateTime)}
-                  destination={arrival.origin}
-                  platform={arrival.actualTrack || arrival.plannedTrack}
-                  trainType={arrival.product.longCategoryName}
-                  trainNumber={arrival.product.number}
-                  delay={delay > 0 ? delay : undefined}
-                  mode="arrival"
-                  onClick={() => setSelectedTrain({
-                    trainType: arrival.product.longCategoryName,
-                    trainNumber: arrival.product.number,
-                    destination: arrival.origin,
-                  })}
-                  data-testid={`row-arrival-${idx}`}
-                />
-              );
-            })}
-          </Card>
-        )}
+      {!isLoading && activeTab === "arrivals" && arrivals.length > 0 && (
+        <ScrollArea className="flex-1">
+          <div className="px-4 pb-6">
+            <Card className="divide-y">
+              {arrivals.map((arrival, idx) => {
+                const delay = calculateDelay(arrival.plannedDateTime, arrival.actualDateTime);
+                return (
+                  <DepartureRow
+                    key={idx}
+                    time={formatTime(arrival.actualDateTime || arrival.plannedDateTime)}
+                    destination={arrival.origin}
+                    platform={arrival.actualTrack || arrival.plannedTrack}
+                    trainType={arrival.product.longCategoryName}
+                    trainNumber={arrival.product.number}
+                    delay={delay > 0 ? delay : undefined}
+                    mode="arrival"
+                    onClick={() => setSelectedTrain({
+                      trainType: arrival.product.longCategoryName,
+                      trainNumber: arrival.product.number,
+                      destination: arrival.origin,
+                    })}
+                    data-testid={`row-arrival-${idx}`}
+                  />
+                );
+              })}
+            </Card>
+          </div>
+        </ScrollArea>
+      )}
+    </div>
+  );
 
-        {selectedTrain && (
-          <TrainDialog
-            open={!!selectedTrain}
-            onOpenChange={(open) => !open && setSelectedTrain(null)}
-            trainType={selectedTrain.trainType}
-            trainNumber={selectedTrain.trainNumber}
-            from={searchedStation || station}
-            to={selectedTrain.destination}
-          />
-        )}
-      </div>
+  const detailContent = selectedTrain && (
+    <TripDetailPanel
+      trainType={selectedTrain.trainType}
+      trainNumber={selectedTrain.trainNumber}
+      from={searchedStation || station}
+      to={selectedTrain.destination}
+      open={!!selectedTrain}
+      onClose={() => setSelectedTrain(null)}
+    />
+  );
+
+  return (
+    <div className="h-screen bg-background overflow-hidden">
+      <MasterDetailLayout
+        master={masterContent}
+        detail={detailContent}
+        hasDetail={!!selectedTrain}
+      />
     </div>
   );
 }

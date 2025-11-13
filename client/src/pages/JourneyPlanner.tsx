@@ -124,16 +124,6 @@ export default function JourneyPlanner() {
     hasAutoSelectedRef.current = false;
   };
 
-  useEffect(() => {
-    if (!isMobile && trips.length > 0 && !hasAutoSelectedRef.current && !selectedTrain) {
-      const firstLeg = trips[0]?.legs?.[0];
-      if (firstLeg) {
-        setSelectedTrain(firstLeg);
-        hasAutoSelectedRef.current = true;
-      }
-    }
-  }, [isMobile, trips, selectedTrain]);
-
   const formatTime = (dateTime: string) => {
     if (!dateTime) return "";
     const date = new Date(dateTime);
@@ -181,6 +171,20 @@ export default function JourneyPlanner() {
       legs,
     };
   }) || [];
+
+  useEffect(() => {
+    hasAutoSelectedRef.current = false;
+  }, [searchedFrom, searchedTo, searchedViaStations, searchMode, date, time]);
+
+  useEffect(() => {
+    if (isMobile === false && trips.length > 0 && !hasAutoSelectedRef.current && !selectedTrain) {
+      const firstLeg = trips[0]?.legs?.[0];
+      if (firstLeg) {
+        setSelectedTrain(firstLeg);
+        hasAutoSelectedRef.current = true;
+      }
+    }
+  }, [isMobile, trips, selectedTrain]);
 
   const searchForm = (
     <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
