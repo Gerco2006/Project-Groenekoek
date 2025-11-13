@@ -437,10 +437,12 @@ export default function DepartureBoard() {
   );
 
   return (
-    <MasterDetailLayout
-      master={masterContent}
-      detail={detailContent}
-      hasDetail={!!selectedTrain}
-    />
+    <div className="max-w-6xl mx-auto h-full">
+      <MasterDetailLayout
+        master={masterContent}
+        detail={detailContent}
+        hasDetail={!!selectedTrain}
+      />
+    </div>
   );
 }

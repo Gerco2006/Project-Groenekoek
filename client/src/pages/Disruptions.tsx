@@ -259,10 +259,12 @@ export default function Disruptions() {
   ) : null;
 
   return (
-    <MasterDetailLayout
-      master={masterContent}
-      detail={detailPanel}
-      hasDetail={!!selectedDisruption}
-    />
+    <div className="max-w-6xl mx-auto h-full">
+      <MasterDetailLayout
+        master={masterContent}
+        detail={detailPanel}
+        hasDetail={!!selectedDisruption}
+      />
+    </div>
   );
 }

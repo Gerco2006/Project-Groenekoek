@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X } from "lucide-react";
+import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2 } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import StationSearch from "@/components/StationSearch";
 import TripListItemButton from "@/components/TripListItemButton";
 import TripAdviceDetailPanel from "@/components/TripAdviceDetailPanel";
@@ -58,6 +59,7 @@ export default function JourneyPlanner() {
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
   const [detailMode, setDetailMode] = useState<'trip' | 'train' | null>(null);
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState(() => {
     const now = new Date();
@@ -99,11 +101,8 @@ export default function JourneyPlanner() {
         fromStation: searchedFrom,
         toStation: searchedTo,
         dateTime: dateTime,
+        searchType: searchMode === "arrival" ? "ARRIVAL" : "DEPART",
       });
-
-      if (searchMode === "arrival") {
-        params.append("searchForArrival", "true");
-      }
 
       searchedViaStations.forEach((via) => {
         if (via.trim()) {
@@ -293,62 +292,78 @@ export default function JourneyPlanner() {
         </Button>
       )}
 
-      <div className="space-y-3">
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Datum</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-start text-left font-normal"
-                data-testid="button-select-date"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(date, "PPP", { locale: nl })}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(newDate) => newDate && setDate(newDate)}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="time-input" className="text-sm font-medium">Tijd & Richting</Label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
-              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="time-input"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="pl-9"
-                data-testid="input-time"
-              />
-            </div>
-            <ToggleGroup 
-              type="single" 
-              value={searchMode}
-              onValueChange={(value) => value && setSearchMode(value as "departure" | "arrival")}
-              className="border rounded-md shrink-0"
-              data-testid="toggle-search-mode"
-            >
-              <ToggleGroupItem value="departure" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" data-testid="toggle-departure">
-                Vertrek
-              </ToggleGroupItem>
-              <ToggleGroupItem value="arrival" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" data-testid="toggle-arrival">
-                Aankomst
-              </ToggleGroupItem>
-            </ToggleGroup>
+      <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-2"
+            data-testid="button-toggle-advanced"
+          >
+            <Settings2 className="w-4 h-4" />
+            {isAdvancedOpen ? "Verberg opties" : "Toon opties"}
+            <span className="ml-auto text-xs text-muted-foreground">
+              {!isAdvancedOpen && `${format(date, "d MMM", { locale: nl })} · ${time} · ${searchMode === "departure" ? "Vertrek" : "Aankomst"}`}
+            </span>
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-3 pt-3">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Datum</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                  data-testid="button-select-date"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(date, "PPP", { locale: nl })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(newDate) => newDate && setDate(newDate)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
-        </div>
-      </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="time-input" className="text-sm font-medium">Tijd & Richting</Label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="time-input"
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="pl-9"
+                  data-testid="input-time"
+                />
+              </div>
+              <ToggleGroup 
+                type="single" 
+                value={searchMode}
+                onValueChange={(value) => value && setSearchMode(value as "departure" | "arrival")}
+                className="border rounded-md shrink-0"
+                data-testid="toggle-search-mode"
+              >
+                <ToggleGroupItem value="departure" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" data-testid="toggle-departure">
+                  Vertrek
+                </ToggleGroupItem>
+                <ToggleGroupItem value="arrival" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" data-testid="toggle-arrival">
+                  Aankomst
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <Button 
         className="w-full" 
@@ -423,7 +438,7 @@ export default function JourneyPlanner() {
   );
 
   return (
-    <>
+    <div className="max-w-6xl mx-auto h-full">
       <MasterDetailLayout
         master={masterContent}
         detail={
@@ -477,6 +492,6 @@ export default function JourneyPlanner() {
           } : undefined}
         />
       )}
-    </>
+    </div>
   );
 }

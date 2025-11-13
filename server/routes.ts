@@ -160,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fromStation, 
         toStation, 
         dateTime,
-        searchForArrival,
+        searchType = "DEPART",
         viaStation,
         lang = "nl" 
       } = req.query;
@@ -194,15 +194,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const params: Record<string, string | string[]> = {
         fromStation: fromCode,
         toStation: toCode,
+        searchType: searchType as string,
         lang: lang as string,
       };
 
       if (dateTime) {
         params.dateTime = dateTime as string;
-      }
-
-      if (searchForArrival === "true") {
-        params.searchForArrival = "true";
       }
 
       if (viaCodes.length > 0) {
