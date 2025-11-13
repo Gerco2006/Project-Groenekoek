@@ -61,8 +61,7 @@ export default function TrainLookup() {
   const destination = stops.length > 0 ? stops[stops.length - 1]?.stop?.name : null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="min-h-screen bg-background px-4 py-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Ritnummer zoeker</h1>
           <p className="text-muted-foreground">Zoek op ritnummer</p>
@@ -133,7 +132,6 @@ export default function TrainLookup() {
             to={destination || "Onbekend"}
           />
         )}
-      </div>
     </div>
   );
 }

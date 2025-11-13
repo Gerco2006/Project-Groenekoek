@@ -124,14 +124,7 @@ export default function TripAdviceDetailPanel({
                 <div key={idx} className="space-y-3">
                   <Card 
                     className="hover-elevate cursor-pointer overflow-hidden"
-                    onClick={() => {
-                      if (isMobile) {
-                        onClose();
-                        setTimeout(() => onTrainClick?.(leg), 300);
-                      } else {
-                        onTrainClick?.(leg);
-                      }
-                    }}
+                    onClick={() => onTrainClick?.(leg)}
                     data-testid={`card-leg-${idx}`}
                   >
                     <div className="p-4">

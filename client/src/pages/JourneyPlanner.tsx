@@ -378,6 +378,13 @@ export default function JourneyPlanner() {
         >
           {searchFormContent}
         </CollapsibleSearchForm>
+        
+        {!isSearchFormOpen && isLoading && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Reismogelijkheden laden...</span>
+          </div>
+        )}
       </div>
 
       {searchedFrom && searchedTo && !isLoading && trips.length > 0 && (
@@ -405,42 +412,44 @@ export default function JourneyPlanner() {
   );
 
   return (
-    <div className="h-screen bg-background overflow-hidden">
-      <div className="h-full max-w-7xl mx-auto">
-        <MasterDetailLayout
-          master={masterContent}
-          detail={
-            selectedTrip ? (
-              <TripAdviceDetailPanel
-                {...selectedTrip}
-                open={!!selectedTrip}
-                onClose={() => setSelectedTrip(null)}
-                onTrainClick={(leg) => setSelectedTrain(leg)}
-              />
-            ) : selectedTrain ? (
-              <TripDetailPanel
-                trainType={selectedTrain.trainType}
-                trainNumber={selectedTrain.trainNumber}
-                from={selectedTrain.from}
-                to={selectedTrain.to}
-                open={!!selectedTrain}
-                onClose={() => setSelectedTrain(null)}
-              />
-            ) : null
-          }
-          hasDetail={!!selectedTrip || !!selectedTrain}
+    <>
+      <MasterDetailLayout
+        master={masterContent}
+        detail={
+          selectedTrip ? (
+            <TripAdviceDetailPanel
+              {...selectedTrip}
+              open={!!selectedTrip}
+              onClose={() => setSelectedTrip(null)}
+              onTrainClick={(leg) => {
+                setSelectedTrain(leg);
+                setSelectedTrip(null);
+              }}
+            />
+          ) : selectedTrain ? (
+            <TripDetailPanel
+              trainType={selectedTrain.trainType}
+              trainNumber={selectedTrain.trainNumber}
+              from={selectedTrain.from}
+              to={selectedTrain.to}
+              open={!!selectedTrain}
+              onClose={() => setSelectedTrain(null)}
+            />
+          ) : null
+        }
+        hasDetail={!!selectedTrip || !!selectedTrain}
+      />
+      {isMobile && selectedTrain && (
+        <TripDetailPanel
+          trainType={selectedTrain.trainType}
+          trainNumber={selectedTrain.trainNumber}
+          from={selectedTrain.from}
+          to={selectedTrain.to}
+          open={!!selectedTrain && !selectedTrip}
+          onClose={() => setSelectedTrain(null)}
+          onBack={() => setSelectedTrain(null)}
         />
-        {selectedTrain && !selectedTrip && (
-          <TripDetailPanel
-            trainType={selectedTrain.trainType}
-            trainNumber={selectedTrain.trainNumber}
-            from={selectedTrain.from}
-            to={selectedTrain.to}
-            open={!!selectedTrain}
-            onClose={() => setSelectedTrain(null)}
-          />
-        )}
-      </div>
-    </div>
+      )}
+    </>
   );
 }

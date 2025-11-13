@@ -103,8 +103,7 @@ export default function Disruptions() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="min-h-screen bg-background px-4 py-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Storingen & Werkzaamheden</h1>
           <p className="text-muted-foreground">Bekijk actuele en geplande verstoringen</p>
@@ -235,7 +234,6 @@ export default function Disruptions() {
             disruptionType={selectedDisruption.type}
           />
         )}
-      </div>
     </div>
   );
 }

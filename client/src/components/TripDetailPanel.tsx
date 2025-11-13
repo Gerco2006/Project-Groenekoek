@@ -26,6 +26,7 @@ interface TripDetailPanelProps {
   to: string;
   open: boolean;
   onClose: () => void;
+  onBack?: () => void;
 }
 
 export default function TripDetailPanel({
@@ -35,6 +36,7 @@ export default function TripDetailPanel({
   to,
   open,
   onClose,
+  onBack,
 }: TripDetailPanelProps) {
   const isMobile = useIsMobile();
   const [showAllStations, setShowAllStations] = useState(false);
@@ -443,11 +445,38 @@ export default function TripDetailPanel({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={(newOpen) => !newOpen && onClose()}>
-        <DrawerContent className="max-h-[90vh]">
-          <DrawerHeader className="sr-only">
-            <DrawerTitle>Treindetails</DrawerTitle>
+        <DrawerContent className="max-h-[90vh] flex flex-col">
+          <DrawerHeader className="border-b shrink-0">
+            <DrawerTitle className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <TrainBadge type={trainType} number={trainNumber} />
+                <span className="truncate">{from} → {to}</span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                {onBack && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onBack}
+                    data-testid="button-back-to-trip"
+                  >
+                    <ChevronDown className="w-5 h-5 rotate-90" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onClose}
+                  data-testid="button-close-mobile-train-detail"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            </DrawerTitle>
           </DrawerHeader>
-          {content}
+          <div className="flex-1 overflow-hidden">
+            {content}
+          </div>
         </DrawerContent>
       </Drawer>
     );
