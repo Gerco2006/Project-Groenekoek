@@ -322,7 +322,7 @@ export default function DepartureBoard() {
       </div>
 
       {!isLoading && searchedStation && activeDisruptions.length > 0 && (
-        <div className="shrink-0 px-4">
+        <div className="shrink-0 px-4 pb-4">
           <Alert className="border-yellow-500/50 bg-yellow-500/10" data-testid="alert-disruptions">
             <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
             <AlertDescription className="ml-2">

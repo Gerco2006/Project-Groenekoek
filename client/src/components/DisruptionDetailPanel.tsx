@@ -91,8 +91,8 @@ export default function DisruptionDetailPanel({
         </div>
       )}
 
-      <div className={`${isMobile ? 'p-4 space-y-6' : 'flex-1 overflow-y-auto'}`}>
-        <div className={`${isMobile ? '' : 'p-4 space-y-6'}`}>
+      <div className={`${isMobile ? 'p-4 space-y-8' : 'flex-1 overflow-y-auto'}`}>
+        <div className={`${isMobile ? '' : 'p-4 space-y-8'}`}>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />

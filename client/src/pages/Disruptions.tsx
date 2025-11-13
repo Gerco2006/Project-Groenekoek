@@ -184,7 +184,7 @@ export default function Disruptions() {
       )}
 
       {!isLoading && disruptions.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {disruptions.map((disruption) => {
             const startTime = disruption.start || disruption.timespans?.[0]?.start;
             const endTime = disruption.end || disruption.timespans?.[0]?.end;
