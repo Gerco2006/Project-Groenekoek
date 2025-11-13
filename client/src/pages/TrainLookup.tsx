@@ -54,18 +54,11 @@ export default function TrainLookup() {
     return date.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
   };
 
-  const trainStops = journeyData?.payload?.stops
-    ?.filter((stop: any) => stop.stop?.name)
-    ?.map((stop: any) => ({
-      name: stop.stop.name,
-      arrival: stop.actualArrivalTime ? formatTime(stop.actualArrivalTime) : (stop.plannedArrivalTime ? formatTime(stop.plannedArrivalTime) : null),
-      departure: stop.actualDepartureTime ? formatTime(stop.actualDepartureTime) : (stop.plannedDepartureTime ? formatTime(stop.plannedDepartureTime) : null),
-      platform: stop.actualArrivalTrack || stop.plannedArrivalTrack || stop.actualDepartureTrack || stop.plannedDepartureTrack || "",
-    })) || [];
-
   const trainInfo = journeyData?.payload;
-  const origin = trainStops.find((stop: any) => stop.departure && !stop.arrival);
-  const destination = trainStops.length > 0 ? trainStops[trainStops.length - 1] : null;
+  const stops = trainInfo?.stops || [];
+  
+  const origin = stops.length > 0 ? stops[0]?.stop?.name : null;
+  const destination = stops.length > 0 ? stops[stops.length - 1]?.stop?.name : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -134,10 +127,10 @@ export default function TrainLookup() {
           <TrainDialog
             open={!!searchedNumber && !!trainInfo}
             onOpenChange={(open) => !open && setSearchedNumber("")}
-            trainType={trainInfo.product?.longCategoryName || "Trein"}
+            trainType={trainInfo.product?.categoryCode || trainInfo.product?.shortCategoryName || "Trein"}
             trainNumber={searchedNumber}
-            from={origin?.name || "Onbekend"}
-            to={destination?.name || "Onbekend"}
+            from={origin || "Onbekend"}
+            to={destination || "Onbekend"}
           />
         )}
       </div>
