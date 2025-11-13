@@ -11,12 +11,14 @@ import { Github, Moon, Sun, Info, Heart, AlertTriangle, ChevronRight } from "luc
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import PageContainer from "@/components/PageContainer";
 
 export default function MorePage() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 space-y-6">
+    <PageContainer>
+      <div className="min-h-screen bg-background px-4 py-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Meer</h1>
           <p className="text-muted-foreground">
@@ -131,6 +133,7 @@ export default function MorePage() {
             </div>
           </CardContent>
         </Card>
-    </div>
+      </div>
+    </PageContainer>
   );
 }

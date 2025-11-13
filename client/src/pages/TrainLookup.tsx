@@ -6,6 +6,7 @@ import { Search, Hash } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import TrainDialog from "@/components/TrainDialog";
+import PageContainer from "@/components/PageContainer";
 
 export default function TrainLookup() {
   const [journeyNumber, setJourneyNumber] = useState("");
@@ -61,7 +62,8 @@ export default function TrainLookup() {
   const destination = stops.length > 0 ? stops[stops.length - 1]?.stop?.name : null;
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 space-y-6">
+    <PageContainer>
+      <div className="min-h-screen bg-background px-4 py-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Ritnummer zoeker</h1>
           <p className="text-muted-foreground">Zoek op ritnummer</p>
@@ -132,6 +134,7 @@ export default function TrainLookup() {
             to={destination || "Onbekend"}
           />
         )}
-    </div>
+      </div>
+    </PageContainer>
   );
 }
