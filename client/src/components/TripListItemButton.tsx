@@ -20,6 +20,7 @@ interface TripListItemButtonProps {
   legs: TripLeg[];
   onClick?: () => void;
   isSelected?: boolean;
+  delayMinutes?: number;
 }
 
 export default function TripListItemButton({ 
@@ -29,7 +30,8 @@ export default function TripListItemButton({
   transfers, 
   legs,
   onClick,
-  isSelected = false
+  isSelected = false,
+  delayMinutes
 }: TripListItemButtonProps) {
   const uniqueTrainTypes = Array.from(new Set(legs.map(leg => leg.trainType)));
 
@@ -72,6 +74,9 @@ export default function TripListItemButton({
         <div className="flex items-center gap-1.5">
           <Clock className="w-4 h-4" />
           <span className="font-medium">{duration}</span>
+          {delayMinutes && delayMinutes > 0 && (
+            <span className="text-destructive font-semibold">+{delayMinutes} min</span>
+          )}
         </div>
         <div className="w-px h-4 bg-border" />
         <div className="flex items-center gap-1.5">

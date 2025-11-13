@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2 } from "lucide-react";
+import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -19,6 +19,8 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from "wouter";
 
 interface TripLeg {
   trainType: string;
@@ -36,6 +38,8 @@ interface SelectedTrip {
   duration: string;
   transfers: number;
   legs: TripLeg[];
+  delayMinutes?: number;
+  status?: string;
 }
 
 interface SelectedTrain {
@@ -120,6 +124,17 @@ export default function JourneyPlanner() {
     retry: 1,
   });
 
+  const { data: disruptionsData } = useQuery<any>({
+    queryKey: ["/api/disruptions"],
+    enabled: !!searchedFrom || !!searchedTo,
+    queryFn: async () => {
+      const response = await fetch(`/api/disruptions?isActive=true`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    retry: 1,
+  });
+
   useEffect(() => {
     if (error) {
       toast({
@@ -129,6 +144,18 @@ export default function JourneyPlanner() {
       });
     }
   }, [error, toast]);
+
+  const routeStations = searchedFrom && searchedTo ? [searchedFrom, searchedTo, ...searchedViaStations.filter(v => v.trim())] : [];
+  const routeDisruptions = Array.isArray(disruptionsData) 
+    ? disruptionsData.filter((d: any) => {
+        const affectedStations = d.publicationSections
+          ?.flatMap((ps: any) => ps.section?.stations || [])
+          .map((s: any) => s.name.toLowerCase()) || [];
+        return routeStations.some(rs => 
+          affectedStations.some((as: string) => as.includes(rs.toLowerCase()) || rs.toLowerCase().includes(as))
+        );
+      })
+    : [];
 
   const handleSearch = () => {
     if (!from.trim() || !to.trim()) {
@@ -190,12 +217,18 @@ export default function JourneyPlanner() {
       trip.legs[trip.legs.length - 1]?.destination?.actualDateTime || trip.legs[trip.legs.length - 1]?.destination?.plannedDateTime
     );
 
+    const delayMinutes = trip.actualDurationInMinutes && trip.plannedDurationInMinutes 
+      ? trip.actualDurationInMinutes - trip.plannedDurationInMinutes 
+      : 0;
+
     return {
       departureTime,
       arrivalTime,
       duration,
       transfers: trip.transfers || 0,
       legs,
+      delayMinutes: delayMinutes > 0 ? delayMinutes : undefined,
+      status: trip.status,
     };
   }) || [];
 
@@ -410,6 +443,29 @@ export default function JourneyPlanner() {
           </div>
         )}
       </div>
+
+      {searchedFrom && searchedTo && routeDisruptions.length > 0 && (
+        <div className="shrink-0 px-4 pb-4">
+          <Alert className="border-yellow-500/50 bg-yellow-500/10" data-testid="alert-route-disruptions">
+            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+            <AlertDescription className="ml-2">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <span className="font-semibold">
+                    {routeDisruptions.length} {routeDisruptions.length === 1 ? 'storing/werkzaamheid' : 'storingen/werkzaamheden'}
+                  </span>
+                  {' '}op dit traject
+                </div>
+                <Link href="/storingen">
+                  <Button variant="outline" size="sm" className="gap-2" data-testid="button-view-route-disruptions">
+                    Bekijk details
+                  </Button>
+                </Link>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       {searchedFrom && searchedTo && !isLoading && trips.length > 0 && (
         <ScrollArea className="flex-1 px-4">

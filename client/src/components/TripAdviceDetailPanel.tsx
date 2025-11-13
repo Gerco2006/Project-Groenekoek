@@ -30,6 +30,7 @@ interface TripAdviceDetailPanelProps {
   open: boolean;
   onClose: () => void;
   onTrainClick?: (leg: TripLeg) => void;
+  delayMinutes?: number;
 }
 
 export default function TripAdviceDetailPanel({
@@ -41,6 +42,7 @@ export default function TripAdviceDetailPanel({
   open,
   onClose,
   onTrainClick,
+  delayMinutes,
 }: TripAdviceDetailPanelProps) {
   const isMobile = useIsMobile();
 
@@ -104,11 +106,17 @@ export default function TripAdviceDetailPanel({
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-2 text-sm">
+            <div className="flex items-center justify-center gap-2 text-sm flex-wrap">
               <Badge variant="outline" className="gap-1.5">
                 <Train className="w-3.5 h-3.5" />
                 {transfers === 0 ? "Direct" : `${transfers} overstap${transfers > 1 ? 'pen' : ''}`}
               </Badge>
+              {delayMinutes && delayMinutes > 0 && (
+                <Badge variant="destructive" className="gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  +{delayMinutes} min vertraging
+                </Badge>
+              )}
             </div>
           </Card>
 

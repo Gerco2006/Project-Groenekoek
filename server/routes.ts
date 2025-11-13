@@ -253,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { isActive, type } = req.query;
       
       const params: Record<string, string> = {};
-      if (isActive) params.isActive = isActive as string;
+      if (isActive !== undefined) params.isActive = isActive as string;
       if (type) params.type = type as string;
 
       const data = await fetchNSDisruptions("/v3", params);
