@@ -162,7 +162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dateTime,
         searchType = "DEPART",
         viaStation,
-        lang = "nl" 
+        lang = "nl",
+        addChangeTime,
+        accessible
       } = req.query;
       
       if (!fromStation || !toStation) {
@@ -204,6 +206,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (viaCodes.length > 0) {
         params.viaStation = viaCodes.length === 1 ? viaCodes[0] : viaCodes;
+      }
+
+      if (addChangeTime && parseInt(addChangeTime as string) > 0) {
+        params.addChangeTime = addChangeTime as string;
+      }
+
+      if (accessible === "true") {
+        params.accessible = "true";
       }
 
       const data = await fetchNS("/v3/trips", params);

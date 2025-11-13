@@ -8,6 +8,7 @@ import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X,
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Switch } from "@/components/ui/switch";
 import StationSearch from "@/components/StationSearch";
 import TripListItemButton from "@/components/TripListItemButton";
 import TripAdviceDetailPanel from "@/components/TripAdviceDetailPanel";
@@ -76,6 +77,8 @@ export default function JourneyPlanner() {
     const now = new Date();
     return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   });
+  const [addChangeTime, setAddChangeTime] = useState<number>(0);
+  const [accessible, setAccessible] = useState<boolean>(false);
   const { toast } = useToast();
 
   const swapStations = () => {
@@ -104,7 +107,7 @@ export default function JourneyPlanner() {
   };
 
   const { data: tripsData, isLoading, error } = useQuery<any>({
-    queryKey: ["/api/trips", searchedFrom, searchedTo, searchedViaStations, searchMode, date, time],
+    queryKey: ["/api/trips", searchedFrom, searchedTo, searchedViaStations, searchMode, date, time, addChangeTime, accessible],
     enabled: !!searchedFrom && !!searchedTo,
     queryFn: async () => {
       const dateTime = buildDateTime();
@@ -120,6 +123,14 @@ export default function JourneyPlanner() {
           params.append("viaStation", via);
         }
       });
+
+      if (addChangeTime > 0) {
+        params.append("addChangeTime", addChangeTime.toString());
+      }
+
+      if (accessible) {
+        params.append("accessible", "true");
+      }
 
       const response = await fetch(`/api/trips?${params.toString()}`);
       if (!response.ok) {
@@ -425,6 +436,34 @@ export default function JourneyPlanner() {
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="change-time-input" className="text-sm font-medium">Extra overstaptijd (minuten)</Label>
+            <Input
+              id="change-time-input"
+              type="number"
+              min="0"
+              max="60"
+              value={addChangeTime}
+              onChange={(e) => setAddChangeTime(Math.max(0, parseInt(e.target.value) || 0))}
+              placeholder="0"
+              data-testid="input-change-time"
+            />
+            <p className="text-xs text-muted-foreground">Extra tijd die wordt toegevoegd aan elke overstap</p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="accessible-toggle" className="text-sm font-medium">Alleen toegankelijke reizen</Label>
+              <p className="text-xs text-muted-foreground">Alleen reizen met NS-treinen (geen bussen of trams)</p>
+            </div>
+            <Switch
+              id="accessible-toggle"
+              checked={accessible}
+              onCheckedChange={setAccessible}
+              data-testid="switch-accessible"
+            />
           </div>
         </CollapsibleContent>
       </Collapsible>
