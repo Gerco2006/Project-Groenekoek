@@ -53,7 +53,7 @@ export default function TripAdviceDetailPanel({
   };
 
   const content = (
-    <div className={`flex flex-col ${isMobile ? 'flex-1' : 'h-full'}`}>
+    <div className={`flex flex-col ${isMobile ? 'flex-1 min-h-0' : 'h-full'}`}>
       {!isMobile && (
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
