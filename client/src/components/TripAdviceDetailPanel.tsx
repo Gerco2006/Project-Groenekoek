@@ -55,28 +55,30 @@ export default function TripAdviceDetailPanel({
 
   const content = (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <Train className="w-5 h-5 shrink-0 text-primary" />
-          <div className="min-w-0 flex-1">
-            <h2 className="font-semibold text-lg truncate" data-testid="text-trip-title">
-              Reisadvies
-            </h2>
-            <p className="text-sm text-muted-foreground truncate">
-              {legs[0]?.from} → {legs[legs.length - 1]?.to}
-            </p>
+      {!isMobile && (
+        <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Train className="w-5 h-5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <h2 className="font-semibold text-lg truncate" data-testid="text-trip-title">
+                Reisadvies
+              </h2>
+              <p className="text-sm text-muted-foreground truncate">
+                {legs[0]?.from} → {legs[legs.length - 1]?.to}
+              </p>
+            </div>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="shrink-0"
+            data-testid="button-close-detail"
+          >
+            <X className="w-5 h-5" />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="shrink-0"
-          data-testid="button-close-detail"
-        >
-          <X className="w-5 h-5" />
-        </Button>
-      </div>
+      )}
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
@@ -122,7 +124,14 @@ export default function TripAdviceDetailPanel({
                 <div key={idx} className="space-y-3">
                   <Card 
                     className="hover-elevate cursor-pointer overflow-hidden"
-                    onClick={() => onTrainClick?.(leg)}
+                    onClick={() => {
+                      if (isMobile) {
+                        onClose();
+                        setTimeout(() => onTrainClick?.(leg), 300);
+                      } else {
+                        onTrainClick?.(leg);
+                      }
+                    }}
                     data-testid={`card-leg-${idx}`}
                   >
                     <div className="p-4">
@@ -188,13 +197,24 @@ export default function TripAdviceDetailPanel({
     return (
       <Drawer open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
         <DrawerContent 
-          className="max-h-[85vh]"
+          className="max-h-[85vh] flex flex-col"
           data-testid="drawer-trip-detail"
         >
-          <DrawerHeader className="border-b">
-            <DrawerTitle className="flex items-center gap-2">
-              <Train className="w-5 h-5 text-primary" />
-              <span className="truncate">Reisadvies</span>
+          <DrawerHeader className="border-b shrink-0">
+            <DrawerTitle className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <Train className="w-5 h-5 text-primary shrink-0" />
+                <span className="truncate">{legs[0]?.from} → {legs[legs.length - 1]?.to}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="shrink-0"
+                data-testid="button-close-mobile-detail"
+              >
+                <X className="w-5 h-5" />
+              </Button>
             </DrawerTitle>
           </DrawerHeader>
           <div className="flex-1 overflow-hidden">

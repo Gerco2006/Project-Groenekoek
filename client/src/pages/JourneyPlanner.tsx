@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,7 @@ interface SelectedTrain {
 
 export default function JourneyPlanner() {
   const isMobile = useIsMobile();
+  const hasAutoSelectedRef = useRef(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [viaStations, setViaStations] = useState<string[]>([]);
@@ -143,6 +144,7 @@ export default function JourneyPlanner() {
     setSearchedViaStations(viaStations.filter(v => v.trim() !== ""));
     setSelectedTrip(null);
     setSelectedTrain(null);
+    hasAutoSelectedRef.current = false;
     if (isMobile) {
       setIsSearchFormOpen(false);
     }
@@ -200,6 +202,17 @@ export default function JourneyPlanner() {
     if (isMobile === undefined) return;
     setIsSearchFormOpen(!isMobile);
   }, [isMobile]);
+
+  useEffect(() => {
+    hasAutoSelectedRef.current = false;
+  }, [searchedFrom, searchedTo, searchedViaStations, searchMode, date, time]);
+
+  useEffect(() => {
+    if (isMobile === false && trips.length > 0 && !hasAutoSelectedRef.current && !selectedTrip) {
+      setSelectedTrip(trips[0]);
+      hasAutoSelectedRef.current = true;
+    }
+  }, [isMobile, trips, selectedTrip]);
 
   const searchFormContent = (
     <>
@@ -392,39 +405,41 @@ export default function JourneyPlanner() {
 
   return (
     <div className="h-screen bg-background overflow-hidden">
-      <MasterDetailLayout
-        master={masterContent}
-        detail={
-          selectedTrip ? (
-            <TripAdviceDetailPanel
-              {...selectedTrip}
-              open={!!selectedTrip}
-              onClose={() => setSelectedTrip(null)}
-              onTrainClick={(leg) => setSelectedTrain(leg)}
-            />
-          ) : selectedTrain ? (
-            <TripDetailPanel
-              trainType={selectedTrain.trainType}
-              trainNumber={selectedTrain.trainNumber}
-              from={selectedTrain.from}
-              to={selectedTrain.to}
-              open={!!selectedTrain}
-              onClose={() => setSelectedTrain(null)}
-            />
-          ) : null
-        }
-        hasDetail={!!selectedTrip || !!selectedTrain}
-      />
-      {selectedTrain && !selectedTrip && (
-        <TripDetailPanel
-          trainType={selectedTrain.trainType}
-          trainNumber={selectedTrain.trainNumber}
-          from={selectedTrain.from}
-          to={selectedTrain.to}
-          open={!!selectedTrain}
-          onClose={() => setSelectedTrain(null)}
+      <div className="h-full max-w-7xl mx-auto">
+        <MasterDetailLayout
+          master={masterContent}
+          detail={
+            selectedTrip ? (
+              <TripAdviceDetailPanel
+                {...selectedTrip}
+                open={!!selectedTrip}
+                onClose={() => setSelectedTrip(null)}
+                onTrainClick={(leg) => setSelectedTrain(leg)}
+              />
+            ) : selectedTrain ? (
+              <TripDetailPanel
+                trainType={selectedTrain.trainType}
+                trainNumber={selectedTrain.trainNumber}
+                from={selectedTrain.from}
+                to={selectedTrain.to}
+                open={!!selectedTrain}
+                onClose={() => setSelectedTrain(null)}
+              />
+            ) : null
+          }
+          hasDetail={!!selectedTrip || !!selectedTrain}
         />
-      )}
+        {selectedTrain && !selectedTrip && (
+          <TripDetailPanel
+            trainType={selectedTrain.trainType}
+            trainNumber={selectedTrain.trainNumber}
+            from={selectedTrain.from}
+            to={selectedTrain.to}
+            open={!!selectedTrain}
+            onClose={() => setSelectedTrain(null)}
+          />
+        )}
+      </div>
     </div>
   );
 }

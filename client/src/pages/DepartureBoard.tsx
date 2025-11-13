@@ -416,11 +416,13 @@ export default function DepartureBoard() {
 
   return (
     <div className="h-screen bg-background overflow-hidden">
-      <MasterDetailLayout
-        master={masterContent}
-        detail={detailContent}
-        hasDetail={!!selectedTrain}
-      />
+      <div className="h-full max-w-7xl mx-auto">
+        <MasterDetailLayout
+          master={masterContent}
+          detail={detailContent}
+          hasDetail={!!selectedTrain}
+        />
+      </div>
     </div>
   );
 }
