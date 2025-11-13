@@ -53,7 +53,7 @@ export default function TripAdviceDetailPanel({
   };
 
   const content = (
-    <div className={`flex flex-col ${isMobile ? 'flex-1 min-h-0' : 'h-full'}`}>
+    <div className={`flex flex-col ${isMobile ? '' : 'h-full'}`}>
       {!isMobile && (
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -79,8 +79,8 @@ export default function TripAdviceDetailPanel({
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-4 space-y-6">
+      <div className={`${isMobile ? 'p-4 space-y-6' : 'flex-1 overflow-y-auto'}`}>
+        <div className={`${isMobile ? '' : 'p-4 space-y-6'}`}>
           {/* Trip Summary Card */}
           <Card className="p-4">
             <div className="flex items-center justify-between gap-2 mb-4">
@@ -194,9 +194,13 @@ export default function TripAdviceDetailPanel({
         >
           <DrawerHeader className="border-b shrink-0 px-3 py-2.5">
             <DrawerTitle className="flex items-center justify-between gap-1.5">
-              <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 <Train className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-xs truncate overflow-hidden text-ellipsis whitespace-nowrap">{legs[0]?.from} → {legs[legs.length - 1]?.to}</span>
+                <span className="text-xs truncate" style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>{legs[0]?.from} → {legs[legs.length - 1]?.to}</span>
               </div>
               <Button
                 variant="ghost"
@@ -209,7 +213,7 @@ export default function TripAdviceDetailPanel({
               </Button>
             </DrawerTitle>
           </DrawerHeader>
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto">
             {content}
           </div>
         </DrawerContent>

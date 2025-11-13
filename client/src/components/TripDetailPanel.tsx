@@ -41,6 +41,7 @@ export default function TripDetailPanel({
   const [showAllStations, setShowAllStations] = useState(false);
   const [trainInfoOpen, setTrainInfoOpen] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     if (!open) {
@@ -153,7 +154,7 @@ export default function TripDetailPanel({
     const scrollToCurrentStop = () => {
       const targetIndex = Math.floor(currentLocationIndex);
       const stopElement = document.querySelector(`[data-testid="row-stop-${targetIndex}"]`) as HTMLElement;
-      const scrollContainer = scrollAreaRef.current;
+      const scrollContainer = isMobile ? mobileScrollRef.current : scrollAreaRef.current;
       
       if (stopElement && scrollContainer) {
         const elementTop = stopElement.offsetTop;
@@ -171,7 +172,7 @@ export default function TripDetailPanel({
   }, [open, journeyData?.payload?.stops, currentLocationIndex]);
   
   const content = (
-    <div className={`flex flex-col ${isMobile ? 'flex-1 min-h-0' : 'h-full'}`}>
+    <div className={`flex flex-col ${isMobile ? '' : 'h-full'}`}>
       {!isMobile && (
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -218,9 +219,9 @@ export default function TripDetailPanel({
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col">
+        <div className={`${isMobile ? '' : 'flex-1 flex flex-col'}`}>
           {(actualStock || plannedStock) && (
-            <div className="px-4 pt-4 shrink-0">
+            <div className={`px-4 pt-4 ${isMobile ? '' : 'shrink-0'}`}>
               <Collapsible open={trainInfoOpen} onOpenChange={setTrainInfoOpen}>
                 <Card className="overflow-hidden">
                   <CollapsibleTrigger asChild>
@@ -321,7 +322,7 @@ export default function TripDetailPanel({
           )}
 
           {!isNonTrainTransport && (
-            <div className="px-4 py-3 shrink-0">
+            <div className={`px-4 py-3 ${isMobile ? '' : 'shrink-0'}`}>
               <Button
                 variant="outline"
                 size="sm"
@@ -335,7 +336,7 @@ export default function TripDetailPanel({
             </div>
           )}
 
-          <div ref={scrollAreaRef} className="flex-1 px-4 pb-4 overflow-y-auto">
+          <div ref={scrollAreaRef} className={`px-4 pb-4 ${isMobile ? '' : 'flex-1 overflow-y-auto'}`}>
             <div className="space-y-2">
               {displayedStops.map((stop: any, displayIdx: number) => {
                 const isPassing = stop.status === "PASSING";
@@ -459,11 +460,15 @@ export default function TripDetailPanel({
         <DrawerContent className="max-h-[90vh] flex flex-col">
           <DrawerHeader className="border-b shrink-0 px-3 py-2.5">
             <DrawerTitle className="flex items-center justify-between gap-1.5">
-              <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 <div className="shrink-0">
                   <TrainBadge type={trainType} number={trainNumber} />
                 </div>
-                <span className="text-xs truncate overflow-hidden text-ellipsis whitespace-nowrap">{from} → {to}</span>
+                <span className="text-xs truncate" style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>{from} → {to}</span>
               </div>
               <div className="flex items-center gap-0 shrink-0">
                 {onBack && (
@@ -487,7 +492,7 @@ export default function TripDetailPanel({
               </div>
             </DrawerTitle>
           </DrawerHeader>
-          <div className="flex-1 min-h-0">
+          <div ref={mobileScrollRef} className="flex-1 overflow-y-auto">
             {content}
           </div>
         </DrawerContent>
