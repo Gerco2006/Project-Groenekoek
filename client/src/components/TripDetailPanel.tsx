@@ -351,8 +351,8 @@ export default function TripDetailPanel({
                 const arrival = stop.arrivals?.[0];
                 const departure = stop.departures?.[0];
                 
-                const arrivalTime = formatTime(arrival?.actualTime || arrival?.plannedTime);
-                const departureTime = formatTime(departure?.actualTime || departure?.plannedTime);
+                const arrivalTime = formatTime(arrival?.plannedTime);
+                const departureTime = formatTime(departure?.plannedTime);
                 const arrivalDelay = calculateDelay(arrival?.plannedTime, arrival?.actualTime);
                 const departureDelay = calculateDelay(departure?.plannedTime, departure?.actualTime);
                 const platform = arrival?.actualTrack || arrival?.plannedTrack || 
