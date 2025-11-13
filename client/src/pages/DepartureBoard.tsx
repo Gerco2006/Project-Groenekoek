@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
-import { RefreshCw, Search, AlertTriangle, ChevronRight } from "lucide-react";
+import { RefreshCw, Search, AlertTriangle, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,6 +13,11 @@ import TripDetailPanel from "@/components/TripDetailPanel";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface SelectedTrain {
   trainType: string;
@@ -68,6 +73,7 @@ export default function DepartureBoard() {
   const [searchedStation, setSearchedStation] = useState("");
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
   const [activeTab, setActiveTab] = useState<"departures" | "arrivals">("departures");
+  const [searchOpen, setSearchOpen] = useState(true);
   const { toast } = useToast();
 
   const { data: departuresData, isLoading: isDeparturesLoading, refetch: refetchDepartures, error: departuresError } = useQuery<any>({
@@ -249,44 +255,60 @@ export default function DepartureBoard() {
     })) || [];
 
   const searchForm = (
-    <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
-      <StationSearch
-        label="Station"
-        value={station}
-        onChange={setStation}
-        placeholder="Bijv. Amsterdam Centraal"
-        testId="input-station"
-      />
-      
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "departures" | "arrivals")} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="departures" data-testid="tab-departures">Vertrek</TabsTrigger>
-          <TabsTrigger value="arrivals" data-testid="tab-arrivals">Aankomst</TabsTrigger>
-        </TabsList>
-      </Tabs>
+    <Collapsible open={searchOpen} onOpenChange={setSearchOpen}>
+      <Card className="backdrop-blur-sm bg-card/80">
+        <CollapsibleTrigger asChild>
+          <Button 
+            variant="ghost" 
+            className="w-full p-6 h-auto hover:bg-transparent no-default-hover-elevate justify-between rounded-b-none"
+            data-testid="button-toggle-search"
+          >
+            <span className="font-semibold text-base">Zoeken</span>
+            {searchOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </Button>
+        </CollapsibleTrigger>
 
-      <div className="flex gap-2">
-        <Button 
-          className="flex-1" 
-          size="lg"
-          disabled={!station.trim() || isLoading}
-          onClick={handleSearch}
-          data-testid="button-search"
-        >
-          <Search className="w-4 h-4 mr-2" />
-          {isLoading ? "Laden..." : activeTab === "departures" ? "Zoek vertrektijden" : "Zoek aankomsten"}
-        </Button>
-        <Button 
-          variant="outline" 
-          size="lg"
-          onClick={handleRefresh}
-          disabled={!searchedStation || isLoading}
-          data-testid="button-refresh"
-        >
-          <RefreshCw className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
+        <CollapsibleContent className="px-6 pb-6 space-y-4">
+          <StationSearch
+            label="Station"
+            value={station}
+            onChange={setStation}
+            placeholder="Bijv. Amsterdam Centraal"
+            testId="input-station"
+          />
+          
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "departures" | "arrivals")} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="departures" data-testid="tab-departures">Vertrek</TabsTrigger>
+              <TabsTrigger value="arrivals" data-testid="tab-arrivals">Aankomst</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              className="flex-1 min-w-[200px] sm:min-w-0" 
+              size="lg"
+              disabled={!station.trim() || isLoading}
+              onClick={handleSearch}
+              data-testid="button-search"
+            >
+              <Search className="w-4 h-4 mr-2 shrink-0" />
+              <span className="truncate">{isLoading ? "Laden..." : activeTab === "departures" ? "Zoek vertrektijden" : "Zoek aankomsten"}</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={handleRefresh}
+              disabled={!searchedStation || isLoading}
+              data-testid="button-refresh"
+              className="shrink-0"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 
   const masterContent = (

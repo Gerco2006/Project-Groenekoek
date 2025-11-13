@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Search, Hash } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import TrainDialog from "@/components/TrainDialog";
+import TripDetailPanel from "@/components/TripDetailPanel";
 import PageContainer from "@/components/PageContainer";
 
 export default function TrainLookup() {
@@ -125,9 +125,9 @@ export default function TrainLookup() {
         )}
 
         {trainInfo && (
-          <TrainDialog
+          <TripDetailPanel
             open={!!searchedNumber && !!trainInfo}
-            onOpenChange={(open) => !open && setSearchedNumber("")}
+            onClose={() => setSearchedNumber("")}
             trainType={trainInfo.product?.categoryCode || trainInfo.product?.shortCategoryName || "Trein"}
             trainNumber={searchedNumber}
             from={origin || "Onbekend"}
