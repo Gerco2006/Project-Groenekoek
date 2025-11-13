@@ -458,19 +458,22 @@ export default function TripDetailPanel({
     return (
       <Drawer open={open} onOpenChange={(newOpen) => !newOpen && onClose()} shouldScaleBackground={false}>
         <DrawerContent className="max-h-[90vh] flex flex-col">
-          <DrawerHeader className="border-b shrink-0 px-3 py-2.5">
-            <DrawerTitle className="flex items-center justify-between gap-1.5">
-              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <DrawerHeader className="border-b shrink-0 pl-3 pr-1 py-2.5">
+            <DrawerTitle className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1" style={{
+                overflow: 'hidden'
+              }}>
                 <div className="shrink-0">
                   <TrainBadge type={trainType} number={trainNumber} />
                 </div>
-                <span className="text-xs truncate" style={{
+                <span className="text-xs" style={{
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+                  whiteSpace: 'nowrap',
+                  minWidth: 0
                 }}>{from} → {to}</span>
               </div>
-              <div className="flex items-center gap-0 shrink-0">
+              <div className="flex items-center shrink-0">
                 {onBack && (
                   <Button
                     variant="ghost"
