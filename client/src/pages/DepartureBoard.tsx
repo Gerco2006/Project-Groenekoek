@@ -78,7 +78,7 @@ export default function DepartureBoard() {
 
   const { data: departuresData, isLoading: isDeparturesLoading, refetch: refetchDepartures, error: departuresError } = useQuery<any>({
     queryKey: ["/api/departures", searchedStation],
-    enabled: !!searchedStation && activeTab === "departures",
+    enabled: !!searchedStation,
     queryFn: async () => {
       const response = await fetch(`/api/departures?station=${encodeURIComponent(searchedStation)}`);
       if (!response.ok) {
@@ -91,7 +91,7 @@ export default function DepartureBoard() {
 
   const { data: arrivalsData, isLoading: isArrivalsLoading, refetch: refetchArrivals, error: arrivalsError } = useQuery<any>({
     queryKey: ["/api/arrivals", searchedStation],
-    enabled: !!searchedStation && activeTab === "arrivals",
+    enabled: !!searchedStation,
     queryFn: async () => {
       const response = await fetch(`/api/arrivals?station=${encodeURIComponent(searchedStation)}`);
       if (!response.ok) {
@@ -429,8 +429,8 @@ export default function DepartureBoard() {
     <TripDetailPanel
       trainType={selectedTrain.trainType}
       trainNumber={selectedTrain.trainNumber}
-      from={searchedStation || station}
-      to={selectedTrain.destination}
+      from={activeTab === "arrivals" ? selectedTrain.destination : (searchedStation || station)}
+      to={activeTab === "arrivals" ? (searchedStation || station) : selectedTrain.destination}
       open={!!selectedTrain}
       onClose={() => setSelectedTrain(null)}
     />

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle } from "lucide-react";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
@@ -408,34 +408,31 @@ export default function JourneyPlanner() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="time-input" className="text-sm font-medium">Tijd & Richting</Label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="relative flex-1">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="time-input"
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="pl-9"
-                  data-testid="input-time"
-                />
-              </div>
-              <ToggleGroup 
-                type="single" 
-                value={searchMode}
-                onValueChange={(value) => value && setSearchMode(value as "departure" | "arrival")}
-                className="border rounded-md shrink-0"
-                data-testid="toggle-search-mode"
-              >
-                <ToggleGroupItem value="departure" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" data-testid="toggle-departure">
-                  Vertrek
-                </ToggleGroupItem>
-                <ToggleGroupItem value="arrival" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" data-testid="toggle-arrival">
-                  Aankomst
-                </ToggleGroupItem>
-              </ToggleGroup>
+            <Label htmlFor="time-input" className="text-sm font-medium">Tijd</Label>
+            <div className="relative">
+              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="time-input"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="pl-9"
+                data-testid="input-time"
+              />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Tijdvoorkeur</Label>
+            <Tabs value={searchMode} onValueChange={(value) => setSearchMode(value as "departure" | "arrival")} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="departure" data-testid="toggle-departure">Vertrek</TabsTrigger>
+                <TabsTrigger value="arrival" data-testid="toggle-arrival">Aankomst</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <p className="text-xs text-muted-foreground">
+              {searchMode === "departure" ? "Vertrek op de aangegeven tijd" : "Aankomst op de aangegeven tijd"}
+            </p>
           </div>
 
           <div className="space-y-2">
