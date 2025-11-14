@@ -115,7 +115,7 @@ export default function JourneyPlanner() {
         fromStation: searchedFrom,
         toStation: searchedTo,
         dateTime: dateTime,
-        searchType: searchMode === "arrival" ? "ARRIVAL" : "DEPART",
+        searchType: searchMode === "arrival" ? "ARRIVAL" : "DEPARTURE",
       });
 
       searchedViaStations.forEach((via) => {
@@ -129,7 +129,7 @@ export default function JourneyPlanner() {
       }
 
       if (accessible) {
-        params.append("accessible", "true");
+        params.append("wheelChairAccessible", "ACCESSIBLE");
       }
 
       const response = await fetch(`/api/trips?${params.toString()}`);

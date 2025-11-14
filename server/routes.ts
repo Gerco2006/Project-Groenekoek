@@ -160,11 +160,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fromStation, 
         toStation, 
         dateTime,
-        searchType = "DEPART",
+        searchType = "DEPARTURE",
         viaStation,
         lang = "nl",
         addChangeTime,
-        accessible
+        wheelChairAccessible
       } = req.query;
       
       if (!fromStation || !toStation) {
@@ -212,8 +212,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         params.addChangeTime = addChangeTime as string;
       }
 
-      if (accessible === "true") {
-        params.accessible = "true";
+      if (wheelChairAccessible) {
+        params.wheelChairAccessible = wheelChairAccessible as string;
       }
 
       const data = await fetchNS("/v3/trips", params);

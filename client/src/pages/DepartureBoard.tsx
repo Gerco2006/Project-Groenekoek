@@ -120,13 +120,11 @@ export default function DepartureBoard() {
   const arrivals: Arrival[] = arrivalsData?.payload?.arrivals || [];
   const isLoading = activeTab === "departures" ? isDeparturesLoading : isArrivalsLoading;
   
-  const fullStationName = activeTab === "departures" 
-    ? (departures[0]?.routeStations?.[0]?.mediumName || searchedStation)
-    : (arrivals[0]?.routeStations?.[arrivals[0]?.routeStations?.length - 1]?.mediumName || searchedStation);
+  const fullStationName = searchedStation;
 
   const { data: disruptionsData } = useQuery<any>({
     queryKey: ["/api/disruptions/station", fullStationName],
-    enabled: !!fullStationName,
+    enabled: !!fullStationName && !isLoading,
     queryFn: async () => {
       const response = await fetch(`/api/disruptions/station/${encodeURIComponent(fullStationName)}`);
       if (!response.ok) {
@@ -425,12 +423,19 @@ export default function DepartureBoard() {
     </div>
   );
 
+  const detailFrom = activeTab === "arrivals" 
+    ? selectedTrain?.destination 
+    : (searchedStation || station);
+  const detailTo = activeTab === "arrivals" 
+    ? (searchedStation || station) 
+    : selectedTrain?.destination;
+
   const detailContent = selectedTrain && (
     <TripDetailPanel
       trainType={selectedTrain.trainType}
       trainNumber={selectedTrain.trainNumber}
-      from={activeTab === "arrivals" ? selectedTrain.destination : (searchedStation || station)}
-      to={activeTab === "arrivals" ? (searchedStation || station) : selectedTrain.destination}
+      from={detailFrom || ""}
+      to={detailTo || ""}
       open={!!selectedTrain}
       onClose={() => setSelectedTrain(null)}
     />
