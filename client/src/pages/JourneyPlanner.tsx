@@ -106,6 +106,12 @@ export default function JourneyPlanner() {
     return `${dateStr}T${time}:00`;
   };
 
+  const resetToNow = () => {
+    const now = new Date();
+    setDate(now);
+    setTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+  };
+
   const { data: tripsData, isLoading, error } = useQuery<any>({
     queryKey: ["/api/trips", searchedFrom, searchedTo, searchedViaStations, searchMode, date, time, addChangeTime, accessible],
     enabled: !!searchedFrom && !!searchedTo,
@@ -115,8 +121,11 @@ export default function JourneyPlanner() {
         fromStation: searchedFrom,
         toStation: searchedTo,
         dateTime: dateTime,
-        searchType: searchMode === "arrival" ? "ARRIVAL" : "DEPARTURE",
       });
+
+      if (searchMode === "arrival") {
+        params.append("searchForArrival", "true");
+      }
 
       searchedViaStations.forEach((via) => {
         if (via.trim()) {
@@ -384,7 +393,17 @@ export default function JourneyPlanner() {
         </CollapsibleTrigger>
         <CollapsibleContent className="space-y-3 pt-3">
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Datum</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Datum & Tijd</Label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetToNow}
+                data-testid="button-reset-to-now"
+              >
+                Nu
+              </Button>
+            </div>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -408,7 +427,6 @@ export default function JourneyPlanner() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="time-input" className="text-sm font-medium">Tijd</Label>
             <div className="relative">
               <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
