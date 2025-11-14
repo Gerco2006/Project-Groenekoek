@@ -415,9 +415,9 @@ export default function TripDetailPanel({
                                   <span className="text-muted-foreground">Aankomst:</span>
                                   <span className="font-medium">{arrivalTime}</span>
                                   {arrivalDelay > 0 && (
-                                    <span className="text-destructive font-semibold">
-                                      +{arrivalDelay} min
-                                    </span>
+                                    <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
+                                      +{arrivalDelay}
+                                    </Badge>
                                   )}
                                 </div>
                               )}
@@ -427,9 +427,9 @@ export default function TripDetailPanel({
                                   <span className="text-muted-foreground">Vertrek:</span>
                                   <span className="font-medium">{departureTime}</span>
                                   {departureDelay > 0 && (
-                                    <span className="text-destructive font-semibold">
-                                      +{departureDelay} min
-                                    </span>
+                                    <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
+                                      +{departureDelay}
+                                    </Badge>
                                   )}
                                 </div>
                               )}

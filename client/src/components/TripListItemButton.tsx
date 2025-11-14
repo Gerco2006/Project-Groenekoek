@@ -58,7 +58,7 @@ export default function TripListItemButton({
         {delayMinutes && delayMinutes > 0 && (
           <Badge variant="destructive" className="gap-1 shrink-0">
             <AlertCircle className="w-3 h-3" />
-            +{delayMinutes} min
+            +{delayMinutes}
           </Badge>
         )}
       </div>

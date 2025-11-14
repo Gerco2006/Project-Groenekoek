@@ -132,7 +132,7 @@ export default function TripAdviceDetailPanel({
               {delayMinutes && delayMinutes > 0 && (
                 <Badge variant="destructive" className="gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  +{delayMinutes} min vertraging
+                  +{delayMinutes}
                 </Badge>
               )}
             </div>
