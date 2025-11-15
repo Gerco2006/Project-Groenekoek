@@ -177,8 +177,8 @@ export default function Disruptions() {
         <Card className="p-8 text-center text-muted-foreground">
           <p>
             {activeFilter === "active" 
-              ? "Geen actieve storingen of werkzaamheden" 
-              : "Geen geplande werkzaamheden"}
+              ? "Geen actieve storingen of werkzaamheden bekend" 
+              : "Geen geplande werkzaamheden bekend"}
           </p>
         </Card>
       )}
