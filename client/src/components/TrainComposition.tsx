@@ -180,8 +180,8 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                 key={deelIndex} 
                 className="relative rounded-lg overflow-hidden shrink-0 border border-border/50"
                 style={{ 
-                  width: isMobile ? '400px' : `${Math.min((deel.breedte || 400) * 1.5, 700)}px`,
-                  minHeight: isMobile ? '160px' : '200px',
+                  width: isMobile ? '500px' : `${Math.min((deel.breedte || 400) * 2, 900)}px`,
+                  height: isMobile ? '80px' : '100px',
                   background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
                 }}
                 data-testid={`train-part-${deelIndex}`}
@@ -192,7 +192,8 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     alt={`${deel.type} - ${deel.materieelnummer}`}
                     className="w-full h-full object-contain"
                     style={{
-                      mixBlendMode: 'darken'
+                      mixBlendMode: 'darken',
+                      objectPosition: 'center'
                     }}
                     loading="lazy"
                   />
