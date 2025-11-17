@@ -95,7 +95,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                   key={deelIndex} 
                   className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
                   style={{ 
-                    width: isMobile ? '600px' : '450px',
+                    width: isMobile ? '600px' : '350px',
                     height: '108px',
                     background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
                   }}
@@ -105,9 +105,10 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     <img 
                       src={deel.afbeelding} 
                       alt={`${deel.type} - ${deel.materieelnummer}`}
-                      className="w-full h-full object-contain"
+                      className="w-full h-full"
                       style={{
                         mixBlendMode: 'darken',
+                        objectFit: 'cover',
                         objectPosition: 'center'
                       }}
                       loading="lazy"
