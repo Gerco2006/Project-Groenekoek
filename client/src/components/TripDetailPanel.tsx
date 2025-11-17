@@ -26,9 +26,9 @@ const crowdingColors = {
 };
 
 const crowdingLabels = {
-  LOW: "Lage drukte",
+  LOW: "Rustig",
   MEDIUM: "Gemiddelde drukte",
-  HIGH: "Hoge drukte",
+  HIGH: "Druk, mogelijk vol",
 };
 
 interface TripDetailPanelProps {

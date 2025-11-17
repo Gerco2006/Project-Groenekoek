@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Wifi, Bike, BatteryCharging, Accessibility, Droplet, Train as TrainIcon, ChevronDown, ChevronUp } from "lucide-react";
+import { Wifi, Bike, BatteryCharging, Accessibility, BellOff, Bath, Train as TrainIcon, ChevronDown, ChevronUp } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useState } from "react";
 import {
@@ -26,7 +26,8 @@ const facilityMap: Record<string, Facility> = {
   FIETS: { type: "FIETS", icon: <Bike className="w-4 h-4" />, label: "Fiets" },
   STROOM: { type: "STROOM", icon: <BatteryCharging className="w-4 h-4" />, label: "Stroom" },
   TOEGANKELIJK: { type: "TOEGANKELIJK", icon: <Accessibility className="w-4 h-4" />, label: "Toegankelijk" },
-  TOILET: { type: "TOILET", icon: <Droplet className="w-4 h-4" />, label: "Toilet" },
+  TOILET: { type: "TOILET", icon: <Bath className="w-4 h-4" />, label: "Toilet" },
+  STILTE: { type: "STILTE", icon: <BellOff className="w-4 h-4" />, label: "Stilte" }
 };
 
 export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
@@ -81,15 +82,15 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
     <div className="space-y-4" data-testid="train-composition">
       {/* Trein visualizatie */}
       <div className="px-4">
-        <Card className="backdrop-blur-sm bg-card/80 p-4 pb-2 space-y-2 overflow-hidden">
+        <Card className="bg-card/80 p-4 pb-2 space-y-2 overflow-hidden">
           <h4 className="font-semibold text-sm">Treinsamenstelling</h4>
           <div 
-            className="overflow-x-scroll overflow-y-hidden rounded-lg -mx-4 w-[calc(100%+2rem)]"
+            className="overflow-x-auto overflow-y-hidden rounded-lg w-full max-w-[100%]"
             style={{ scrollbarWidth: 'thin' }}
             data-testid="train-visualization"
           >
 
-            <div className="flex px-4">
+            <div className="flex px-4 w-max">
               {materieeldelen.map((deel: any, deelIndex: number) => {
                 const bakkenCount = deel.bakken?.length || 4;
                 const baseWidth = deel.type?.toUpperCase().includes('SPR') ? 150 : 200;
@@ -98,7 +99,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                 return (
                   <div 
                     key={deelIndex} 
-                    className="shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
+                    className="shrink-0 first:border-l first:rounded-l-lg last:rounded-r-lg border-border/0"
                     style={{ 
                       width: isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
                       height: '45px',
@@ -197,7 +198,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                 {/* Material Parts */}
                 <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
                   {materieeldelen.map((deel: any, index: number) => (
-                    <Card key={index} className="backdrop-blur-sm bg-card/80 p-4 space-y-3" data-testid={`material-part-${index}`}>
+                    <Card key={index} className="bg-card/80 p-4 space-y-3" data-testid={`material-part-${index}`}>
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-semibold text-sm" data-testid={`material-number-${index}`}>
