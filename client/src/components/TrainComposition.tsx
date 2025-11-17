@@ -102,32 +102,25 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
                     style={{ 
                       width: isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
-                      height: '160px',
+                      height: '140px',
                       background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
                     }}
                     data-testid={`train-part-${deelIndex}`}
                   >
                     {deel.afbeelding ? (
-                      <div style={{
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'hidden'
-                      }}>
-                        <img 
-                          src={deel.afbeelding} 
-                          alt={`${deel.type} - ${deel.materieelnummer}`}
-                          style={{
-                            mixBlendMode: 'darken',
-                            width: 'auto',
-                            height: '280%',
-                            clipPath: 'inset(25% 0 25% 0)'
-                          }}
-                          loading="lazy"
-                        />
-                      </div>
+                      <img 
+                        src={deel.afbeelding} 
+                        alt={`${deel.type} - ${deel.materieelnummer}`}
+                        style={{
+                          mixBlendMode: 'darken',
+                          width: '100%',
+                          height: '300%',
+                          objectFit: 'contain',
+                          objectPosition: 'center',
+                          transform: 'translateY(-33.33%)'
+                        }}
+                        loading="lazy"
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         <div className="text-center">
