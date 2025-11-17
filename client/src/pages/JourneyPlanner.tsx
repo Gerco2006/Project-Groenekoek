@@ -508,8 +508,8 @@ export default function JourneyPlanner() {
     <div className="h-full flex flex-col">
       <div className="shrink-0 px-4 py-6 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">TravNL reisplanner</h1>
-          <p className="text-muted-foreground">Plan je reis met de trein!</p>
+          <h1 className="text-3xl font-bold mb-2">Reisplanner</h1>
+          <p className="text-muted-foreground">Plan je reis met de trein</p>
         </div>
         <CollapsibleSearchForm
           isOpen={isSearchFormOpen}
