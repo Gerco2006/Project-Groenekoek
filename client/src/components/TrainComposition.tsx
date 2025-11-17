@@ -61,7 +61,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
 
   const materieeldelen = compositionData.materieeldelen || [];
 
-  // Calculate totals
+  // Bereken totaal aantal zitplaatsen en fietsplekken
   const totalSeatsFirstClass = materieeldelen.reduce((sum: number, deel: any) => 
     sum + (deel.zitplaatsen?.zitplaatsEersteKlas || 0) + (deel.zitplaatsen?.klapstoelEersteKlas || 0), 0
   );
@@ -72,7 +72,6 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
     sum + (deel.zitplaatsen?.fietsplekken || 0), 0
   );
 
-  // Get unique facilities across all parts
   const allFacilities = new Set<string>();
   materieeldelen.forEach((deel: any) => {
     deel.faciliteiten?.forEach((fac: string) => allFacilities.add(fac));
@@ -80,7 +79,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
 
   return (
     <div className="space-y-4" data-testid="train-composition">
-      {/* Train Visualization - Always visible */}
+      {/* Trein visualizatie */}
       <div className="px-4">
         <Card className="backdrop-blur-sm bg-card/80 p-4 pb-2 space-y-2 overflow-hidden">
           <h4 className="font-semibold text-sm">Treinsamenstelling</h4>
@@ -91,9 +90,8 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
           >
             <div className="flex px-4">
               {materieeldelen.map((deel: any, deelIndex: number) => {
-                // Calculate width based on number of bakken to maintain consistent scale
                 const bakkenCount = deel.bakken?.length || 4;
-                const baseWidth = 565; // pixels per bakje
+                const baseWidth = 200; // pixels per bak
                 const calculatedWidth = bakkenCount * baseWidth;
                 
                 return (
@@ -108,7 +106,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                       justifyContent: 'center',
                       overflow: 'hidden',
                       padding: 0,
-                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
+                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.75) 100%)'
                     }}
                     data-testid={`train-part-${deelIndex}`}
                   >
@@ -124,7 +122,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                           objectPosition: 'center bottom',
                           mixBlendMode: 'darken'
                         }}
-                        loading="lazy"
+                        // loading="lazy"
                       />
                     )}
                   </div>
