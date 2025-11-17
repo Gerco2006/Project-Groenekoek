@@ -99,7 +99,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                 return (
                   <div 
                     key={deelIndex} 
-                    className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50 flex items-center justify-center"
+                    className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
                     style={{ 
                       width: isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
                       height: '140px',
@@ -111,18 +111,22 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                       <img 
                         src={deel.afbeelding} 
                         alt={`${deel.type} - ${deel.materieelnummer}`}
-                        className="w-full"
                         style={{
                           mixBlendMode: 'darken',
-                          height: 'auto',
-                          maxHeight: '100%'
+                          width: '100%',
+                          height: '200%',
+                          objectFit: 'contain',
+                          objectPosition: 'center',
+                          transform: 'translateY(-25%)'
                         }}
                         loading="lazy"
                       />
                     ) : (
-                      <div className="text-center text-muted-foreground">
-                        <TrainIcon className="w-12 h-12 mx-auto mb-2" />
-                        <p className="text-xs">{deel.type}</p>
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <TrainIcon className="w-12 h-12 mx-auto mb-2" />
+                          <p className="text-xs">{deel.type}</p>
+                        </div>
                       </div>
                     )}
                   </div>
