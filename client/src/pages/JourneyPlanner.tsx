@@ -441,7 +441,6 @@ export default function JourneyPlanner() {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Tijdvoorkeur</Label>
             <Tabs value={searchMode} onValueChange={(value) => setSearchMode(value as "departure" | "arrival")} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="departure" data-testid="toggle-departure">Vertrek</TabsTrigger>
@@ -509,8 +508,8 @@ export default function JourneyPlanner() {
     <div className="h-full flex flex-col">
       <div className="shrink-0 px-4 py-6 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Reisplanner</h1>
-          <p className="text-muted-foreground">Plan je reis met de trein</p>
+          <h1 className="text-3xl font-bold mb-2">TravNL reisplanner</h1>
+          <p className="text-muted-foreground">Plan je reis met de trein!</p>
         </div>
         <CollapsibleSearchForm
           isOpen={isSearchFormOpen}
