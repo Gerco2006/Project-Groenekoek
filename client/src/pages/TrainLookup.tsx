@@ -16,29 +16,25 @@ export default function TrainLookup() {
   const [searchedMode, setSearchedMode] = useState<"journey" | "material">("journey");
   const { toast } = useToast();
 
-  const { data: materialData, isLoading: isMaterialLoading, error: materialError } = useQuery({
-    queryKey: ["/api/material-to-journey", searchedNumber],
+  const { data: materialJourneyData, isLoading: isMaterialLoading, error: materialError } = useQuery({
+    queryKey: ["/api/journey-by-material", searchedNumber],
     enabled: !!searchedNumber && searchedMode === "material",
     queryFn: async () => {
-      const response = await fetch(`/api/material-to-journey?material=${searchedNumber}`);
+      const response = await fetch(`/api/journey-by-material?material=${searchedNumber}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch journey number");
+        throw new Error(errorData.error || "Failed to fetch journey by material number");
       }
       return response.json();
     },
     retry: 1,
   });
 
-  const actualJourneyNumber = searchedMode === "material" && materialData?.ritnummer 
-    ? materialData.ritnummer 
-    : searchedNumber;
-
   const { data: journeyData, isLoading: isJourneyLoading, error: journeyError } = useQuery({
-    queryKey: ["/api/journey", actualJourneyNumber],
-    enabled: searchedMode === "journey" ? !!searchedNumber : !!materialData?.ritnummer,
+    queryKey: ["/api/journey", searchedNumber],
+    enabled: !!searchedNumber && searchedMode === "journey",
     queryFn: async () => {
-      const response = await fetch(`/api/journey?train=${actualJourneyNumber}`);
+      const response = await fetch(`/api/journey?train=${searchedNumber}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to fetch journey details");
@@ -48,8 +44,11 @@ export default function TrainLookup() {
     retry: 1,
   });
 
-  const isLoading = searchedMode === "material" ? (isMaterialLoading || isJourneyLoading) : isJourneyLoading;
+  const isLoading = searchedMode === "material" ? isMaterialLoading : isJourneyLoading;
   const error = materialError || journeyError;
+  
+  const actualJourneyData = searchedMode === "material" ? materialJourneyData?.journeyData : journeyData;
+  const actualJourneyNumber = searchedMode === "material" ? materialJourneyData?.ritnummer : searchedNumber;
 
   useEffect(() => {
     if (error) {
@@ -82,7 +81,7 @@ export default function TrainLookup() {
     return date.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
   };
 
-  const trainInfo = journeyData?.payload;
+  const trainInfo = actualJourneyData?.payload;
   const stops = trainInfo?.stops || [];
   
   const origin = stops.length > 0 ? stops[0]?.stop?.name : null;
@@ -170,10 +169,10 @@ export default function TrainLookup() {
           </div>
         )}
 
-        {!isLoading && searchedNumber && !journeyData && (
+        {!isLoading && searchedNumber && !actualJourneyData && (
           <div className="backdrop-blur-sm bg-card/80 rounded-xl p-8 border text-center text-muted-foreground">
             <p>Geen treininfo gevonden voor {searchedMode === "journey" ? "ritnummer" : "materieelnummer"} {searchedNumber}</p>
-            {searchedMode === "material" && !materialData?.ritnummer && (
+            {searchedMode === "material" && (
               <p className="mt-2 text-sm">Controleer of het materieelnummer correct is</p>
             )}
           </div>
@@ -187,10 +186,10 @@ export default function TrainLookup() {
           </div>
         )}
 
-        {searchedMode === "material" && materialData?.ritnummer && (
+        {searchedMode === "material" && materialJourneyData?.ritnummer && (
           <div className="backdrop-blur-sm bg-card/80 rounded-xl p-4 border">
             <p className="text-sm text-muted-foreground">
-              Materieelnummer <span className="font-semibold text-foreground">{searchedNumber}</span> rijdt als ritnummer <span className="font-semibold text-foreground">{materialData.ritnummer}</span>
+              Materieelnummer <span className="font-semibold text-foreground">{searchedNumber}</span> rijdt als ritnummer <span className="font-semibold text-foreground">{materialJourneyData.ritnummer}</span>
             </p>
           </div>
         )}

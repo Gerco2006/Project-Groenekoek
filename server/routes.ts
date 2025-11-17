@@ -228,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/material-to-journey", async (req, res) => {
+  app.get("/api/journey-by-material", async (req, res) => {
     try {
       const { material } = req.query;
       
@@ -236,7 +236,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Material number parameter is required" });
       }
 
-      const response = await fetch(
+      // Step 1: Convert material number to journey number
+      const virtualTrainResponse = await fetch(
         `https://gateway.apiportal.ns.nl/virtual-train-api/v1/ritnummer/${material}`,
         {
           headers: {
@@ -245,18 +246,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       );
 
-      if (!response.ok) {
-        if (response.status === 404) {
+      if (!virtualTrainResponse.ok) {
+        if (virtualTrainResponse.status === 404) {
           return res.status(404).json({ error: "Material number not found" });
         }
-        throw new Error(`NS API returned ${response.status}`);
+        throw new Error(`Virtual Train API returned ${virtualTrainResponse.status}`);
       }
 
-      const ritnummer = await response.text();
-      res.json({ ritnummer: ritnummer.trim() });
+      const ritnummer = (await virtualTrainResponse.text()).trim();
+      
+      // Step 2: Fetch journey details using the journey number
+      const journeyData = await fetchNS("/v2/journey", { train: ritnummer });
+
+      // Return both the ritnummer and the full journey data
+      res.json({
+        ritnummer,
+        journeyData
+      });
     } catch (error) {
-      console.error("Error fetching journey number from material:", error);
-      res.status(500).json({ error: "Failed to convert material number to journey number" });
+      console.error("Error fetching journey by material number:", error);
+      res.status(500).json({ error: "Failed to fetch journey details using material number" });
     }
   });
 
