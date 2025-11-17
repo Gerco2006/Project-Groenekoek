@@ -93,7 +93,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
               {materieeldelen.map((deel: any, deelIndex: number) => {
                 // Calculate width based on number of bakken to maintain consistent scale
                 const bakkenCount = deel.bakken?.length || 4;
-                const baseWidth = 90; // pixels per bakje
+                const baseWidth = 565; // pixels per bakje
                 const calculatedWidth = bakkenCount * baseWidth;
                 
                 return (
@@ -102,7 +102,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
                     style={{ 
                       width: isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
-                      height: '140px',
+                      height: '120px',
                       background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
                     }}
                     data-testid={`train-part-${deelIndex}`}
@@ -113,9 +113,9 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                         alt={`${deel.type} - ${deel.materieelnummer}`}
                         style={{
                           mixBlendMode: 'darken',
-                          width: '200%',
+                          width: '100%',
                           height: '200%',
-                          objectFit: 'contain',
+                          objectFit: 'none',
                           objectPosition: 'center',
                           transform: 'translateY(-25%)'
                         }}
