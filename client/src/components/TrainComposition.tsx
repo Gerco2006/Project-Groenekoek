@@ -88,7 +88,6 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
             style={{ scrollbarWidth: 'thin' }}
             data-testid="train-visualization"
           >
-            console.log(deel.materieelnummer, deel.type);
 
             <div className="flex px-4">
               {materieeldelen.map((deel: any, deelIndex: number) => {
@@ -108,7 +107,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                       justifyContent: 'center',
                       overflow: 'hidden',
                       padding: 0,
-                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.75) 100%)'
+                      // background: 'linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.6) 100%)'
                     }}
                     data-testid={`train-part-${deelIndex}`}
                   >
@@ -122,7 +121,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                           display: 'block',
                           objectFit: 'contain',
                           objectPosition: 'center bottom',
-                          mixBlendMode: 'darken'
+                          // mixBlendMode: 'darken'
                         }}
                         // loading="lazy"
                       />
