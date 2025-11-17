@@ -88,10 +88,12 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
             style={{ scrollbarWidth: 'thin' }}
             data-testid="train-visualization"
           >
+            console.log(deel.materieelnummer, deel.type);
+
             <div className="flex px-4">
               {materieeldelen.map((deel: any, deelIndex: number) => {
                 const bakkenCount = deel.bakken?.length || 4;
-                const baseWidth = 200; // pixels per bak
+                const baseWidth = deel.type?.toUpperCase().includes('SPR') ? 150 : 200;
                 const calculatedWidth = bakkenCount * baseWidth;
                 
                 return (
