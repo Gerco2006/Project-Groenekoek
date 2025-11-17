@@ -98,26 +98,24 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
 
   return (
     <div className="space-y-4" data-testid="train-composition">
-      {/* Overview Card */}
+      {/* Overview Card - Moved to top without header */}
       <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
-        <div className="flex items-center gap-2 mb-2">
-          <TrainIcon className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-lg">Materieelinfo</h3>
-        </div>
-
         {/* Capacity Overview */}
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-primary">{totalSeatsFirstClass}</p>
-            <p className="text-xs text-muted-foreground">1e klas</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-primary">{totalSeatsSecondClass}</p>
-            <p className="text-xs text-muted-foreground">2e klas</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-primary">{totalBikeSpots}</p>
-            <p className="text-xs text-muted-foreground">Fietsplekken</p>
+        <div>
+          <p className="text-xs text-muted-foreground font-medium mb-3 text-center">Totale capaciteit materieel</p>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="space-y-1">
+              <p className="text-lg font-bold text-primary">{totalSeatsFirstClass}</p>
+              <p className="text-xs text-muted-foreground">1e klas</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-lg font-bold text-primary">{totalSeatsSecondClass}</p>
+              <p className="text-xs text-muted-foreground">2e klas</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-lg font-bold text-primary">{totalBikeSpots}</p>
+              <p className="text-xs text-muted-foreground">Fietsplekken</p>
+            </div>
           </div>
         </div>
 
@@ -138,7 +136,11 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
         )}
       </Card>
 
-      {/* Material Parts */}
+      {/* Material Parts - With header */}
+      <div className="flex items-center gap-2 mb-2">
+        <TrainIcon className="w-5 h-5 text-primary" />
+        <h3 className="font-semibold text-lg">Materieelinfo</h3>
+      </div>
       <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
         {materieeldelen.map((deel: any, index: number) => (
           <Card key={index} className="backdrop-blur-sm bg-card/80 p-4 space-y-3" data-testid={`material-part-${index}`}>
@@ -194,39 +196,37 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
       <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
         <h4 className="font-semibold text-sm">Trein samenstelling</h4>
         <div 
-          className="overflow-x-auto pb-2"
+          className="overflow-x-auto pb-2 bg-muted/30 dark:bg-muted/50 rounded-lg p-3"
           style={{ scrollbarWidth: 'thin' }}
           data-testid="train-visualization"
         >
-          <div className="flex gap-2 min-w-max">
-            {materieeldelen.map((deel: any, deelIndex: number) => (
-              <div key={deelIndex} className="space-y-2">
-                {deel.bakken?.map((bak: any, bakIndex: number) => (
-                  <div 
-                    key={bakIndex} 
-                    className="relative rounded border bg-background/50 overflow-hidden"
-                    style={{ 
-                      width: isMobile ? '200px' : `${Math.min(bak.afbeelding?.breedte || 250, 300)}px`,
-                      height: isMobile ? 'auto' : `${Math.min(bak.afbeelding?.hoogte || 100, 120)}px`
-                    }}
-                    data-testid={`wagon-${deelIndex}-${bakIndex}`}
-                  >
-                    {bak.afbeelding?.url ? (
-                      <img 
-                        src={bak.afbeelding.url} 
-                        alt={`Bak ${bakIndex + 1} van ${deel.type}`}
-                        className="w-full h-full object-contain"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <TrainIcon className="w-8 h-8" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))}
+          <div className="flex gap-3">
+            {materieeldelen.map((deel: any, deelIndex: number) => 
+              deel.bakken?.map((bak: any, bakIndex: number) => (
+                <div 
+                  key={`${deelIndex}-${bakIndex}`} 
+                  className="relative rounded border bg-background dark:bg-card overflow-hidden shrink-0"
+                  style={{ 
+                    width: isMobile ? '200px' : `${Math.min(bak.afbeelding?.breedte || 250, 300)}px`,
+                    height: isMobile ? '100px' : `${Math.min(bak.afbeelding?.hoogte || 100, 120)}px`
+                  }}
+                  data-testid={`wagon-${deelIndex}-${bakIndex}`}
+                >
+                  {bak.afbeelding?.url ? (
+                    <img 
+                      src={bak.afbeelding.url} 
+                      alt={`Bak ${bakIndex + 1} van ${deel.type}`}
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <TrainIcon className="w-8 h-8" />
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
         <p className="text-xs text-muted-foreground text-center">
