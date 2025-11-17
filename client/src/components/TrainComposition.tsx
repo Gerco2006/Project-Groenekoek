@@ -102,30 +102,24 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
                     style={{ 
                       width: isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
-                      height: '120px',
+                      height: '90px',
                       background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
                     }}
+                    data-testid={`train-part-${deelIndex}`}
                   >
                     {deel.afbeelding && (
                       <img 
                         src={deel.afbeelding}
                         alt={`${deel.type} - ${deel.materieelnummer}`}
                         style={{
-                          position: "absolute",
-                          bottom: 0,
-                          left: 0,
-
-                          width: "100%",
-                          height: "auto",
-
-                          objectFit: "contain",
-                          objectPosition: "bottom",
-
-                          transform: "scale(0.5)",
-                          transformOrigin: "bottom left",
-
-                          mixBlendMode: "darken",
+                          mixBlendMode: 'darken',
+                          width: '100%',
+                          height: '300%',
+                          objectFit: 'contain',
+                          objectPosition: 'center',
+                          transform: 'translateY(-33.33%)'
                         }}
+                        loading="lazy"
                       />
                     )}
                   </div>
