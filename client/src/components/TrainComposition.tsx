@@ -108,19 +108,27 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     data-testid={`train-part-${deelIndex}`}
                   >
                     {deel.afbeelding ? (
-                      <img 
-                        src={deel.afbeelding} 
-                        alt={`${deel.type} - ${deel.materieelnummer}`}
-                        style={{
-                          mixBlendMode: 'darken',
-                          width: '100%',
-                          height: '300%',
-                          objectFit: 'contain',
-                          objectPosition: 'center',
-                          transform: 'translateY(-33.33%)'
-                        }}
-                        loading="lazy"
-                      />
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden'
+                      }}>
+                        <img 
+                          src={deel.afbeelding} 
+                          alt={`${deel.type} - ${deel.materieelnummer}`}
+                          style={{
+                            mixBlendMode: 'darken',
+                            width: '100%',
+                            height: 'auto',
+                            transform: 'scale(2.5)',
+                            transformOrigin: 'center center'
+                          }}
+                          loading="lazy"
+                        />
+                      </div>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         <div className="text-center">
