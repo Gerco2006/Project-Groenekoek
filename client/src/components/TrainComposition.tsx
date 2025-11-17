@@ -90,39 +90,46 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
             data-testid="train-visualization"
           >
             <div className="flex px-4">
-              {materieeldelen.map((deel: any, deelIndex: number) => (
-                <div 
-                  key={deelIndex} 
-                  className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
-                  style={{ 
-                    width: isMobile ? '600px' : '350px',
-                    height: '108px',
-                    background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
-                  }}
-                  data-testid={`train-part-${deelIndex}`}
-                >
-                  {deel.afbeelding ? (
-                    <img 
-                      src={deel.afbeelding} 
-                      alt={`${deel.type} - ${deel.materieelnummer}`}
-                      className="w-full h-full"
-                      style={{
-                        mixBlendMode: 'darken',
-                        objectFit: 'cover',
-                        objectPosition: 'center'
-                      }}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <div className="text-center">
-                        <TrainIcon className="w-12 h-12 mx-auto mb-2" />
-                        <p className="text-xs">{deel.type}</p>
+              {materieeldelen.map((deel: any, deelIndex: number) => {
+                // Calculate width based on number of bakken to maintain consistent scale
+                const bakkenCount = deel.bakken?.length || 4;
+                const baseWidth = 90; // pixels per bakje
+                const calculatedWidth = bakkenCount * baseWidth;
+                
+                return (
+                  <div 
+                    key={deelIndex} 
+                    className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
+                    style={{ 
+                      width: isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
+                      height: '108px',
+                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
+                    }}
+                    data-testid={`train-part-${deelIndex}`}
+                  >
+                    {deel.afbeelding ? (
+                      <img 
+                        src={deel.afbeelding} 
+                        alt={`${deel.type} - ${deel.materieelnummer}`}
+                        className="w-full h-full"
+                        style={{
+                          mixBlendMode: 'darken',
+                          objectFit: 'contain',
+                          objectPosition: 'center'
+                        }}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <TrainIcon className="w-12 h-12 mx-auto mb-2" />
+                          <p className="text-xs">{deel.type}</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
           <p className="text-xs text-muted-foreground text-center">
