@@ -250,28 +250,8 @@ export default function TripDetailPanel({
       ) : (
         <div className={`${isMobile ? '' : 'flex-1 flex flex-col'}`}>
           {/* Material Info Section */}
-          <div className={`px-4 pt-4 ${isMobile ? '' : 'shrink-0'}`}>
-            <Collapsible open={materialInfoOpen} onOpenChange={setMaterialInfoOpen}>
-              <Card className="overflow-hidden">
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" className="w-full p-4 h-auto hover:bg-transparent no-default-hover-elevate justify-start" data-testid="button-toggle-material-info">
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2 font-semibold">
-                        <Train className="w-5 h-5" />
-                        <span>Uitgebreide materieelinfo</span>
-                      </div>
-                      {materialInfoOpen ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
-                    </div>
-                  </Button>
-                </CollapsibleTrigger>
-                
-                <CollapsibleContent>
-                  <div className="px-4 pb-4">
-                    <TrainComposition ritnummer={trainNumber} />
-                  </div>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+          <div className={`pt-4 ${isMobile ? '' : 'shrink-0'}`}>
+            <TrainComposition ritnummer={trainNumber} />
           </div>
 
           {!isNonTrainTransport && (
