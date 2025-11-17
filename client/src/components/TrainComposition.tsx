@@ -99,10 +99,15 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                 return (
                   <div 
                     key={deelIndex} 
-                    className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
+                    className="shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
                     style={{ 
                       width: isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
-                      height: '90px',
+                      height: '45px',
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      padding: 0,
                       background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
                     }}
                     data-testid={`train-part-${deelIndex}`}
@@ -112,12 +117,12 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                         src={deel.afbeelding}
                         alt={`${deel.type} - ${deel.materieelnummer}`}
                         style={{
-                          mixBlendMode: 'darken',
+                          height: '100%',
                           width: 'auto',
-                          height: '150%',
+                          display: 'block',
                           objectFit: 'contain',
-                          objectPosition: 'center',
-                          transform: 'translateY(-16.67%)'
+                          objectPosition: 'center bottom',
+                          mixBlendMode: 'darken'
                         }}
                         loading="lazy"
                       />
