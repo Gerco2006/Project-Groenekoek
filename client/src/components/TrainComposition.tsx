@@ -180,19 +180,19 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                 key={deelIndex} 
                 className="relative rounded overflow-hidden shrink-0"
                 style={{ 
-                  width: isMobile ? '300px' : `${Math.min(deel.afbeelding?.breedte || 400, 500)}px`,
+                  width: isMobile ? '300px' : `${Math.min(deel.breedte || 400, 500)}px`,
                   minHeight: isMobile ? '120px' : '150px'
                 }}
                 data-testid={`train-part-${deelIndex}`}
               >
-                {deel.afbeelding?.url ? (
+                {deel.afbeelding ? (
                   <img 
-                    src={deel.afbeelding.url} 
+                    src={deel.afbeelding} 
                     alt={`${deel.type} - ${deel.materieelnummer}`}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain dark:invert"
                     style={{
-                      mixBlendMode: 'multiply',
-                      filter: 'brightness(1.1) contrast(1.05)'
+                      mixBlendMode: 'darken',
+                      backgroundColor: 'transparent'
                     }}
                     loading="lazy"
                   />

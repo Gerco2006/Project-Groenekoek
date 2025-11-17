@@ -26,9 +26,9 @@ const crowdingColors = {
 };
 
 const crowdingLabels = {
-  LOW: "Laag",
-  MEDIUM: "Gemiddeld",
-  HIGH: "Hoog",
+  LOW: "Lage drukte",
+  MEDIUM: "Gemiddelde drukte",
+  HIGH: "Hoge drukte",
 };
 
 interface TripDetailPanelProps {
@@ -249,108 +249,7 @@ export default function TripDetailPanel({
         </div>
       ) : (
         <div className={`${isMobile ? '' : 'flex-1 flex flex-col'}`}>
-          {(actualStock || plannedStock) && (
-            <div className={`px-4 pt-4 ${isMobile ? '' : 'shrink-0'}`}>
-              <Collapsible open={trainInfoOpen} onOpenChange={setTrainInfoOpen}>
-                <Card className="overflow-hidden">
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full p-4 h-auto hover:bg-transparent no-default-hover-elevate justify-start" data-testid="button-toggle-train-info">
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2 font-semibold">
-                          <Train className="w-5 h-5" />
-                          <span>Treinsamenstelling</span>
-                        </div>
-                        {trainInfoOpen ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
-                      </div>
-                    </Button>
-                  </CollapsibleTrigger>
-                  
-                  <CollapsibleContent>
-                    <div className="px-4 pb-4 space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        {(actualStock?.trainType || plannedStock?.trainType) && (
-                          <div className="space-y-1.5">
-                            <div className="text-xs text-muted-foreground font-medium">Materieeltype</div>
-                            <Badge variant="secondary" className="text-sm">{actualStock?.trainType || plannedStock?.trainType}</Badge>
-                          </div>
-                        )}
-                        <div className="space-y-1.5">
-                          <div className="text-xs text-muted-foreground font-medium">Treinnummer</div>
-                          <Badge variant="secondary" className="text-sm">{trainNumber}</Badge>
-                        </div>
-                      </div>
-
-                      {(actualStock?.numberOfParts || plannedStock?.numberOfParts) && (
-                        <div className="grid grid-cols-2 gap-3">
-                          {plannedStock?.numberOfParts && (
-                            <div className="space-y-1.5">
-                              <div className="text-xs text-muted-foreground font-medium">Gepland aantal bakken</div>
-                              <div className="text-lg font-semibold">{plannedStock.numberOfParts}</div>
-                            </div>
-                          )}
-                          {actualStock?.numberOfParts && (
-                            <div className="space-y-1.5">
-                              <div className="text-xs text-muted-foreground font-medium">Actueel aantal bakken</div>
-                              <Badge 
-                                variant="secondary"
-                                className={`text-lg font-semibold h-auto py-1 ${
-                                  plannedStock?.numberOfParts 
-                                    ? actualStock.numberOfParts > plannedStock.numberOfParts
-                                      ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
-                                      : actualStock.numberOfParts < plannedStock.numberOfParts
-                                      ? "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
-                                      : ""
-                                    : ""
-                                }`}
-                              >
-                                {actualStock.numberOfParts}
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      {(() => {
-                        const trainParts = actualStock?.trainParts || plannedStock?.trainParts || [];
-                        const uniqueFacilities = Array.from(new Set(
-                          trainParts
-                            .flatMap((part: any) => part.facilities || [])
-                            .map((facility: any) => facility.name || facility.code || facility)
-                        ));
-                        
-                        return uniqueFacilities.length > 0 && (
-                          <div className="space-y-2">
-                            <div className="text-xs text-muted-foreground font-medium">Faciliteiten</div>
-                            <div className="flex flex-wrap gap-2">
-                              {uniqueFacilities.map((facility, fIdx: number) => {
-                                const icon = getFacilityIcon(String(facility));
-                                return icon ? (
-                                  <div 
-                                    key={fIdx} 
-                                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-secondary text-secondary-foreground"
-                                    title={String(facility)}
-                                  >
-                                    {icon}
-                                    <span className="text-xs font-medium">{String(facility)}</span>
-                                  </div>
-                                ) : (
-                                  <Badge key={fIdx} variant="outline" className="text-xs">
-                                    {String(facility)}
-                                  </Badge>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            </div>
-          )}
-
-          {/* New Material Info Section */}
+          {/* Material Info Section */}
           <div className={`px-4 pt-4 ${isMobile ? '' : 'shrink-0'}`}>
             <Collapsible open={materialInfoOpen} onOpenChange={setMaterialInfoOpen}>
               <Card className="overflow-hidden">
