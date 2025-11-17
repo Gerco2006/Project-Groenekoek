@@ -228,6 +228,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/material-to-journey", async (req, res) => {
+    try {
+      const { material } = req.query;
+      
+      if (!material) {
+        return res.status(400).json({ error: "Material number parameter is required" });
+      }
+
+      const response = await fetch(
+        `https://gateway.apiportal.ns.nl/virtual-train-api/v1/ritnummer/${material}`,
+        {
+          headers: {
+            "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return res.status(404).json({ error: "Material number not found" });
+        }
+        throw new Error(`NS API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching journey number from material:", error);
+      res.status(500).json({ error: "Failed to convert material number to journey number" });
+    }
+  });
+
   app.get("/api/journey", async (req, res) => {
     try {
       const { id, train, dateTime } = req.query;
