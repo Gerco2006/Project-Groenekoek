@@ -252,8 +252,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error(`NS API returned ${response.status}`);
       }
 
-      const data = await response.json();
-      res.json(data);
+      const ritnummer = await response.text();
+      res.json({ ritnummer: ritnummer.trim() });
     } catch (error) {
       console.error("Error fetching journey number from material:", error);
       res.status(500).json({ error: "Failed to convert material number to journey number" });
