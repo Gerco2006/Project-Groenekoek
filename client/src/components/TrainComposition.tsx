@@ -111,13 +111,11 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                       <img 
                         src={deel.afbeelding} 
                         alt={`${deel.type} - ${deel.materieelnummer}`}
+                        className="w-full h-full"
                         style={{
                           mixBlendMode: 'darken',
-                          width: '100%',
-                          height: '400%',
-                          objectFit: 'contain',
-                          objectPosition: 'center',
-                          transform: 'translateY(-37.5%)'
+                          objectFit: 'cover',
+                          objectPosition: 'center'
                         }}
                         loading="lazy"
                       />
