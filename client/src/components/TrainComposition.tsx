@@ -114,9 +114,10 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                         style={{
                           mixBlendMode: 'darken',
                           width: 'auto',
-                          height: '100%',
+                          height: '200%',
                           objectFit: 'contain',
-                          objectPosition: 'center'
+                          objectPosition: 'center',
+                          transform: 'translateY(-25%)'
                         }}
                         loading="lazy"
                       />
