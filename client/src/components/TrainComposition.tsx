@@ -102,32 +102,31 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
                     style={{ 
                       width: isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
-                      height: '90px',
+                      height: '120px',
                       background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
                     }}
-                    data-testid={`train-part-${deelIndex}`}
                   >
-                    {deel.afbeelding ? (
+                    {deel.afbeelding && (
                       <img 
                         src={deel.afbeelding}
                         alt={`${deel.type} - ${deel.materieelnummer}`}
                         style={{
-                          mixBlendMode: 'darken',
-                          width: '200%',
-                          height: '300%',
-                          objectFit: 'contain',
-                          objectPosition: 'center',
-                          transform: 'translate(-10%, -33.33%)'
+                          position: "absolute",
+                          bottom: 0,
+                          left: 0,
+
+                          width: "100%",
+                          height: "auto",
+
+                          objectFit: "contain",
+                          objectPosition: "bottom",
+
+                          transform: "scale(0.5)",
+                          transformOrigin: "bottom left",
+
+                          mixBlendMode: "darken",
                         }}
-                        loading="lazy"
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <TrainIcon className="w-12 h-12 mx-auto mb-2" />
-                          <p className="text-xs">{deel.type}</p>
-                        </div>
-                      </div>
                     )}
                   </div>
 
