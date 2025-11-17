@@ -60,8 +60,8 @@ export default function TripDetailPanel({
   useEffect(() => {
     if (!open) {
       setShowAllStations(false);
-      setTrainInfoOpen(true);
-      setMaterialInfoOpen(true);
+      setTrainInfoOpen(false);
+      setMaterialInfoOpen(false);
     }
   }, [open]);
   
