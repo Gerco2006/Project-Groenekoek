@@ -358,7 +358,7 @@ export default function TripDetailPanel({
                                 Nu hier
                               </Badge>
                             )}
-                            {stopCrowding && !isPassing && (
+                            {stopCrowding && !isPassing && !isMobile && (
                               <Badge 
                                 variant="outline" 
                                 className={`shrink-0 gap-1 ${crowdingColors[stopCrowding.classification as keyof typeof crowdingColors]}`}
@@ -401,11 +401,28 @@ export default function TripDetailPanel({
                                   )}
                                 </div>
                               )}
+                              {isMobile && platform && (
+                                <div className="flex items-center gap-2 text-sm flex-wrap">
+                                  <Badge variant="outline" className="shrink-0">
+                                    Spoor {platform}
+                                  </Badge>
+                                  {stopCrowding && (
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`shrink-0 gap-1 ${crowdingColors[stopCrowding.classification as keyof typeof crowdingColors]}`}
+                                      data-testid={`crowding-${originalIdx}`}
+                                    >
+                                      <Users className="w-3 h-3" />
+                                      {crowdingLabels[stopCrowding.classification as keyof typeof crowdingLabels]}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
 
-                        {platform && !isPassing && (
+                        {platform && !isPassing && !isMobile && (
                           <Badge variant="outline" className="shrink-0">
                             Spoor {platform}
                           </Badge>
