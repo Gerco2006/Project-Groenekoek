@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Clock, AlertCircle, Navigation, Loader2, Info, Train, Wifi, UtensilsCrossed, Accessibility, BatteryCharging, ChevronDown, ChevronUp, Droplet, Bike } from "lucide-react";
 import TrainBadge from "./TrainBadge";
+import TrainComposition from "./TrainComposition";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ export default function TripDetailPanel({
   const isMobile = useIsMobile();
   const [showAllStations, setShowAllStations] = useState(false);
   const [trainInfoOpen, setTrainInfoOpen] = useState(true);
+  const [materialInfoOpen, setMaterialInfoOpen] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
   
@@ -47,6 +49,7 @@ export default function TripDetailPanel({
     if (!open) {
       setShowAllStations(false);
       setTrainInfoOpen(true);
+      setMaterialInfoOpen(true);
     }
   }, [open]);
   
@@ -320,6 +323,31 @@ export default function TripDetailPanel({
               </Collapsible>
             </div>
           )}
+
+          {/* New Material Info Section */}
+          <div className={`px-4 pt-4 ${isMobile ? '' : 'shrink-0'}`}>
+            <Collapsible open={materialInfoOpen} onOpenChange={setMaterialInfoOpen}>
+              <Card className="overflow-hidden">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full p-4 h-auto hover:bg-transparent no-default-hover-elevate justify-start" data-testid="button-toggle-material-info">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Train className="w-5 h-5" />
+                        <span>Uitgebreide materieelinfo</span>
+                      </div>
+                      {materialInfoOpen ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
+                    </div>
+                  </Button>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent>
+                  <div className="px-4 pb-4">
+                    <TrainComposition ritnummer={trainNumber} />
+                  </div>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          </div>
 
           {!isNonTrainTransport && (
             <div className={`px-4 py-3 ${isMobile ? '' : 'shrink-0'}`}>

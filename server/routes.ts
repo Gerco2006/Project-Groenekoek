@@ -292,6 +292,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/train-composition/:ritnummer", async (req, res) => {
+    try {
+      const { ritnummer } = req.params;
+      const { features, dateTime } = req.query;
+      
+      if (!ritnummer) {
+        return res.status(400).json({ error: "Journey number parameter is required" });
+      }
+
+      let url = `https://gateway.apiportal.ns.nl/virtual-train-api/v1/trein/${ritnummer}`;
+      const params = new URLSearchParams();
+      
+      if (features) params.append("features", features as string);
+      if (dateTime) params.append("dateTime", dateTime as string);
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return res.status(404).json({ error: "Train composition not found" });
+        }
+        throw new Error(`Virtual Train API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching train composition:", error);
+      res.status(500).json({ error: "Failed to fetch train composition" });
+    }
+  });
+
+  app.get("/api/train-crowding/:ritnummer", async (req, res) => {
+    try {
+      const { ritnummer } = req.params;
+      
+      if (!ritnummer) {
+        return res.status(400).json({ error: "Journey number parameter is required" });
+      }
+
+      const response = await fetch(
+        `https://gateway.apiportal.ns.nl/virtual-train-api/v1/prognose/${ritnummer}`,
+        {
+          headers: {
+            "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return res.status(404).json({ error: "Train crowding data not found" });
+        }
+        throw new Error(`Virtual Train API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching train crowding:", error);
+      res.status(500).json({ error: "Failed to fetch train crowding data" });
+    }
+  });
+
   app.get("/api/stations", async (req, res) => {
     try {
       const data = await fetchNS("/v2/stations");

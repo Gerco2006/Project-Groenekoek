@@ -1,0 +1,268 @@
+import { useQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Wifi, Bike, BatteryCharging, Accessibility, Droplet, Users, Train as TrainIcon } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-is-mobile";
+
+interface TrainCompositionProps {
+  ritnummer: string;
+}
+
+interface Facility {
+  type: string;
+  icon: JSX.Element;
+  label: string;
+}
+
+const facilityMap: Record<string, Facility> = {
+  WIFI: { type: "WIFI", icon: <Wifi className="w-4 h-4" />, label: "WiFi" },
+  FIETS: { type: "FIETS", icon: <Bike className="w-4 h-4" />, label: "Fiets" },
+  STROOM: { type: "STROOM", icon: <BatteryCharging className="w-4 h-4" />, label: "Stroom" },
+  TOEGANKELIJK: { type: "TOEGANKELIJK", icon: <Accessibility className="w-4 h-4" />, label: "Toegankelijk" },
+  TOILET: { type: "TOILET", icon: <Droplet className="w-4 h-4" />, label: "Toilet" },
+};
+
+const crowdingColors = {
+  LOW: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
+  MEDIUM: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
+  HIGH: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+};
+
+const crowdingLabels = {
+  LOW: "Laag",
+  MEDIUM: "Gemiddeld",
+  HIGH: "Hoog",
+};
+
+export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
+  const isMobile = useIsMobile();
+
+  const { data: compositionData, isLoading: isCompositionLoading } = useQuery({
+    queryKey: ["/api/train-composition", ritnummer],
+    enabled: !!ritnummer,
+    queryFn: async () => {
+      const response = await fetch(`/api/train-composition/${ritnummer}?features=zitplaats`);
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error("Failed to fetch train composition");
+      }
+      return response.json();
+    },
+    retry: 1,
+  });
+
+  const { data: crowdingData, isLoading: isCrowdingLoading } = useQuery({
+    queryKey: ["/api/train-crowding", ritnummer],
+    enabled: !!ritnummer,
+    queryFn: async () => {
+      const response = await fetch(`/api/train-crowding/${ritnummer}`);
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error("Failed to fetch crowding data");
+      }
+      return response.json();
+    },
+    retry: 1,
+  });
+
+  if (isCompositionLoading || isCrowdingLoading) {
+    return (
+      <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 border">
+        <p className="text-sm text-muted-foreground text-center">Materieelinfo laden...</p>
+      </div>
+    );
+  }
+
+  if (!compositionData || !compositionData.materieeldelen || compositionData.materieeldelen.length === 0) {
+    return null;
+  }
+
+  const materieeldelen = compositionData.materieeldelen || [];
+
+  // Calculate totals
+  const totalSeatsFirstClass = materieeldelen.reduce((sum: number, deel: any) => 
+    sum + (deel.zitplaatsen?.zitplaatsEersteKlas || 0) + (deel.zitplaatsen?.klapstoelEersteKlas || 0), 0
+  );
+  const totalSeatsSecondClass = materieeldelen.reduce((sum: number, deel: any) => 
+    sum + (deel.zitplaatsen?.zitplaatsTweedeKlas || 0) + (deel.zitplaatsen?.klapstoelTweedeKlas || 0), 0
+  );
+  const totalBikeSpots = materieeldelen.reduce((sum: number, deel: any) => 
+    sum + (deel.zitplaatsen?.fietsplekken || 0), 0
+  );
+
+  // Get unique facilities across all parts
+  const allFacilities = new Set<string>();
+  materieeldelen.forEach((deel: any) => {
+    deel.faciliteiten?.forEach((fac: string) => allFacilities.add(fac));
+  });
+
+  return (
+    <div className="space-y-4" data-testid="train-composition">
+      {/* Overview Card */}
+      <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
+        <div className="flex items-center gap-2 mb-2">
+          <TrainIcon className="w-5 h-5 text-primary" />
+          <h3 className="font-semibold text-lg">Materieelinfo</h3>
+        </div>
+
+        {/* Capacity Overview */}
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="space-y-1">
+            <p className="text-2xl font-bold text-primary">{totalSeatsFirstClass}</p>
+            <p className="text-xs text-muted-foreground">1e klas</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-2xl font-bold text-primary">{totalSeatsSecondClass}</p>
+            <p className="text-xs text-muted-foreground">2e klas</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-2xl font-bold text-primary">{totalBikeSpots}</p>
+            <p className="text-xs text-muted-foreground">Fietsplekken</p>
+          </div>
+        </div>
+
+        {/* Facilities */}
+        {allFacilities.size > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t">
+            {Array.from(allFacilities).map((fac) => {
+              const facility = facilityMap[fac];
+              if (!facility) return null;
+              return (
+                <Badge key={fac} variant="outline" className="gap-1" data-testid={`facility-${fac.toLowerCase()}`}>
+                  {facility.icon}
+                  <span className="text-xs">{facility.label}</span>
+                </Badge>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      {/* Material Parts */}
+      <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+        {materieeldelen.map((deel: any, index: number) => (
+          <Card key={index} className="backdrop-blur-sm bg-card/80 p-4 space-y-3" data-testid={`material-part-${index}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-sm" data-testid={`material-number-${index}`}>
+                  {deel.materieelnummer}
+                </p>
+                <p className="text-xs text-muted-foreground" data-testid={`material-type-${index}`}>
+                  {deel.type}
+                </p>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {deel.bakken?.length || 0} bakken
+              </Badge>
+            </div>
+
+            {/* Seats */}
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <p className="font-semibold">{(deel.zitplaatsen?.zitplaatsEersteKlas || 0) + (deel.zitplaatsen?.klapstoelEersteKlas || 0)}</p>
+                <p className="text-muted-foreground">1e klas</p>
+              </div>
+              <div>
+                <p className="font-semibold">{(deel.zitplaatsen?.zitplaatsTweedeKlas || 0) + (deel.zitplaatsen?.klapstoelTweedeKlas || 0)}</p>
+                <p className="text-muted-foreground">2e klas</p>
+              </div>
+              <div>
+                <p className="font-semibold">{deel.zitplaatsen?.fietsplekken || 0}</p>
+                <p className="text-muted-foreground">Fietsen</p>
+              </div>
+            </div>
+
+            {/* Facilities */}
+            {deel.faciliteiten && deel.faciliteiten.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {deel.faciliteiten.map((fac: string) => {
+                  const facility = facilityMap[fac];
+                  if (!facility) return null;
+                  return (
+                    <div key={fac} className="p-1.5 rounded bg-muted" title={facility.label} data-testid={`part-${index}-facility-${fac.toLowerCase()}`}>
+                      {facility.icon}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+
+      {/* Train Visualization */}
+      <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
+        <h4 className="font-semibold text-sm">Trein samenstelling</h4>
+        <div 
+          className="overflow-x-auto pb-2"
+          style={{ scrollbarWidth: 'thin' }}
+          data-testid="train-visualization"
+        >
+          <div className="flex gap-2 min-w-max">
+            {materieeldelen.map((deel: any, deelIndex: number) => (
+              <div key={deelIndex} className="space-y-2">
+                {deel.bakken?.map((bak: any, bakIndex: number) => (
+                  <div 
+                    key={bakIndex} 
+                    className="relative rounded border bg-background/50 overflow-hidden"
+                    style={{ 
+                      width: isMobile ? '200px' : `${Math.min(bak.afbeelding?.breedte || 250, 300)}px`,
+                      height: isMobile ? 'auto' : `${Math.min(bak.afbeelding?.hoogte || 100, 120)}px`
+                    }}
+                    data-testid={`wagon-${deelIndex}-${bakIndex}`}
+                  >
+                    {bak.afbeelding?.url ? (
+                      <img 
+                        src={bak.afbeelding.url} 
+                        alt={`Bak ${bakIndex + 1} van ${deel.type}`}
+                        className="w-full h-full object-contain"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <TrainIcon className="w-8 h-8" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground text-center">
+          Scroll horizontaal om alle bakken te bekijken
+        </p>
+      </Card>
+
+      {/* Crowding Prognosis */}
+      {crowdingData && crowdingData.prognoses && crowdingData.prognoses.length > 0 && (
+        <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            <h4 className="font-semibold text-sm">Verwachte drukte</h4>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {crowdingData.prognoses.slice(0, 6).map((prognosis: any, index: number) => {
+              const classification = prognosis.classification as keyof typeof crowdingColors;
+              return (
+                <Badge 
+                  key={index} 
+                  variant="outline" 
+                  className={`${crowdingColors[classification]} text-xs justify-center`}
+                  data-testid={`crowding-${index}`}
+                >
+                  {crowdingLabels[classification]}
+                </Badge>
+              );
+            })}
+          </div>
+          {crowdingData.prognoses.length > 6 && (
+            <p className="text-xs text-muted-foreground text-center">
+              +{crowdingData.prognoses.length - 6} meer stations
+            </p>
+          )}
+        </Card>
+      )}
+    </div>
+  );
+}
