@@ -40,7 +40,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
       const response = await fetch(`/api/train-composition/${ritnummer}?features=zitplaats`);
       if (!response.ok) {
         if (response.status === 404) return null;
-        throw new Error("Failed to fetch train composition");
+        throw new Error("Kon trein samenstelling niet ophalen");
       }
       return response.json();
     },
