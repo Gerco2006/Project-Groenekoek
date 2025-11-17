@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wifi, Bike, BatteryCharging, Accessibility, Droplet, Users, Train as TrainIcon } from "lucide-react";
+import { Wifi, Bike, BatteryCharging, Accessibility, Droplet, Train as TrainIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface TrainCompositionProps {
@@ -22,18 +22,6 @@ const facilityMap: Record<string, Facility> = {
   TOILET: { type: "TOILET", icon: <Droplet className="w-4 h-4" />, label: "Toilet" },
 };
 
-const crowdingColors = {
-  LOW: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
-  MEDIUM: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
-  HIGH: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
-};
-
-const crowdingLabels = {
-  LOW: "Laag",
-  MEDIUM: "Gemiddeld",
-  HIGH: "Hoog",
-};
-
 export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   const isMobile = useIsMobile();
 
@@ -51,21 +39,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
     retry: 1,
   });
 
-  const { data: crowdingData, isLoading: isCrowdingLoading } = useQuery({
-    queryKey: ["/api/train-crowding", ritnummer],
-    enabled: !!ritnummer,
-    queryFn: async () => {
-      const response = await fetch(`/api/train-crowding/${ritnummer}`);
-      if (!response.ok) {
-        if (response.status === 404) return null;
-        throw new Error("Failed to fetch crowding data");
-      }
-      return response.json();
-    },
-    retry: 1,
-  });
-
-  if (isCompositionLoading || isCrowdingLoading) {
+  if (isCompositionLoading) {
     return (
       <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 border">
         <p className="text-sm text-muted-foreground text-center">Materieelinfo laden...</p>
@@ -105,15 +79,15 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
           <p className="text-xs text-muted-foreground font-medium mb-3 text-center">Totale capaciteit materieel</p>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="space-y-1">
-              <p className="text-lg font-bold text-primary">{totalSeatsFirstClass}</p>
+              <p className="text-2xl font-bold text-primary">{totalSeatsFirstClass}</p>
               <p className="text-xs text-muted-foreground">1e klas</p>
             </div>
             <div className="space-y-1">
-              <p className="text-lg font-bold text-primary">{totalSeatsSecondClass}</p>
+              <p className="text-2xl font-bold text-primary">{totalSeatsSecondClass}</p>
               <p className="text-xs text-muted-foreground">2e klas</p>
             </div>
             <div className="space-y-1">
-              <p className="text-lg font-bold text-primary">{totalBikeSpots}</p>
+              <p className="text-2xl font-bold text-primary">{totalBikeSpots}</p>
               <p className="text-xs text-muted-foreground">Fietsplekken</p>
             </div>
           </div>
@@ -196,73 +170,48 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
       <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
         <h4 className="font-semibold text-sm">Trein samenstelling</h4>
         <div 
-          className="overflow-x-auto pb-2 bg-muted/30 dark:bg-muted/50 rounded-lg p-3"
+          className="overflow-x-auto pb-2 rounded-lg p-3"
           style={{ scrollbarWidth: 'thin' }}
           data-testid="train-visualization"
         >
-          <div className="flex gap-3">
-            {materieeldelen.map((deel: any, deelIndex: number) => 
-              deel.bakken?.map((bak: any, bakIndex: number) => (
-                <div 
-                  key={`${deelIndex}-${bakIndex}`} 
-                  className="relative rounded border bg-background dark:bg-card overflow-hidden shrink-0"
-                  style={{ 
-                    width: isMobile ? '200px' : `${Math.min(bak.afbeelding?.breedte || 250, 300)}px`,
-                    height: isMobile ? '100px' : `${Math.min(bak.afbeelding?.hoogte || 100, 120)}px`
-                  }}
-                  data-testid={`wagon-${deelIndex}-${bakIndex}`}
-                >
-                  {bak.afbeelding?.url ? (
-                    <img 
-                      src={bak.afbeelding.url} 
-                      alt={`Bak ${bakIndex + 1} van ${deel.type}`}
-                      className="w-full h-full object-contain"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <TrainIcon className="w-8 h-8" />
+          <div className="flex gap-4">
+            {materieeldelen.map((deel: any, deelIndex: number) => (
+              <div 
+                key={deelIndex} 
+                className="relative rounded overflow-hidden shrink-0"
+                style={{ 
+                  width: isMobile ? '300px' : `${Math.min(deel.afbeelding?.breedte || 400, 500)}px`,
+                  minHeight: isMobile ? '120px' : '150px'
+                }}
+                data-testid={`train-part-${deelIndex}`}
+              >
+                {deel.afbeelding?.url ? (
+                  <img 
+                    src={deel.afbeelding.url} 
+                    alt={`${deel.type} - ${deel.materieelnummer}`}
+                    className="w-full h-full object-contain"
+                    style={{
+                      mixBlendMode: 'multiply',
+                      filter: 'brightness(1.1) contrast(1.05)'
+                    }}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted/30">
+                    <div className="text-center">
+                      <TrainIcon className="w-12 h-12 mx-auto mb-2" />
+                      <p className="text-xs">{deel.type}</p>
                     </div>
-                  )}
-                </div>
-              ))
-            )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
         <p className="text-xs text-muted-foreground text-center">
-          Scroll horizontaal om alle bakken te bekijken
+          Scroll horizontaal om alle treindelen te bekijken
         </p>
       </Card>
-
-      {/* Crowding Prognosis */}
-      {crowdingData && crowdingData.prognoses && crowdingData.prognoses.length > 0 && (
-        <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" />
-            <h4 className="font-semibold text-sm">Verwachte drukte</h4>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {crowdingData.prognoses.slice(0, 6).map((prognosis: any, index: number) => {
-              const classification = prognosis.classification as keyof typeof crowdingColors;
-              return (
-                <Badge 
-                  key={index} 
-                  variant="outline" 
-                  className={`${crowdingColors[classification]} text-xs justify-center`}
-                  data-testid={`crowding-${index}`}
-                >
-                  {crowdingLabels[classification]}
-                </Badge>
-              );
-            })}
-          </div>
-          {crowdingData.prognoses.length > 6 && (
-            <p className="text-xs text-muted-foreground text-center">
-              +{crowdingData.prognoses.length - 6} meer stations
-            </p>
-          )}
-        </Card>
-      )}
     </div>
   );
 }

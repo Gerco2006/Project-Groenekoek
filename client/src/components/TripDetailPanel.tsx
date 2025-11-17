@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Clock, AlertCircle, Navigation, Loader2, Info, Train, Wifi, UtensilsCrossed, Accessibility, BatteryCharging, ChevronDown, ChevronUp, Droplet, Bike } from "lucide-react";
+import { X, Clock, AlertCircle, Navigation, Loader2, Info, Train, Wifi, UtensilsCrossed, Accessibility, BatteryCharging, ChevronDown, ChevronUp, Droplet, Bike, Users } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import TrainComposition from "./TrainComposition";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +18,18 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+
+const crowdingColors = {
+  LOW: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
+  MEDIUM: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
+  HIGH: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+};
+
+const crowdingLabels = {
+  LOW: "Laag",
+  MEDIUM: "Gemiddeld",
+  HIGH: "Hoog",
+};
 
 interface TripDetailPanelProps {
   trainType: string;
@@ -59,6 +71,20 @@ export default function TripDetailPanel({
     queryFn: async () => {
       const response = await fetch(`/api/journey?train=${trainNumber}`);
       if (!response.ok) throw new Error("Failed to fetch journey details");
+      return response.json();
+    },
+    retry: 1,
+  });
+
+  const { data: crowdingData } = useQuery({
+    queryKey: ["/api/train-crowding", trainNumber],
+    enabled: open && !!trainNumber,
+    queryFn: async () => {
+      const response = await fetch(`/api/train-crowding/${trainNumber}`);
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error("Failed to fetch crowding data");
+      }
       return response.json();
     },
     retry: 1,
@@ -386,6 +412,11 @@ export default function TripDetailPanel({
                 const platform = arrival?.actualTrack || arrival?.plannedTrack || 
                                 departure?.actualTrack || departure?.plannedTrack;
 
+                // Find crowding data for this stop
+                const stopCrowding = crowdingData?.prognoses?.find(
+                  (prognosis: any) => prognosis.stationUic === stop.stop?.uicCode
+                );
+
                 return (
                   <div key={originalIdx}>
                     {isBetweenStops && (
@@ -418,7 +449,7 @@ export default function TripDetailPanel({
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <span className={`font-semibold ${isPassing ? "text-muted-foreground" : ""}`}>
                               {stop.stop?.name}
                             </span>
@@ -426,6 +457,16 @@ export default function TripDetailPanel({
                               <Badge variant="default" className="shrink-0">
                                 <Navigation className="w-3 h-3 mr-1" />
                                 Nu hier
+                              </Badge>
+                            )}
+                            {stopCrowding && !isPassing && (
+                              <Badge 
+                                variant="outline" 
+                                className={`shrink-0 gap-1 ${crowdingColors[stopCrowding.classification as keyof typeof crowdingColors]}`}
+                                data-testid={`crowding-${originalIdx}`}
+                              >
+                                <Users className="w-3 h-3" />
+                                {crowdingLabels[stopCrowding.classification as keyof typeof crowdingLabels]}
                               </Badge>
                             )}
                           </div>
