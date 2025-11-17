@@ -178,10 +178,11 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
             {materieeldelen.map((deel: any, deelIndex: number) => (
               <div 
                 key={deelIndex} 
-                className="relative rounded overflow-hidden shrink-0"
+                className="relative rounded-lg overflow-hidden shrink-0 border border-border/50"
                 style={{ 
-                  width: isMobile ? '300px' : `${Math.min(deel.breedte || 400, 500)}px`,
-                  minHeight: isMobile ? '120px' : '150px'
+                  width: isMobile ? '400px' : `${Math.min((deel.breedte || 400) * 1.5, 700)}px`,
+                  minHeight: isMobile ? '160px' : '200px',
+                  background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
                 }}
                 data-testid={`train-part-${deelIndex}`}
               >
@@ -189,15 +190,14 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                   <img 
                     src={deel.afbeelding} 
                     alt={`${deel.type} - ${deel.materieelnummer}`}
-                    className="w-full h-full object-contain dark:invert"
+                    className="w-full h-full object-contain"
                     style={{
-                      mixBlendMode: 'darken',
-                      backgroundColor: 'transparent'
+                      mixBlendMode: 'darken'
                     }}
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted/30">
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                     <div className="text-center">
                       <TrainIcon className="w-12 h-12 mx-auto mb-2" />
                       <p className="text-xs">{deel.type}</p>
