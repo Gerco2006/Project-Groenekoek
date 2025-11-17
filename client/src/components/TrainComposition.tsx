@@ -197,6 +197,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
 
                 {/* Material Parts */}
                 <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                  <p className="text-m font-bold">{"Treinstellen"}</p>
                   {materieeldelen.map((deel: any, index: number) => (
                     <Card key={index} className="bg-card/80 p-4 space-y-3" data-testid={`material-part-${index}`}>
                       <div className="flex items-center justify-between">
