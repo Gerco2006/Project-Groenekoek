@@ -180,7 +180,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                 key={deelIndex} 
                 className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
                 style={{ 
-                  width: isMobile ? '500px' : `${Math.min((deel.breedte || 400) * 2, 900)}px`,
+                  width: isMobile ? '500px' : '400px',
                   height: isMobile ? '80px' : '100px',
                   background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
                 }}
