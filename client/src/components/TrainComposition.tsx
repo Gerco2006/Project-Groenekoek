@@ -170,11 +170,11 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
       <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
         <h4 className="font-semibold text-sm">Trein samenstelling</h4>
         <div 
-          className="overflow-x-auto overflow-y-hidden pb-2 rounded-lg p-3"
+          className="overflow-x-auto overflow-y-hidden pb-2 rounded-lg p-3 max-w-full"
           style={{ scrollbarWidth: 'thin' }}
           data-testid="train-visualization"
         >
-          <div className="flex">
+          <div className="flex w-max">
             {materieeldelen.map((deel: any, deelIndex: number) => (
               <div 
                 key={deelIndex} 
