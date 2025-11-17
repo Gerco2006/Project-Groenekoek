@@ -51,7 +51,7 @@ export default function TrainDialog({
     enabled: open && !!trainNumber,
     queryFn: async () => {
       const response = await fetch(`/api/journey?train=${trainNumber}`);
-      if (!response.ok) throw new Error("Failed to fetch journey details");
+      if (!response.ok) throw new Error("Kon rit informatie niet ophalen");
       return response.json();
     },
     retry: 1,

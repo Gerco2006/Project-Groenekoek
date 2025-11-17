@@ -166,15 +166,15 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     <div className="grid grid-cols-3 gap-3 text-center">
                       <div className="space-y-1">
                         <p className="text-2xl font-bold text-primary">{totalSeatsFirstClass}</p>
-                        <p className="text-xs text-muted-foreground">1e klas</p>
+                        <p className="text-xs text-muted-foreground">Zitplaatsen 1e klas</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-2xl font-bold text-primary">{totalSeatsSecondClass}</p>
-                        <p className="text-xs text-muted-foreground">2e klas</p>
+                        <p className="text-xs text-muted-foreground">Zitplaatsen 2e klas</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-2xl font-bold text-primary">{totalBikeSpots}</p>
-                        <p className="text-xs text-muted-foreground">Fietsplekken</p>
+                        <p className="text-xs text-muted-foreground">Beschikbare Fietsplekken</p>
                       </div>
                     </div>
                   </div>
@@ -226,7 +226,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                         </div>
                         <div>
                           <p className="font-semibold">{deel.zitplaatsen?.fietsplekken || 0}</p>
-                          <p className="text-muted-foreground">Fietsen</p>
+                          <p className="text-muted-foreground">Fietsplekken</p>
                         </div>
                       </div>
 
