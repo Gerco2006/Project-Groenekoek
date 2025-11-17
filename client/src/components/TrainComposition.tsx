@@ -113,11 +113,11 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                         alt={`${deel.type} - ${deel.materieelnummer}`}
                         style={{
                           mixBlendMode: 'darken',
-                          width: '100%',
-                          height: '300%',
+                          width: 'auto',
+                          height: '150%',
                           objectFit: 'contain',
                           objectPosition: 'center',
-                          transform: 'translateY(-33.33%)'
+                          transform: 'translateY(-16.67%)'
                         }}
                         loading="lazy"
                       />
