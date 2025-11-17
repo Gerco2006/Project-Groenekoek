@@ -121,10 +121,9 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                           alt={`${deel.type} - ${deel.materieelnummer}`}
                           style={{
                             mixBlendMode: 'darken',
-                            width: '100%',
-                            height: 'auto',
-                            transform: 'scaleY(3.5)',
-                            transformOrigin: 'center center'
+                            width: 'auto',
+                            height: '280%',
+                            clipPath: 'inset(25% 0 25% 0)'
                           }}
                           loading="lazy"
                         />
