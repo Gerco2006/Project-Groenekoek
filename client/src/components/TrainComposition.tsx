@@ -82,10 +82,10 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
     <div className="space-y-4" data-testid="train-composition">
       {/* Train Visualization - Always visible */}
       <div className="px-4">
-        <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3 overflow-hidden">
+        <Card className="backdrop-blur-sm bg-card/80 p-4 pb-2 space-y-2 overflow-hidden">
           <h4 className="font-semibold text-sm">Treinsamenstelling</h4>
           <div 
-            className="overflow-x-scroll overflow-y-hidden pb-2 rounded-lg -mx-4 w-[calc(100%+2rem)]"
+            className="overflow-x-scroll overflow-y-hidden rounded-lg -mx-4 w-[calc(100%+2rem)]"
             style={{ scrollbarWidth: 'thin' }}
             data-testid="train-visualization"
           >
@@ -102,7 +102,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     className="relative overflow-hidden shrink-0 border-y border-r first:border-l first:rounded-l-lg last:rounded-r-lg border-border/50"
                     style={{ 
                       width: isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
-                      height: '108px',
+                      height: '140px',
                       background: 'linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.85) 100%)'
                     }}
                     data-testid={`train-part-${deelIndex}`}
@@ -132,7 +132,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
               })}
             </div>
           </div>
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="text-xs text-muted-foreground text-center pb-2">
             Scroll horizontaal om alle treindelen te bekijken
           </p>
         </Card>
