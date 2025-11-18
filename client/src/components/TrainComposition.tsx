@@ -32,7 +32,7 @@ const facilityMap: Record<string, Facility> = {
 
 export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   const isMobile = useIsMobile();
-  const [detailsOpen, setDetailsOpen] = useState(true);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const { data: compositionData, isLoading: isCompositionLoading } = useQuery({
     queryKey: ["/api/train-composition", ritnummer],
