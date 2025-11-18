@@ -23,7 +23,7 @@ export default function TrainLookup() {
       const response = await fetch(`/api/journey-by-material?material=${searchedNumber}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch journey by material number");
+        throw new Error(errorData.error || "Kon geen ritnr vinden voor dit treinnr");
       }
       return response.json();
     },
@@ -37,7 +37,7 @@ export default function TrainLookup() {
       const response = await fetch(`/api/journey?train=${searchedNumber}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch journey details");
+        throw new Error(errorData.error || "Fout bij ophalen ritinfo");
       }
       return response.json();
     },
@@ -146,8 +146,8 @@ export default function TrainLookup() {
             </div>
             <p className="text-xs text-muted-foreground">
               {searchMode === "journey" 
-                ? "Voer een ritnummer in voor specifieke ritinformatie"
-                : "Voer een materieelnummer in (bijv. 2345, 9438)"}
+                ? "Voer een ritnummer in voor ritinformatie"
+                : "Voer een materieelnummer in (bijv. 8743, 9438)"}
             </p>
           </div>
 
