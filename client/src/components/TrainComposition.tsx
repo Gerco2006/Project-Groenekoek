@@ -101,7 +101,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     key={deelIndex} 
                     className="shrink-0 first:border-l first:rounded-l-lg last:rounded-r-lg border-border/0"
                     style={{ 
-                      width: isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
+                      width: 'auto', // isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
                       height: '45px',
                       display: 'flex',
                       alignItems: 'flex-end',
