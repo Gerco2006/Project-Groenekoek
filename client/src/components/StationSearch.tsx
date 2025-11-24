@@ -160,7 +160,7 @@ export default function StationSearch({
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 200)}
             placeholder={placeholder}
-            className="pl-9 backdrop-blur-sm bg-card/50"
+            className="pl-9"
           />
         </div>
       </div>
