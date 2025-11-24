@@ -638,7 +638,7 @@ export default function JourneyPlanner() {
 
   const masterContent = (
     <div className="h-full flex flex-col">
-      <div className="shrink-0 px-4 py-6 space-y-6">
+      <div className="shrink-0 md:px-4 py-6 space-y-6">
         <CollapsibleSearchForm
           isOpen={isSearchFormOpen}
           onToggle={() => setIsSearchFormOpen(!isSearchFormOpen)}
@@ -656,7 +656,7 @@ export default function JourneyPlanner() {
       </div>
 
       {searchedFrom && searchedTo && routeDisruptions.length > 0 && (
-        <div className="shrink-0 px-4 pb-4">
+        <div className="shrink-0 md:px-4 pb-4">
           <Alert className="border-yellow-500/50 bg-yellow-500/10" data-testid="alert-route-disruptions">
             <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
             <AlertDescription className="ml-2">
@@ -679,7 +679,7 @@ export default function JourneyPlanner() {
       )}
 
       {searchedFrom && searchedTo && !isLoading && trips.length > 0 && (
-        <ScrollArea className="flex-1 px-4">
+        <ScrollArea className="flex-1 md:px-4">
           <div className="space-y-3 pb-6">
             <h2 className="text-xl font-semibold">Reismogelijkheden</h2>
             {trips.map((trip, idx) => (
@@ -699,13 +699,13 @@ export default function JourneyPlanner() {
       )}
 
       {searchedFrom && searchedTo && !isLoading && trips.length === 0 && !error && (
-        <div className="flex-1 flex items-center justify-center px-4">
+        <div className="flex-1 flex items-center justify-center md:px-4">
           <p className="text-muted-foreground">Geen reismogelijkheden gevonden voor deze route.</p>
         </div>
       )}
 
       {!searchedFrom && !searchedTo && !isLoading && (
-        <div className="flex-1 px-4 pb-6 overflow-y-auto">
+        <div className="flex-1 md:px-4 pb-6 overflow-y-auto">
           <WidgetContainer
             activeWidgets={config.activeWidgets}
             savedRoutes={config.savedRoutes}

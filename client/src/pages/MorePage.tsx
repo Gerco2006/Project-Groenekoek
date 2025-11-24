@@ -18,7 +18,7 @@ export default function MorePage() {
 
   return (
     <PageContainer>
-      <div className="min-h-screen bg-background px-4 py-6 space-y-6">
+      <div className="min-h-screen bg-background md:px-4 py-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Meer</h1>
           <p className="text-muted-foreground">

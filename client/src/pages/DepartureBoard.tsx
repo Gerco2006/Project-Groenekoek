@@ -311,7 +311,7 @@ export default function DepartureBoard() {
 
   const masterContent = (
     <div className="h-full flex flex-col">
-      <div className="shrink-0 px-4 py-6 space-y-6">
+      <div className="shrink-0 md:px-4 py-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Vertrektijden & Aankomsten</h1>
           <p className="text-muted-foreground">Bekijk actuele trein informatie</p>
@@ -320,7 +320,7 @@ export default function DepartureBoard() {
       </div>
 
       {!isLoading && searchedStation && activeDisruptions.length > 0 && (
-        <div className="shrink-0 px-4 pb-4">
+        <div className="shrink-0 md:px-4 pb-4">
           <Alert className="border-yellow-500/50 bg-yellow-500/10" data-testid="alert-disruptions">
             <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
             <AlertDescription className="ml-2">
@@ -344,26 +344,26 @@ export default function DepartureBoard() {
       )}
 
       {isLoading && (
-        <div className="flex-1 flex items-center justify-center px-4">
+        <div className="flex-1 flex items-center justify-center md:px-4">
           <p className="text-muted-foreground">{activeTab === "departures" ? "Vertrektijden laden..." : "Aankomsttijden laden..."}</p>
         </div>
       )}
 
       {!isLoading && searchedStation && activeTab === "departures" && departures.length === 0 && (
-        <div className="flex-1 flex items-center justify-center px-4">
+        <div className="flex-1 flex items-center justify-center md:px-4">
           <p className="text-muted-foreground">Geen vertrektijden gevonden voor {searchedStation}</p>
         </div>
       )}
 
       {!isLoading && searchedStation && activeTab === "arrivals" && arrivals.length === 0 && (
-        <div className="flex-1 flex items-center justify-center px-4">
+        <div className="flex-1 flex items-center justify-center md:px-4">
           <p className="text-muted-foreground">Geen aankomsten gevonden voor {searchedStation}</p>
         </div>
       )}
 
       {!isLoading && activeTab === "departures" && departures.length > 0 && (
         <ScrollArea className="flex-1">
-          <div className="px-4 pb-6">
+          <div className="md:px-4 pb-6">
             <Card className="divide-y">
               {departures.map((departure, idx) => {
                 const delay = calculateDelay(departure.plannedDateTime, departure.actualDateTime);
@@ -393,7 +393,7 @@ export default function DepartureBoard() {
 
       {!isLoading && activeTab === "arrivals" && arrivals.length > 0 && (
         <ScrollArea className="flex-1">
-          <div className="px-4 pb-6">
+          <div className="md:px-4 pb-6">
             <Card className="divide-y">
               {arrivals.map((arrival, idx) => {
                 const delay = calculateDelay(arrival.plannedDateTime, arrival.actualDateTime);
