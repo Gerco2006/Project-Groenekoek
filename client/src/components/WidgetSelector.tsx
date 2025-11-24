@@ -9,7 +9,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface WidgetOption {
   id: 'savedRoutes' | 'savedTrips' | 'disruptions';
@@ -48,6 +57,7 @@ interface WidgetSelectorProps {
 
 export default function WidgetSelector({ activeWidgets, onToggleWidget, onMoveWidgetUp, onMoveWidgetDown }: WidgetSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const availableToAdd = AVAILABLE_WIDGETS.filter(
     widget => !activeWidgets.includes(widget.id)
@@ -57,23 +67,8 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onMoveWi
     .map(id => AVAILABLE_WIDGETS.find(w => w.id === id))
     .filter((w): w is WidgetOption => w !== undefined);
 
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2" data-testid="button-add-widget">
-          <Plus className="w-4 h-4" />
-          Beheer widgets
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Widgets beheren</DialogTitle>
-          <DialogDescription>
-            Kies welke widgets je wilt zien op je startpagina
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
+  const content = (
+    <div className="space-y-4">
           {activeWidgets.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold mb-3">Actieve widgets</h3>
@@ -154,12 +149,54 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onMoveWi
             </div>
           )}
 
-          {activeWidgets.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Je hebt nog geen widgets toegevoegd. Selecteer er een om te beginnen!
-            </p>
-          )}
-        </div>
+      {activeWidgets.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          Je hebt nog geen widgets toegevoegd. Selecteer er een om te beginnen!
+        </p>
+      )}
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <DrawerTrigger asChild>
+          <Button variant="outline" className="gap-2" data-testid="button-add-widget">
+            <Plus className="w-4 h-4" />
+            Beheer widgets
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Widgets beheren</DrawerTitle>
+            <DrawerDescription>
+              Kies welke widgets je wilt zien op je startpagina
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 pb-4 max-h-[80vh] overflow-y-auto">
+            {content}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="gap-2" data-testid="button-add-widget">
+          <Plus className="w-4 h-4" />
+          Beheer widgets
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Widgets beheren</DialogTitle>
+          <DialogDescription>
+            Kies welke widgets je wilt zien op je startpagina
+          </DialogDescription>
+        </DialogHeader>
+        {content}
       </DialogContent>
     </Dialog>
   );
