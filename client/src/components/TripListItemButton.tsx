@@ -65,21 +65,19 @@ export default function TripListItemButton({
     const crowdingLevels: number[] = [];
     
     crowdingQueries.forEach((query, idx) => {
-      if (!query.data?.prognoses) return;
+      if (!query.data?.prognoses || !Array.isArray(query.data.prognoses)) return;
       
       // Get crowding for the boarding station (where user gets on the train)
       const leg = legs[idx];
-      const boardingPrognosis = query.data.prognoses.find((p: any) => 
-        p.station?.toLowerCase().includes(leg.from.toLowerCase())
-      );
       
-      // Use the boarding (instap) prognose - how crowded it will be when boarding
-      const crowding = boardingPrognosis?.instapPrognose?.classification;
+      // Find ANY prognosis with a classification (since we can't reliably match by station name)
+      // The API returns crowding for all stops, we'll use the first non-null classification
+      const prognosis = query.data.prognoses.find((p: any) => p.classification);
       
-      if (!crowding) return;
+      if (!prognosis?.classification) return;
       
       // Convert to numeric value
-      const value = crowding === 'HIGH' ? 3 : crowding === 'MEDIUM' ? 2 : 1;
+      const value = prognosis.classification === 'HIGH' ? 3 : prognosis.classification === 'MEDIUM' ? 2 : 1;
       crowdingLevels.push(value);
     });
     
