@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import StationSearch from "@/components/StationSearch";
 import TripListItemButton from "@/components/TripListItemButton";
 import TripAdviceDetailPanel from "@/components/TripAdviceDetailPanel";
@@ -468,7 +469,7 @@ export default function JourneyPlanner() {
             </span>
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-3 pt-3">
+        <CollapsibleContent className="space-y-4 pt-3">
           <div className="space-y-3">
             <Label className="text-sm font-medium">Tussenstop (optioneel)</Label>
             {viaStations.length === 0 && (
@@ -509,6 +510,9 @@ export default function JourneyPlanner() {
               </div>
             )}
           </div>
+
+          <Separator />
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">Datum & Tijd</Label>
@@ -557,6 +561,8 @@ export default function JourneyPlanner() {
             </div>
           </div>
 
+          <Separator />
+
           <div className="space-y-2">
             <Tabs value={searchMode} onValueChange={(value) => setSearchMode(value as "departure" | "arrival")} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -568,6 +574,8 @@ export default function JourneyPlanner() {
               {searchMode === "departure" ? "Vertrek op de aangegeven tijd" : "Aankomst op de aangegeven tijd"}
             </p>
           </div>
+
+          <Separator />
 
           <div className="space-y-2">
             <Label htmlFor="change-time-input" className="text-sm font-medium">Extra overstaptijd (minuten)</Label>
@@ -583,6 +591,8 @@ export default function JourneyPlanner() {
             />
             <p className="text-xs text-muted-foreground">Extra tijd die wordt toegevoegd aan elke overstap</p>
           </div>
+
+          <Separator />
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
