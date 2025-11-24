@@ -1,0 +1,67 @@
+{
+  "id": "/",
+  "name": "TravNL - Nederlandse Reisplanner",
+  "short_name": "TravNL",
+  "description": "De open-source Nederlandse reisplanner. Plan je treinreizen, bekijk vertrektijden en volg storingen.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "categories": ["travel", "utilities"],
+  "lang": "nl",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Reisplanner",
+      "short_name": "Plannen",
+      "description": "Plan een treinreis",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Vertrektijden",
+      "short_name": "Vertrek",
+      "description": "Bekijk vertrektijden",
+      "url": "/vertrektijden",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Trein Zoeken",
+      "short_name": "Trein",
+      "description": "Zoek treininfo",
+      "url": "/treininfo",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
