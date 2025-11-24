@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { AlertTriangle, Construction, X, Plus, Loader2, ChevronRight } from "lucide-react";
 import type { DisruptionStation } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
@@ -182,32 +183,30 @@ export default function DisruptionsWidget({
                         <span>Laden...</span>
                       </div>
                     ) : hasDisruptions ? (
-                      <div className="space-y-0 md:space-y-2 md:px-0 -mx-4 md:mx-0 -mb-4 md:mb-0">
+                      <div className="md:space-y-2 md:px-0 -mx-4 md:mx-0 -mb-4 md:mb-0">
                         {stationDisruptions.map((disruption, idx) => {
-                          const isFirst = idx === 0;
                           const isLast = idx === stationDisruptions.length - 1;
-                          const roundingClass = isMobile 
-                            ? (isFirst ? 'rounded-t-md' : isLast ? 'rounded-b-md' : 'rounded-none')
-                            : 'rounded-md';
                           
                           return (
-                          <Card
-                            key={disruption.id}
-                            className={`md:p-3 py-3 px-4 md:px-3 pb-0 md:pb-3 hover-elevate cursor-pointer ${roundingClass}`}
-                            onClick={() => setSelectedDisruption(disruption)}
-                            data-testid={`disruption-item-${disruption.id}`}
-                          >
-                            <div className="flex items-start gap-2 text-sm">
-                              {getDisruptionIcon(disruption.type)}
-                              <div className="flex-1 min-w-0">
-                                <Badge variant="secondary" className="text-xs mb-1">
-                                  {getDisruptionType(disruption.type)}
-                                </Badge>
-                                <p className="text-xs leading-relaxed line-clamp-2">{disruption.title}</p>
+                          <div key={disruption.id}>
+                            <div
+                              className="md:p-3 py-3 px-4 md:px-3 md:rounded-md md:border hover-elevate cursor-pointer"
+                              onClick={() => setSelectedDisruption(disruption)}
+                              data-testid={`disruption-item-${disruption.id}`}
+                            >
+                              <div className="flex items-start gap-2 text-sm">
+                                {getDisruptionIcon(disruption.type)}
+                                <div className="flex-1 min-w-0">
+                                  <Badge variant="secondary" className="text-xs mb-1">
+                                    {getDisruptionType(disruption.type)}
+                                  </Badge>
+                                  <p className="text-xs leading-relaxed line-clamp-2">{disruption.title}</p>
+                                </div>
+                                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                               </div>
-                              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                             </div>
-                          </Card>
+                            {!isLast && <Separator className="md:hidden" />}
+                          </div>
                           );
                         })}
                       </div>
