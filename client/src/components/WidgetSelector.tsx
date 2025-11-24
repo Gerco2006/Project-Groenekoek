@@ -44,7 +44,7 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget }: Widget
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2" data-testid="button-add-widget">
           <Plus className="w-4 h-4" />
-          Widget toevoegen
+          Beheer widgets
         </Button>
       </DialogTrigger>
       <DialogContent>
