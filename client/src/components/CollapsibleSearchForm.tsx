@@ -21,7 +21,7 @@ export default function CollapsibleSearchForm({
 }: CollapsibleSearchFormProps) {
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
-      <div className="backdrop-blur-sm bg-card/80 rounded-none md:rounded-xl border overflow-hidden">
+      <div className="backdrop-blur-sm bg-card/80 rounded-b-xl md:rounded-xl border overflow-hidden">
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
