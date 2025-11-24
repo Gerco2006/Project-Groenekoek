@@ -219,10 +219,6 @@ export default function JourneyPlanner() {
     const cleanViaStations = searchedViaStations.filter(v => v.trim() !== "");
     
     if (isRouteAlreadySaved(searchedFrom, searchedTo, cleanViaStations)) {
-      toast({
-        title: "Route al opgeslagen",
-        description: "Deze route staat al in je opgeslagen routes",
-      });
       return;
     }
     
@@ -235,11 +231,6 @@ export default function JourneyPlanner() {
       from: searchedFrom,
       to: searchedTo,
       viaStations: cleanViaStations,
-    });
-    
-    toast({
-      title: "Route opgeslagen",
-      description: "Je kunt deze route nu snel terugvinden in je widgets",
     });
   };
 
@@ -258,11 +249,6 @@ export default function JourneyPlanner() {
       setDetailMode(null);
       hasAutoSelectedRef.current = false;
     }, 100);
-    
-    toast({
-      title: "Route geladen",
-      description: `Reisadviezen voor ${route.from} → ${route.to} worden gezocht...`,
-    });
   };
 
   const handleSaveTrip = () => {
@@ -274,11 +260,6 @@ export default function JourneyPlanner() {
     const rawArrivalTime = selectedTrip.rawArrivalTime || selectedTrip.legs[selectedTrip.legs.length - 1]?.plannedArrival;
     
     if (!rawDepartureTime || !rawArrivalTime) {
-      toast({
-        title: "Fout bij opslaan",
-        description: "Kan dit reisadvies niet opslaan. Probeer het opnieuw.",
-        variant: "destructive",
-      });
       return;
     }
     
@@ -288,10 +269,6 @@ export default function JourneyPlanner() {
       );
       if (savedTrip) {
         removeSavedTrip(savedTrip.id);
-        toast({
-          title: "Reisadvies verwijderd",
-          description: "Dit reisadvies is verwijderd uit je favorieten",
-        });
       }
       return;
     }
@@ -307,11 +284,6 @@ export default function JourneyPlanner() {
       legs: selectedTrip.legs,
       delayMinutes: selectedTrip.delayMinutes,
       status: selectedTrip.status,
-    });
-    
-    toast({
-      title: "Reisadvies opgeslagen",
-      description: "Je kunt dit reisadvies nu snel terugvinden in je widgets",
     });
   };
 
@@ -332,11 +304,6 @@ export default function JourneyPlanner() {
     setSelectedTripIndex(null);
     setSelectedTrain(null);
     setDetailMode('trip');
-    
-    toast({
-      title: "Reisadvies geopend",
-      description: `${trip.from} → ${trip.to}`,
-    });
   };
 
   const formatTime = (dateTime: string) => {
@@ -443,13 +410,9 @@ export default function JourneyPlanner() {
       if (!tripStillExists) {
         setManuallySelectedTrip(null);
         setDetailMode(null);
-        toast({
-          title: "Reisadvies verlopen",
-          description: "Dit reisadvies is automatisch verwijderd omdat de vertrektijd in het verleden ligt",
-        });
       }
     }
-  }, [config.savedTrips, manuallySelectedTrip, detailMode, toast]);
+  }, [config.savedTrips, manuallySelectedTrip, detailMode]);
   
   const selectedTrip = selectedTripIndex !== null ? trips[selectedTripIndex] : manuallySelectedTrip;
 
