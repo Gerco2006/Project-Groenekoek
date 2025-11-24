@@ -23,6 +23,9 @@ export default function TrainBadge({ type, number, className = "" }: TrainBadgeP
     if (normalized.includes("spr") || normalized.includes("sprinter")) {
       return "bg-train-sprinter/10 text-train-sprinter border-train-sprinter/20";
     }
+    if (normalized.includes("stoptrein")) {
+      return "bg-train-stoptrein/10 text-train-stoptrein border-train-stoptrein/20";
+    }
     if (isNonNS(number || type)) {
       return "bg-train-other/10 text-train-other border-train-other/20";
     }

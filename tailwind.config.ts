@@ -84,6 +84,7 @@ export default {
         train: {
           intercity: "hsl(var(--train-intercity) / <alpha-value>)",
           sprinter: "hsl(var(--train-sprinter) / <alpha-value>)",
+          stoptrein: "hsl(var(--train-stoptrein) / <alpha-value>)",
           other: "hsl(var(--train-other) / <alpha-value>)",
         },
       },

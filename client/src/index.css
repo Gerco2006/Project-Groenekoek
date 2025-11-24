@@ -45,6 +45,7 @@
   --chart-5: 30 85% 45%;
   --train-intercity: 45 100% 50%;
   --train-sprinter: 210 100% 50%;
+  --train-stoptrein: 180 100% 40%;
   --train-other: 142 71% 45%;
   --font-sans: Inter, sans-serif;
   --font-serif: Georgia, serif;
@@ -132,6 +133,7 @@
   --chart-5: 30 85% 65%;
   --train-intercity: 45 100% 55%;
   --train-sprinter: 210 100% 55%;
+  --train-stoptrein: 180 100% 50%;
   --train-other: 142 71% 50%;
   --shadow-2xs: 0px 2px 0px 0px hsl(210 10% 5% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(210 10% 5% / 0.00);
