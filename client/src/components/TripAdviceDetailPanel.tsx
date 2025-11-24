@@ -1,4 +1,4 @@
-import { X, Clock, ArrowRight, Train, MapPin, AlertCircle, Star } from "lucide-react";
+import { X, Clock, ArrowRight, Train, MapPin, AlertCircle, Star, Users } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,19 @@ import {
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import type { TripLeg } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+
+const crowdingColors = {
+  LOW: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
+  MEDIUM: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
+  HIGH: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+};
+
+const crowdingLabels = {
+  LOW: "Rustig",
+  MEDIUM: "Gemiddelde drukte",
+  HIGH: "Druk, mogelijk vol",
+};
 
 interface TripAdviceDetailPanelProps {
   departureTime: string;
@@ -42,6 +55,61 @@ export default function TripAdviceDetailPanel({
   isTripSaved = false,
 }: TripAdviceDetailPanelProps) {
   const isMobile = useIsMobile();
+
+  // Fetch crowding data for all train legs
+  const crowdingQueries = legs.map(leg => 
+    useQuery({
+      queryKey: ["/api/train-crowding", leg.trainNumber],
+      enabled: open && !!leg.trainNumber,
+      queryFn: async () => {
+        const response = await fetch(`/api/train-crowding/${leg.trainNumber}`);
+        if (!response.ok) {
+          if (response.status === 404) return null;
+          throw new Error("Failed to fetch crowding data");
+        }
+        return response.json();
+      },
+      retry: 1,
+    })
+  );
+
+  // Calculate average crowding level
+  const getAverageCrowding = () => {
+    const crowdingLevels = crowdingQueries
+      .map((query, idx) => {
+        if (!query.data?.prognoses) return null;
+        
+        // Get crowding for origin and destination of this leg
+        const leg = legs[idx];
+        const originPrognosis = query.data.prognoses.find((p: any) => 
+          p.station?.toLowerCase().includes(leg.from.toLowerCase())
+        );
+        const destPrognosis = query.data.prognoses.find((p: any) => 
+          p.station?.toLowerCase().includes(leg.to.toLowerCase())
+        );
+        
+        // Average of origin and destination crowding
+        const crowdings = [originPrognosis?.uitstapPrognose?.classification, destPrognosis?.instapPrognose?.classification]
+          .filter(Boolean);
+        
+        if (crowdings.length === 0) return null;
+        
+        const values = crowdings.map((c: string) => 
+          c === 'HIGH' ? 3 : c === 'MEDIUM' ? 2 : 1
+        );
+        return values.reduce((a: number, b: number) => a + b, 0) / values.length;
+      })
+      .filter((v): v is number => v !== null);
+    
+    if (crowdingLevels.length === 0) return null;
+    
+    const avg = crowdingLevels.reduce((a, b) => a + b, 0) / crowdingLevels.length;
+    if (avg >= 2.5) return 'HIGH';
+    if (avg >= 1.5) return 'MEDIUM';
+    return 'LOW';
+  };
+
+  const averageCrowding = getAverageCrowding();
 
   const calculateTransferTime = (leg: TripLeg, nextLeg?: TripLeg) => {
     if (!nextLeg) return null;
@@ -137,6 +205,12 @@ export default function TripAdviceDetailPanel({
                   +{delayMinutes}
                 </Badge>
               )}
+              {averageCrowding && (
+                <Badge variant="outline" className={`gap-1.5 ${crowdingColors[averageCrowding as keyof typeof crowdingColors]}`}>
+                  <Users className="w-3.5 h-3.5" />
+                  {crowdingLabels[averageCrowding as keyof typeof crowdingLabels]}
+                </Badge>
+              )}
             </div>
           </Card>
 
@@ -146,6 +220,33 @@ export default function TripAdviceDetailPanel({
             
             {legs.map((leg, idx) => {
               const transferTime = calculateTransferTime(leg, legs[idx + 1]);
+              const crowdingData = crowdingQueries[idx]?.data;
+              
+              // Get overall crowding for this leg
+              const getLegCrowding = () => {
+                if (!crowdingData?.prognoses) return null;
+                
+                const originPrognosis = crowdingData.prognoses.find((p: any) => 
+                  p.station?.toLowerCase().includes(leg.from.toLowerCase())
+                );
+                const destPrognosis = crowdingData.prognoses.find((p: any) => 
+                  p.station?.toLowerCase().includes(leg.to.toLowerCase())
+                );
+                
+                const crowdings = [
+                  originPrognosis?.uitstapPrognose?.classification,
+                  destPrognosis?.instapPrognose?.classification
+                ].filter(Boolean);
+                
+                if (crowdings.length === 0) return null;
+                
+                // Return highest crowding level
+                if (crowdings.some((c: string) => c === 'HIGH')) return 'HIGH';
+                if (crowdings.some((c: string) => c === 'MEDIUM')) return 'MEDIUM';
+                return 'LOW';
+              };
+              
+              const legCrowding = getLegCrowding();
               
               return (
                 <div key={idx} className="space-y-3">
@@ -155,8 +256,14 @@ export default function TripAdviceDetailPanel({
                     data-testid={`card-leg-${idx}`}
                   >
                     <div className="p-4">
-                      <div className="flex items-start gap-3 mb-3">
+                      <div className="flex items-start gap-3 mb-3 flex-wrap">
                         <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                        {legCrowding && (
+                          <Badge variant="outline" className={`gap-1 text-xs ${crowdingColors[legCrowding as keyof typeof crowdingColors]}`}>
+                            <Users className="w-3 h-3" />
+                            {crowdingLabels[legCrowding as keyof typeof crowdingLabels]}
+                          </Badge>
+                        )}
                         {leg.cancelled && (
                           <Badge variant="destructive" className="ml-auto">
                             Geannuleerd
