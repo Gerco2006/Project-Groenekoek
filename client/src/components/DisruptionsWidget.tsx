@@ -264,7 +264,7 @@ export default function DisruptionsWidget({
   return (
     <>
       {widgetContent}
-      {selectedDisruption && !isMobile && (
+      {selectedDisruption && (
         <DisruptionDetailPanel
           disruptionId={selectedDisruption.id}
           disruptionType={selectedDisruption.type}
