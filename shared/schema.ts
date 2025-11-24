@@ -44,6 +44,8 @@ export const tripLegSchema = z.object({
   departureDelayMinutes: z.number().optional(),
   arrivalDelayMinutes: z.number().optional(),
   cancelled: z.boolean().optional(),
+  fromUicCode: z.string().optional(),
+  toUicCode: z.string().optional(),
 });
 
 export const savedTripSchema = z.object({

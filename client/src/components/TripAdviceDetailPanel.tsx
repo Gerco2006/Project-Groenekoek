@@ -81,12 +81,13 @@ export default function TripAdviceDetailPanel({
     crowdingQueries.forEach((query, idx) => {
       if (!query.data?.prognoses || !Array.isArray(query.data.prognoses)) return;
       
-      // Get crowding for the boarding station (where user gets on the train)
       const leg = legs[idx];
       
-      // Find ANY prognosis with a classification (since we can't reliably match by station name)
-      // The API returns crowding for all stops, we'll use the first non-null classification
-      const prognosis = query.data.prognoses.find((p: any) => p.classification);
+      // Find the crowding prognosis for the boarding station (where user gets on the train)
+      // Match by UIC code if available, otherwise use first available prognosis
+      const prognosis = leg.fromUicCode 
+        ? query.data.prognoses.find((p: any) => p.stationUic === leg.fromUicCode)
+        : query.data.prognoses.find((p: any) => p.classification);
       
       if (!prognosis?.classification) return;
       
@@ -220,9 +221,11 @@ export default function TripAdviceDetailPanel({
               const getLegCrowding = () => {
                 if (!crowdingData?.prognoses || !Array.isArray(crowdingData.prognoses)) return null;
                 
-                // Find ANY prognosis with a classification
-                // The API returns crowding for all stops, we'll use the first non-null classification
-                const prognosis = crowdingData.prognoses.find((p: any) => p.classification);
+                // Find the crowding prognosis for the boarding station (where user gets on the train)
+                // Match by UIC code if available, otherwise use first available prognosis
+                const prognosis = leg.fromUicCode 
+                  ? crowdingData.prognoses.find((p: any) => p.stationUic === leg.fromUicCode)
+                  : crowdingData.prognoses.find((p: any) => p.classification);
                 
                 return prognosis?.classification || null;
               };

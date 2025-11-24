@@ -355,6 +355,8 @@ export default function JourneyPlanner() {
           departureDelayMinutes: calculateDelayMinutes(plannedDeparture, actualDeparture),
           arrivalDelayMinutes: calculateDelayMinutes(plannedArrival, actualArrival),
           cancelled: leg.cancelled || false,
+          fromUicCode: leg.origin.uicCode,
+          toUicCode: leg.destination.uicCode,
         };
       }) || [];
 
