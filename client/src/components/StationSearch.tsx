@@ -1,8 +1,9 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { createPortal } from "react-dom";
 
 interface StationSearchProps {
   label: string;
@@ -33,6 +34,8 @@ export default function StationSearch({
 }: StationSearchProps) {
   const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState(value);
+  const inputRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   const { data: stationsData } = useQuery<any>({
     queryKey: ["/api/stations"],
@@ -48,6 +51,17 @@ export default function StationSearch({
   useEffect(() => {
     setInputValue(value);
   }, [value]);
+
+  useEffect(() => {
+    if (focused && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  }, [focused, inputValue]);
 
   useEffect(() => {
     if (!inputValue || inputValue.length < 2 || focused) return;
@@ -90,56 +104,67 @@ export default function StationSearch({
         .slice(0, 10)
     : [];
 
-  return (
-    <div className="space-y-2 relative">
-      <Label htmlFor={testId} className="text-sm font-medium">
-        {label}
-      </Label>
-      <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-        <Input
-          id={testId}
-          data-testid={testId}
-          type="text"
-          value={inputValue}
-          onChange={(e) => {
-            setInputValue(e.target.value);
-            onChange(e.target.value);
-          }}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 200)}
-          placeholder={placeholder}
-          className="pl-9 backdrop-blur-sm bg-card/50"
-        />
-        
-        {filteredStations.length > 0 && (
-          <div className="absolute top-full mt-1 w-full z-[100]">
-            <div className="relative bg-card backdrop-blur-md border rounded-lg shadow-lg max-h-60 overflow-auto">
-              {filteredStations.map((station, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    setInputValue(station.namen.lang);
-                    onChange(station.namen.lang);
-                    setFocused(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover-elevate flex items-center justify-between"
-                  data-testid={`option-station-${idx}`}
-                >
-                  <span>{station.namen.lang}</span>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                    {station.code}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {filteredStations.length >= 10 && (
-              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card via-card/90 to-transparent pointer-events-none rounded-b-lg" />
-            )}
-          </div>
-        )}
+  const dropdownContent = filteredStations.length > 0 && focused && (
+    <div 
+      style={{
+        position: 'fixed',
+        top: dropdownPosition.top,
+        left: dropdownPosition.left,
+        width: dropdownPosition.width,
+        zIndex: 9999
+      }}
+    >
+      <div className="relative bg-card/98 backdrop-blur-lg border rounded-lg shadow-lg max-h-60 overflow-auto">
+        {filteredStations.map((station, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => {
+              setInputValue(station.namen.lang);
+              onChange(station.namen.lang);
+              setFocused(false);
+            }}
+            className="w-full text-left px-4 py-2 hover-elevate flex items-center justify-between"
+            data-testid={`option-station-${idx}`}
+          >
+            <span>{station.namen.lang}</span>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+              {station.code}
+            </span>
+          </button>
+        ))}
       </div>
+      {filteredStations.length >= 10 && (
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card/98 via-card/70 to-transparent pointer-events-none rounded-b-lg" />
+      )}
     </div>
+  );
+
+  return (
+    <>
+      <div className="space-y-2 relative">
+        <Label htmlFor={testId} className="text-sm font-medium">
+          {label}
+        </Label>
+        <div className="relative" ref={inputRef}>
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+          <Input
+            id={testId}
+            data-testid={testId}
+            type="text"
+            value={inputValue}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              onChange(e.target.value);
+            }}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 200)}
+            placeholder={placeholder}
+            className="pl-9 backdrop-blur-sm bg-card/50"
+          />
+        </div>
+      </div>
+      {typeof document !== 'undefined' && dropdownContent && createPortal(dropdownContent, document.body)}
+    </>
   );
 }
