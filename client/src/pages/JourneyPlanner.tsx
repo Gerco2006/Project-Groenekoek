@@ -24,24 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
-import type { SavedRoute, SavedTrip } from "@shared/schema";
-
-interface TripLeg {
-  trainType: string;
-  trainNumber: string;
-  from: string;
-  to: string;
-  departure: string;
-  arrival: string;
-  platform?: string;
-  plannedDeparture?: string;
-  actualDeparture?: string;
-  plannedArrival?: string;
-  actualArrival?: string;
-  departureDelayMinutes?: number;
-  arrivalDelayMinutes?: number;
-  cancelled?: boolean;
-}
+import type { SavedRoute, SavedTrip, TripLeg } from "@shared/schema";
 
 interface SelectedTrip {
   departureTime: string;

@@ -2,18 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, ArrowRight, Train, AlertCircle } from "lucide-react";
 import TrainBadge from "./TrainBadge";
-
-interface TripLeg {
-  trainType: string;
-  trainNumber: string;
-  from: string;
-  to: string;
-  departure: string;
-  arrival: string;
-  platform?: string;
-  departureDelayMinutes?: number;
-  arrivalDelayMinutes?: number;
-}
+import type { TripLeg } from "@shared/schema";
 
 interface TripListItemButtonProps {
   departureTime: string;

@@ -4,16 +4,7 @@ import { ChevronDown, ChevronUp, Clock, ArrowRight, Train } from "lucide-react";
 import { useState } from "react";
 import TrainBadge from "./TrainBadge";
 import { Badge } from "@/components/ui/badge";
-
-interface TripLeg {
-  trainType: string;
-  trainNumber: string;
-  from: string;
-  to: string;
-  departure: string;
-  arrival: string;
-  platform?: string;
-}
+import type { TripLeg } from "@shared/schema";
 
 interface TripCardProps {
   departureTime: string;

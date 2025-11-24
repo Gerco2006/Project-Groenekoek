@@ -10,23 +10,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
-
-interface TripLeg {
-  trainType: string;
-  trainNumber: string;
-  from: string;
-  to: string;
-  departure: string;
-  arrival: string;
-  platform?: string;
-  plannedDeparture?: string;
-  actualDeparture?: string;
-  plannedArrival?: string;
-  actualArrival?: string;
-  departureDelayMinutes?: number;
-  arrivalDelayMinutes?: number;
-  cancelled?: boolean;
-}
+import type { TripLeg } from "@shared/schema";
 
 interface TripAdviceDetailPanelProps {
   departureTime: string;
@@ -182,6 +166,11 @@ export default function TripAdviceDetailPanel({
                           {leg.platform && (
                             <Badge variant="outline">
                               Spoor {leg.platform}
+                            </Badge>
+                          )}
+                          {leg.arrivalPlatform && leg.arrivalPlatform !== leg.platform && (
+                            <Badge variant="outline">
+                              → Spoor {leg.arrivalPlatform}
                             </Badge>
                           )}
                         </div>
