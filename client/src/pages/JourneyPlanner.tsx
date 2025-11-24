@@ -442,33 +442,35 @@ export default function JourneyPlanner() {
             />
           </div>
         </div>
+      </div>
 
+      <div className="flex gap-2">
         <Button 
           variant="outline" 
-          size="icon"
+          size="sm"
           onClick={swapStations}
           className="shrink-0"
           data-testid="button-swap-stations"
         >
           <ArrowDownUp className="w-4 h-4" />
         </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 gap-2"
+          data-testid="button-toggle-advanced"
+          onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+        >
+          <Settings2 className="w-4 h-4" />
+          {isAdvancedOpen ? "Verberg opties" : "Extra opties"}
+          <span className="ml-auto text-xs text-muted-foreground hidden sm:inline">
+            {!isAdvancedOpen && `${format(date, "d MMM", { locale: nl })} · ${time} · ${searchMode === "departure" ? "Vertrek" : "Aankomst"}`}
+          </span>
+        </Button>
       </div>
 
       <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full gap-2"
-            data-testid="button-toggle-advanced"
-          >
-            <Settings2 className="w-4 h-4" />
-            {isAdvancedOpen ? "Verberg opties" : "Extra opties"}
-            <span className="ml-auto text-xs text-muted-foreground">
-              {!isAdvancedOpen && `${format(date, "d MMM", { locale: nl })} · ${time} · ${searchMode === "departure" ? "Vertrek" : "Aankomst"}`}
-            </span>
-          </Button>
-        </CollapsibleTrigger>
         <CollapsibleContent className="space-y-4 pt-3">
           <div className="space-y-3">
             <Label className="text-sm font-medium">Tussenstop (optioneel)</Label>
