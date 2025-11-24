@@ -1,4 +1,4 @@
-import { X, Clock, ArrowRight, Train, MapPin, AlertCircle } from "lucide-react";
+import { X, Clock, ArrowRight, Train, MapPin, AlertCircle, Star } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,9 @@ interface TripAdviceDetailPanelProps {
   onClose: () => void;
   onTrainClick?: (leg: TripLeg) => void;
   delayMinutes?: number;
+  status?: string;
+  onSaveTrip?: () => void;
+  isTripSaved?: boolean;
 }
 
 export default function TripAdviceDetailPanel({
@@ -50,6 +53,9 @@ export default function TripAdviceDetailPanel({
   onClose,
   onTrainClick,
   delayMinutes,
+  status,
+  onSaveTrip,
+  isTripSaved = false,
 }: TripAdviceDetailPanelProps) {
   const isMobile = useIsMobile();
 
@@ -87,15 +93,27 @@ export default function TripAdviceDetailPanel({
               </p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="shrink-0"
-            data-testid="button-close-detail"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            {onSaveTrip && (
+              <Button
+                variant={isTripSaved ? "default" : "ghost"}
+                size="icon"
+                onClick={onSaveTrip}
+                data-testid="button-save-trip"
+              >
+                <Star className={`w-5 h-5 ${isTripSaved ? 'fill-current' : ''}`} />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="shrink-0"
+              data-testid="button-close-detail"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -262,15 +280,27 @@ export default function TripAdviceDetailPanel({
                   whiteSpace: 'nowrap'
                 }}>{legs[0]?.from} → {legs[legs.length - 1]?.to}</span>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="shrink-0"
-                data-testid="button-close-mobile-detail"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-1 shrink-0">
+                {onSaveTrip && (
+                  <Button
+                    variant={isTripSaved ? "default" : "ghost"}
+                    size="icon"
+                    onClick={onSaveTrip}
+                    data-testid="button-save-trip-mobile"
+                  >
+                    <Star className={`w-4 h-4 ${isTripSaved ? 'fill-current' : ''}`} />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onClose}
+                  className="shrink-0"
+                  data-testid="button-close-mobile-detail"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </DrawerTitle>
           </DrawerHeader>
           <div className="flex-1 overflow-y-auto">

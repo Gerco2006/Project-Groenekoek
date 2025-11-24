@@ -24,7 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
-import type { SavedRoute } from "@shared/schema";
+import type { SavedRoute, SavedTrip } from "@shared/schema";
 
 interface TripLeg {
   trainType: string;
@@ -71,6 +71,7 @@ export default function JourneyPlanner() {
   const [searchedViaStations, setSearchedViaStations] = useState<string[]>([]);
   const [searchMode, setSearchMode] = useState<"departure" | "arrival">("departure");
   const [selectedTripIndex, setSelectedTripIndex] = useState<number | null>(null);
+  const [manuallySelectedTrip, setManuallySelectedTrip] = useState<SelectedTrip | null>(null);
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
   const [detailMode, setDetailMode] = useState<'trip' | 'train' | null>(null);
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
@@ -83,7 +84,7 @@ export default function JourneyPlanner() {
   const [addChangeTime, setAddChangeTime] = useState<number>(0);
   const [accessible, setAccessible] = useState<boolean>(false);
   const { toast } = useToast();
-  const { config, addSavedRoute, removeSavedRoute, isRouteAlreadySaved, toggleWidget } = useWidgetManager();
+  const { config, addSavedRoute, removeSavedRoute, isRouteAlreadySaved, toggleWidget, addSavedTrip, removeSavedTrip, isTripAlreadySaved } = useWidgetManager();
 
   const swapStations = () => {
     const temp = from;
@@ -201,6 +202,7 @@ export default function JourneyPlanner() {
     setSearchedTo(to);
     setSearchedViaStations(viaStations.filter(v => v.trim() !== ""));
     setSelectedTripIndex(null);
+    setManuallySelectedTrip(null);
     setSelectedTrain(null);
     setDetailMode(null);
     hasAutoSelectedRef.current = false;
@@ -249,6 +251,7 @@ export default function JourneyPlanner() {
       setSearchedTo(route.to);
       setSearchedViaStations(route.viaStations);
       setSelectedTripIndex(null);
+      setManuallySelectedTrip(null);
       setSelectedTrain(null);
       setDetailMode(null);
       hasAutoSelectedRef.current = false;
@@ -257,6 +260,67 @@ export default function JourneyPlanner() {
     toast({
       title: "Route geladen",
       description: `Reisadviezen voor ${route.from} → ${route.to} worden gezocht...`,
+    });
+  };
+
+  const handleSaveTrip = () => {
+    if (!selectedTrip) return;
+    
+    const from = selectedTrip.legs[0]?.from;
+    const to = selectedTrip.legs[selectedTrip.legs.length - 1]?.to;
+    
+    if (isTripAlreadySaved(selectedTrip.departureTime, from, to)) {
+      const savedTrip = config.savedTrips.find(
+        t => t.departureTime === selectedTrip.departureTime && t.from === from && t.to === to
+      );
+      if (savedTrip) {
+        removeSavedTrip(savedTrip.id);
+        toast({
+          title: "Reisadvies verwijderd",
+          description: "Dit reisadvies is verwijderd uit je favorieten",
+        });
+      }
+      return;
+    }
+    
+    addSavedTrip({
+      name: `${from} → ${to}`,
+      from,
+      to,
+      departureTime: selectedTrip.departureTime,
+      arrivalTime: selectedTrip.arrivalTime,
+      duration: selectedTrip.duration,
+      transfers: selectedTrip.transfers,
+      legs: selectedTrip.legs,
+      delayMinutes: selectedTrip.delayMinutes,
+      status: selectedTrip.status,
+    });
+    
+    toast({
+      title: "Reisadvies opgeslagen",
+      description: "Je kunt dit reisadvies nu snel terugvinden in je widgets",
+    });
+  };
+
+  const handleLoadSavedTrip = (trip: SavedTrip) => {
+    const tripData: SelectedTrip = {
+      departureTime: trip.departureTime,
+      arrivalTime: trip.arrivalTime,
+      duration: trip.duration,
+      transfers: trip.transfers,
+      legs: trip.legs,
+      delayMinutes: trip.delayMinutes,
+      status: trip.status,
+    };
+    
+    setManuallySelectedTrip(tripData);
+    setSelectedTripIndex(null);
+    setSelectedTrain(null);
+    setDetailMode('trip');
+    
+    toast({
+      title: "Reisadvies geopend",
+      description: `${trip.from} → ${trip.to}`,
     });
   };
 
@@ -345,14 +409,33 @@ export default function JourneyPlanner() {
   }, [searchedFrom, searchedTo, searchedViaStations, searchMode, date, time]);
 
   useEffect(() => {
-    if (isMobile === false && trips.length > 0 && !hasAutoSelectedRef.current) {
+    if (isMobile === false && trips.length > 0 && !hasAutoSelectedRef.current && !manuallySelectedTrip) {
       setSelectedTripIndex(0);
       setDetailMode('trip');
       hasAutoSelectedRef.current = true;
     }
-  }, [isMobile, trips]);
+  }, [isMobile, trips, manuallySelectedTrip]);
+
+  useEffect(() => {
+    if (manuallySelectedTrip && detailMode === 'trip') {
+      const tripStillExists = config.savedTrips.some(
+        (saved) =>
+          saved.departureTime === manuallySelectedTrip.departureTime &&
+          saved.arrivalTime === manuallySelectedTrip.arrivalTime
+      );
+
+      if (!tripStillExists) {
+        setManuallySelectedTrip(null);
+        setDetailMode(null);
+        toast({
+          title: "Reisadvies verlopen",
+          description: "Dit reisadvies is automatisch verwijderd omdat de vertrektijd in het verleden ligt",
+        });
+      }
+    }
+  }, [config.savedTrips, manuallySelectedTrip, detailMode, toast]);
   
-  const selectedTrip = selectedTripIndex !== null ? trips[selectedTripIndex] : null;
+  const selectedTrip = selectedTripIndex !== null ? trips[selectedTripIndex] : manuallySelectedTrip;
 
   const searchFormContent = (
     <>
@@ -625,6 +708,7 @@ export default function JourneyPlanner() {
                 {...trip}
                 onClick={() => {
                   setSelectedTripIndex(idx);
+                  setManuallySelectedTrip(null);
                   setDetailMode('trip');
                 }}
                 isSelected={selectedTripIndex === idx}
@@ -645,8 +729,11 @@ export default function JourneyPlanner() {
           <WidgetContainer
             activeWidgets={config.activeWidgets}
             savedRoutes={config.savedRoutes}
+            savedTrips={config.savedTrips}
             onRouteClick={handleLoadSavedRoute}
             onRouteRemove={removeSavedRoute}
+            onTripClick={handleLoadSavedTrip}
+            onTripRemove={removeSavedTrip}
             onToggleWidget={toggleWidget}
           />
         </div>
@@ -665,12 +752,19 @@ export default function JourneyPlanner() {
               open={!!selectedTrip}
               onClose={() => {
                 setSelectedTripIndex(null);
+                setManuallySelectedTrip(null);
                 setDetailMode(null);
               }}
               onTrainClick={(leg) => {
                 setSelectedTrain(leg);
                 setDetailMode('train');
               }}
+              onSaveTrip={handleSaveTrip}
+              isTripSaved={isTripAlreadySaved(
+                selectedTrip.departureTime,
+                selectedTrip.legs[0]?.from,
+                selectedTrip.legs[selectedTrip.legs.length - 1]?.to
+              )}
             />
           ) : detailMode === 'train' && selectedTrain ? (
             <TripDetailPanel

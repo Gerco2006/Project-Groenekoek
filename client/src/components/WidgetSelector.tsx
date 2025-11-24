@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, MapPin, X } from "lucide-react";
+import { Plus, MapPin, X, Star } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
 import { useState } from "react";
 
 interface WidgetOption {
-  id: 'savedRoutes';
+  id: 'savedRoutes' | 'savedTrips';
   name: string;
   description: string;
   icon: JSX.Element;
@@ -25,11 +25,17 @@ const AVAILABLE_WIDGETS: WidgetOption[] = [
     description: 'Snel toegang tot je meest gebruikte routes',
     icon: <MapPin className="w-5 h-5" />,
   },
+  {
+    id: 'savedTrips',
+    name: 'Opgeslagen Reisadviezen',
+    description: 'Favoriete reisadviezen voor snel terugvinden',
+    icon: <Star className="w-5 h-5" />,
+  },
 ];
 
 interface WidgetSelectorProps {
   activeWidgets: string[];
-  onToggleWidget: (widgetId: 'savedRoutes') => void;
+  onToggleWidget: (widgetId: 'savedRoutes' | 'savedTrips') => void;
 }
 
 export default function WidgetSelector({ activeWidgets, onToggleWidget }: WidgetSelectorProps) {

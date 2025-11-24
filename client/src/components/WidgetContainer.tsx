@@ -1,22 +1,29 @@
 import SavedRoutesWidget from "./SavedRoutesWidget";
+import SavedTripsWidget from "./SavedTripsWidget";
 import WidgetSelector from "./WidgetSelector";
 import { Card } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
-import type { SavedRoute } from "@shared/schema";
+import type { SavedRoute, SavedTrip } from "@shared/schema";
 
 interface WidgetContainerProps {
   activeWidgets: string[];
   savedRoutes: SavedRoute[];
+  savedTrips: SavedTrip[];
   onRouteClick: (route: SavedRoute) => void;
   onRouteRemove: (id: string) => void;
-  onToggleWidget: (widgetId: 'savedRoutes') => void;
+  onTripClick: (trip: SavedTrip) => void;
+  onTripRemove: (id: string) => void;
+  onToggleWidget: (widgetId: 'savedRoutes' | 'savedTrips') => void;
 }
 
 export default function WidgetContainer({
   activeWidgets,
   savedRoutes,
+  savedTrips,
   onRouteClick,
   onRouteRemove,
+  onTripClick,
+  onTripRemove,
   onToggleWidget,
 }: WidgetContainerProps) {
   return (
@@ -45,6 +52,14 @@ export default function WidgetContainer({
           routes={savedRoutes}
           onRouteClick={onRouteClick}
           onRouteRemove={onRouteRemove}
+        />
+      )}
+
+      {activeWidgets.includes('savedTrips') && (
+        <SavedTripsWidget
+          trips={savedTrips}
+          onTripClick={onTripClick}
+          onTripRemove={onTripRemove}
         />
       )}
     </div>
