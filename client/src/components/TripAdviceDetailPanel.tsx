@@ -221,11 +221,20 @@ export default function TripAdviceDetailPanel({
               const getLegCrowding = () => {
                 if (!crowdingData?.prognoses || !Array.isArray(crowdingData.prognoses)) return null;
                 
+                // Debug logging
+                console.log(`[Crowding Debug] Train ${leg.trainNumber} from ${leg.from}:`);
+                console.log(`  fromUicCode: ${leg.fromUicCode}`);
+                console.log(`  Available prognoses:`, crowdingData.prognoses.map((p: any) => 
+                  `Station ${p.stationUic}: ${p.classification}`
+                ));
+                
                 // Find the crowding prognosis for the boarding station (where user gets on the train)
                 // Match by UIC code if available, otherwise use first available prognosis
                 const prognosis = leg.fromUicCode 
                   ? crowdingData.prognoses.find((p: any) => p.stationUic === leg.fromUicCode)
                   : crowdingData.prognoses.find((p: any) => p.classification);
+                
+                console.log(`  Matched prognosis:`, prognosis);
                 
                 return prognosis?.classification || null;
               };
