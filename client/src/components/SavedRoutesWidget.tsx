@@ -67,7 +67,7 @@ export default function SavedRoutesWidget({
                   e.stopPropagation();
                   onRouteRemove(route.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                className="opacity-70 md:opacity-0 md:group-hover:opacity-100 hover:opacity-100 transition-opacity flex-shrink-0"
                 data-testid={`button-remove-route-${route.id}`}
               >
                 <X className="w-4 h-4" />
