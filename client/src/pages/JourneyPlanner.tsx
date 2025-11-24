@@ -364,6 +364,7 @@ export default function JourneyPlanner() {
           departure: formatTime(plannedDeparture),
           arrival: formatTime(plannedArrival),
           platform: leg.origin.actualTrack || leg.origin.plannedTrack,
+          arrivalPlatform: leg.destination.actualTrack || leg.destination.plannedTrack,
           plannedDeparture,
           actualDeparture,
           plannedArrival,
