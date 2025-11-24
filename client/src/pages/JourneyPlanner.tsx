@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle } from "lucide-react";
+import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle, Bookmark } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -15,6 +15,7 @@ import TripAdviceDetailPanel from "@/components/TripAdviceDetailPanel";
 import TripDetailPanel from "@/components/TripDetailPanel";
 import CollapsibleSearchForm from "@/components/CollapsibleSearchForm";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
+import WidgetContainer from "@/components/WidgetContainer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -22,6 +23,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
+import { localStorageUtils } from "@/lib/localStorage";
+import { SavedRoute } from "@/types/widgets";
+import { queryClient } from "@/lib/queryClient";
+import "@/widgets";
 
 interface TripLeg {
   trainType: string;
@@ -110,6 +115,72 @@ export default function JourneyPlanner() {
     const now = new Date();
     setDate(now);
     setTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+  };
+
+  const handleSaveRoute = () => {
+    if (!searchedFrom || !searchedTo) {
+      toast({
+        title: "Kan route niet opslaan",
+        description: "Er is geen geldige route om op te slaan",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      localStorageUtils.saveRoute({
+        from: searchedFrom,
+        to: searchedTo,
+        viaStations: searchedViaStations.filter(v => v.trim() !== ""),
+      });
+      
+      window.dispatchEvent(new Event("savedRoutesChanged"));
+      
+      toast({
+        title: "Route opgeslagen",
+        description: `${searchedFrom} → ${searchedTo}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Fout bij opslaan",
+        description: "Kon route niet opslaan",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLoadRoute = (route: SavedRoute) => {
+    const viaStations = route.viaStations ?? [];
+    
+    setFrom(route.from.trim());
+    setTo(route.to.trim());
+    setViaStations([...viaStations.map(v => v.trim())]);
+    
+    setSearchedFrom(route.from.trim());
+    setSearchedTo(route.to.trim());
+    setSearchedViaStations([...viaStations.map(v => v.trim())]);
+    
+    setSelectedTripIndex(null);
+    setSelectedTrain(null);
+    setDetailMode(null);
+    hasAutoSelectedRef.current = false;
+    
+    queryClient.invalidateQueries({ queryKey: ["/api/trips"] });
+    
+    if (isMobile) {
+      setIsSearchFormOpen(false);
+    }
+    
+    toast({
+      title: "Route geladen",
+      description: route.nickname || `${route.from.trim()} → ${route.to.trim()}`,
+    });
+  };
+
+  const handleWidgetAction = (widgetId: string, action: string, data?: any) => {
+    if (widgetId === "saved-routes" && action === "selectRoute") {
+      handleLoadRoute(data as SavedRoute);
+    }
   };
 
   const { data: tripsData, isLoading, error } = useQuery<any>({
@@ -553,7 +624,19 @@ export default function JourneyPlanner() {
       {searchedFrom && searchedTo && !isLoading && trips.length > 0 && (
         <ScrollArea className="flex-1 px-4">
           <div className="space-y-3 pb-6">
-            <h2 className="text-xl font-semibold">Reismogelijkheden</h2>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <h2 className="text-xl font-semibold">Reismogelijkheden</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveRoute}
+                className="gap-2 shrink-0"
+                data-testid="button-save-route"
+              >
+                <Bookmark className="w-4 h-4" />
+                Route opslaan
+              </Button>
+            </div>
             {trips.map((trip, idx) => (
               <TripListItemButton
                 key={idx}
@@ -572,6 +655,12 @@ export default function JourneyPlanner() {
       {searchedFrom && searchedTo && !isLoading && trips.length === 0 && !error && (
         <div className="flex-1 flex items-center justify-center px-4">
           <p className="text-muted-foreground">Geen reismogelijkheden gevonden voor deze route.</p>
+        </div>
+      )}
+
+      {!searchedFrom && !searchedTo && !isLoading && (
+        <div className="flex-1 px-4 overflow-auto">
+          <WidgetContainer onAction={handleWidgetAction} />
         </div>
       )}
     </div>
