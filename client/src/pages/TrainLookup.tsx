@@ -101,10 +101,6 @@ export default function TrainLookup() {
   return (
     <PageContainer>
       <div className="min-h-screen bg-background md:px-4 py-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Treininfo zoeker</h1>
-          <p className="text-muted-foreground">Zoek op ritnummer of materieelnummer</p>
-        </div>
 
         <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
           <div className="space-y-2">

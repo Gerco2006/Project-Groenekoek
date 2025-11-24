@@ -261,7 +261,7 @@ export default function DepartureBoard() {
             className="w-full p-6 h-auto hover:bg-transparent no-default-hover-elevate justify-between rounded-b-none"
             data-testid="button-toggle-search"
           >
-            <span className="font-semibold text-base">Zoeken</span>
+            <span className="font-semibold text-base">Zoek vertrek en aankomsttijden</span>
             {searchOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </Button>
         </CollapsibleTrigger>
@@ -312,10 +312,6 @@ export default function DepartureBoard() {
   const masterContent = (
     <div className="h-full flex flex-col">
       <div className="shrink-0 md:px-4 py-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Vertrektijden & Aankomsten</h1>
-          <p className="text-muted-foreground">Bekijk actuele trein informatie</p>
-        </div>
         {searchForm}
       </div>
 
