@@ -714,7 +714,7 @@ export default function JourneyPlanner() {
       )}
 
       {!searchedFrom && !searchedTo && !isLoading && (
-        <div className="flex-1 md:px-4 pb-6 overflow-y-auto">
+        <div className="flex-1 px-4 pb-6 overflow-y-auto">
           <WidgetContainer
             activeWidgets={config.activeWidgets}
             savedRoutes={config.savedRoutes}
