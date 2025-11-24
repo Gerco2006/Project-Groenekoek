@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   Collapsible,
   CollapsibleContent,
@@ -252,8 +251,6 @@ export default function TripDetailPanel({
           <div className={`pt-4 ${isMobile ? '' : 'shrink-0'}`}>
             <TrainComposition ritnummer={trainNumber} />
           </div>
-
-          <Separator className="h-1 my-2" />
 
           {!isNonTrainTransport && (
             <div className={`px-4 py-3 ${isMobile ? '' : 'shrink-0'}`}>
