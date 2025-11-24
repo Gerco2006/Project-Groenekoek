@@ -113,25 +113,30 @@ export default function StationSearch({
         />
         
         {filteredStations.length > 0 && (
-          <div className="absolute top-full mt-1 w-full bg-card/95 backdrop-blur-sm border rounded-lg shadow-lg z-[100] max-h-60 overflow-auto">
-            {filteredStations.map((station, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => {
-                  setInputValue(station.namen.lang);
-                  onChange(station.namen.lang);
-                  setFocused(false);
-                }}
-                className="w-full text-left px-4 py-2 hover-elevate flex items-center justify-between"
-                data-testid={`option-station-${idx}`}
-              >
-                <span>{station.namen.lang}</span>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                  {station.code}
-                </span>
-              </button>
-            ))}
+          <div className="absolute top-full mt-1 w-full z-[100]">
+            <div className="relative bg-card backdrop-blur-md border rounded-lg shadow-lg max-h-60 overflow-auto">
+              {filteredStations.map((station, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setInputValue(station.namen.lang);
+                    onChange(station.namen.lang);
+                    setFocused(false);
+                  }}
+                  className="w-full text-left px-4 py-2 hover-elevate flex items-center justify-between"
+                  data-testid={`option-station-${idx}`}
+                >
+                  <span>{station.namen.lang}</span>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                    {station.code}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {filteredStations.length >= 10 && (
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card via-card/90 to-transparent pointer-events-none rounded-b-lg" />
+            )}
           </div>
         )}
       </div>
