@@ -14,6 +14,8 @@ interface WidgetContainerProps {
   onTripClick: (trip: SavedTrip) => void;
   onTripRemove: (id: string) => void;
   onToggleWidget: (widgetId: 'savedRoutes' | 'savedTrips') => void;
+  onMoveWidgetUp: (widgetId: 'savedRoutes' | 'savedTrips') => void;
+  onMoveWidgetDown: (widgetId: 'savedRoutes' | 'savedTrips') => void;
 }
 
 export default function WidgetContainer({
@@ -25,6 +27,8 @@ export default function WidgetContainer({
   onTripClick,
   onTripRemove,
   onToggleWidget,
+  onMoveWidgetUp,
+  onMoveWidgetDown,
 }: WidgetContainerProps) {
   return (
     <div className="space-y-4" data-testid="widget-container">
@@ -33,7 +37,12 @@ export default function WidgetContainer({
           <Sparkles className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Widgets</h2>
         </div>
-        <WidgetSelector activeWidgets={activeWidgets} onToggleWidget={onToggleWidget} />
+        <WidgetSelector 
+          activeWidgets={activeWidgets} 
+          onToggleWidget={onToggleWidget}
+          onMoveWidgetUp={onMoveWidgetUp}
+          onMoveWidgetDown={onMoveWidgetDown}
+        />
       </div>
 
       {activeWidgets.length === 0 && (
@@ -47,21 +56,29 @@ export default function WidgetContainer({
         </Card>
       )}
 
-      {activeWidgets.includes('savedRoutes') && (
-        <SavedRoutesWidget
-          routes={savedRoutes}
-          onRouteClick={onRouteClick}
-          onRouteRemove={onRouteRemove}
-        />
-      )}
-
-      {activeWidgets.includes('savedTrips') && (
-        <SavedTripsWidget
-          trips={savedTrips}
-          onTripClick={onTripClick}
-          onTripRemove={onTripRemove}
-        />
-      )}
+      {activeWidgets.map((widgetId) => {
+        if (widgetId === 'savedRoutes') {
+          return (
+            <SavedRoutesWidget
+              key={widgetId}
+              routes={savedRoutes}
+              onRouteClick={onRouteClick}
+              onRouteRemove={onRouteRemove}
+            />
+          );
+        }
+        if (widgetId === 'savedTrips') {
+          return (
+            <SavedTripsWidget
+              key={widgetId}
+              trips={savedTrips}
+              onTripClick={onTripClick}
+              onTripRemove={onTripRemove}
+            />
+          );
+        }
+        return null;
+      })}
     </div>
   );
 }

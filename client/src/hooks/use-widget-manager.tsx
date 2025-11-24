@@ -85,6 +85,38 @@ export function useWidgetManager() {
     }));
   };
 
+  const moveWidgetUp = (widgetId: 'savedRoutes' | 'savedTrips') => {
+    setConfig((prev) => {
+      const currentIndex = prev.activeWidgets.indexOf(widgetId);
+      if (currentIndex <= 0) return prev;
+      
+      const newActiveWidgets = [...prev.activeWidgets];
+      [newActiveWidgets[currentIndex - 1], newActiveWidgets[currentIndex]] = 
+        [newActiveWidgets[currentIndex], newActiveWidgets[currentIndex - 1]];
+      
+      return {
+        ...prev,
+        activeWidgets: newActiveWidgets,
+      };
+    });
+  };
+
+  const moveWidgetDown = (widgetId: 'savedRoutes' | 'savedTrips') => {
+    setConfig((prev) => {
+      const currentIndex = prev.activeWidgets.indexOf(widgetId);
+      if (currentIndex === -1 || currentIndex >= prev.activeWidgets.length - 1) return prev;
+      
+      const newActiveWidgets = [...prev.activeWidgets];
+      [newActiveWidgets[currentIndex], newActiveWidgets[currentIndex + 1]] = 
+        [newActiveWidgets[currentIndex + 1], newActiveWidgets[currentIndex]];
+      
+      return {
+        ...prev,
+        activeWidgets: newActiveWidgets,
+      };
+    });
+  };
+
   const isRouteAlreadySaved = (from: string, to: string, viaStations: string[] = []) => {
     return config.savedRoutes.some(
       (route) =>
@@ -110,6 +142,8 @@ export function useWidgetManager() {
     addSavedTrip,
     removeSavedTrip,
     toggleWidget,
+    moveWidgetUp,
+    moveWidgetDown,
     isRouteAlreadySaved,
     isTripAlreadySaved,
   };

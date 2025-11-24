@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, MapPin, X, Star } from "lucide-react";
+import { Plus, MapPin, X, Star, ChevronUp, ChevronDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -36,14 +36,20 @@ const AVAILABLE_WIDGETS: WidgetOption[] = [
 interface WidgetSelectorProps {
   activeWidgets: string[];
   onToggleWidget: (widgetId: 'savedRoutes' | 'savedTrips') => void;
+  onMoveWidgetUp: (widgetId: 'savedRoutes' | 'savedTrips') => void;
+  onMoveWidgetDown: (widgetId: 'savedRoutes' | 'savedTrips') => void;
 }
 
-export default function WidgetSelector({ activeWidgets, onToggleWidget }: WidgetSelectorProps) {
+export default function WidgetSelector({ activeWidgets, onToggleWidget, onMoveWidgetUp, onMoveWidgetDown }: WidgetSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const availableToAdd = AVAILABLE_WIDGETS.filter(
     widget => !activeWidgets.includes(widget.id)
   );
+
+  const activeWidgetsList = activeWidgets
+    .map(id => AVAILABLE_WIDGETS.find(w => w.id === id))
+    .filter((w): w is WidgetOption => w !== undefined);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -66,7 +72,7 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget }: Widget
             <div>
               <h3 className="text-sm font-semibold mb-3">Actieve widgets</h3>
               <div className="space-y-2">
-                {AVAILABLE_WIDGETS.filter(w => activeWidgets.includes(w.id)).map((widget) => (
+                {activeWidgetsList.map((widget, index) => (
                   <Card key={widget.id} className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="text-primary">{widget.icon}</div>
@@ -74,14 +80,34 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget }: Widget
                         <h4 className="font-semibold text-sm">{widget.name}</h4>
                         <p className="text-xs text-muted-foreground">{widget.description}</p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onToggleWidget(widget.id)}
-                        data-testid={`button-remove-widget-${widget.id}`}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onMoveWidgetUp(widget.id)}
+                          disabled={index === 0}
+                          data-testid={`button-move-up-${widget.id}`}
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onMoveWidgetDown(widget.id)}
+                          disabled={index === activeWidgetsList.length - 1}
+                          data-testid={`button-move-down-${widget.id}`}
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onToggleWidget(widget.id)}
+                          data-testid={`button-remove-widget-${widget.id}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 ))}
