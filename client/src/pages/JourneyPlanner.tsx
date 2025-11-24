@@ -51,6 +51,8 @@ interface SelectedTrip {
   legs: TripLeg[];
   delayMinutes?: number;
   status?: string;
+  rawDepartureTime?: string;
+  rawArrivalTime?: string;
 }
 
 interface SelectedTrain {
@@ -268,10 +270,21 @@ export default function JourneyPlanner() {
     
     const from = selectedTrip.legs[0]?.from;
     const to = selectedTrip.legs[selectedTrip.legs.length - 1]?.to;
+    const rawDepartureTime = selectedTrip.rawDepartureTime || selectedTrip.legs[0]?.plannedDeparture;
+    const rawArrivalTime = selectedTrip.rawArrivalTime || selectedTrip.legs[selectedTrip.legs.length - 1]?.plannedArrival;
     
-    if (isTripAlreadySaved(selectedTrip.departureTime, from, to)) {
+    if (!rawDepartureTime || !rawArrivalTime) {
+      toast({
+        title: "Fout bij opslaan",
+        description: "Kan dit reisadvies niet opslaan. Probeer het opnieuw.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (isTripAlreadySaved(rawDepartureTime, from, to)) {
       const savedTrip = config.savedTrips.find(
-        t => t.departureTime === selectedTrip.departureTime && t.from === from && t.to === to
+        t => t.departureTime === rawDepartureTime && t.from === from && t.to === to
       );
       if (savedTrip) {
         removeSavedTrip(savedTrip.id);
@@ -287,8 +300,8 @@ export default function JourneyPlanner() {
       name: `${from} → ${to}`,
       from,
       to,
-      departureTime: selectedTrip.departureTime,
-      arrivalTime: selectedTrip.arrivalTime,
+      departureTime: rawDepartureTime,
+      arrivalTime: rawArrivalTime,
       duration: selectedTrip.duration,
       transfers: selectedTrip.transfers,
       legs: selectedTrip.legs,
@@ -304,13 +317,15 @@ export default function JourneyPlanner() {
 
   const handleLoadSavedTrip = (trip: SavedTrip) => {
     const tripData: SelectedTrip = {
-      departureTime: trip.departureTime,
-      arrivalTime: trip.arrivalTime,
+      departureTime: formatTime(trip.departureTime),
+      arrivalTime: formatTime(trip.arrivalTime),
       duration: trip.duration,
       transfers: trip.transfers,
       legs: trip.legs,
       delayMinutes: trip.delayMinutes,
       status: trip.status,
+      rawDepartureTime: trip.departureTime,
+      rawArrivalTime: trip.arrivalTime,
     };
     
     setManuallySelectedTrip(tripData);
@@ -379,12 +394,11 @@ export default function JourneyPlanner() {
         };
       }) || [];
 
-    const departureTime = formatTime(trip.legs[0]?.origin?.plannedDateTime);
-    const arrivalTime = formatTime(trip.legs[trip.legs.length - 1]?.destination?.plannedDateTime);
-    const duration = calculateDuration(
-      trip.legs[0]?.origin?.plannedDateTime,
-      trip.legs[trip.legs.length - 1]?.destination?.plannedDateTime
-    );
+    const rawDepartureTime = trip.legs[0]?.origin?.plannedDateTime;
+    const rawArrivalTime = trip.legs[trip.legs.length - 1]?.destination?.plannedDateTime;
+    const departureTime = formatTime(rawDepartureTime);
+    const arrivalTime = formatTime(rawArrivalTime);
+    const duration = calculateDuration(rawDepartureTime, rawArrivalTime);
 
     const delayMinutes = trip.actualDurationInMinutes && trip.plannedDurationInMinutes 
       ? trip.actualDurationInMinutes - trip.plannedDurationInMinutes 
@@ -398,6 +412,8 @@ export default function JourneyPlanner() {
       legs,
       delayMinutes: delayMinutes > 0 ? delayMinutes : undefined,
       status: trip.status,
+      rawDepartureTime,
+      rawArrivalTime,
     };
   }) ?? []) as SelectedTrip[];
 
@@ -420,8 +436,8 @@ export default function JourneyPlanner() {
     if (manuallySelectedTrip && detailMode === 'trip') {
       const tripStillExists = config.savedTrips.some(
         (saved) =>
-          saved.departureTime === manuallySelectedTrip.departureTime &&
-          saved.arrivalTime === manuallySelectedTrip.arrivalTime
+          saved.departureTime === manuallySelectedTrip.rawDepartureTime &&
+          saved.arrivalTime === manuallySelectedTrip.rawArrivalTime
       );
 
       if (!tripStillExists) {
@@ -761,7 +777,7 @@ export default function JourneyPlanner() {
               }}
               onSaveTrip={handleSaveTrip}
               isTripSaved={isTripAlreadySaved(
-                selectedTrip.departureTime,
+                selectedTrip.rawDepartureTime || selectedTrip.legs[0]?.plannedDeparture || '',
                 selectedTrip.legs[0]?.from,
                 selectedTrip.legs[selectedTrip.legs.length - 1]?.to
               )}
