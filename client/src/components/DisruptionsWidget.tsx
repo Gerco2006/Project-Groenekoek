@@ -164,7 +164,7 @@ export default function DisruptionsWidget({
               <Card key={station.id} className="p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 md:mb-2">
                       <h4 className="font-semibold text-sm">{station.stationName}</h4>
                       <Button
                         variant="ghost"
@@ -176,6 +176,8 @@ export default function DisruptionsWidget({
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
+                    
+                    {hasDisruptions && <Separator className="md:hidden -mx-4 mb-0" />}
 
                     {isLoading ? (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
