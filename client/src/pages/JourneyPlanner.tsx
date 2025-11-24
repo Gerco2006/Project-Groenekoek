@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle } from "lucide-react";
+import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle, Star } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -15,13 +15,16 @@ import TripAdviceDetailPanel from "@/components/TripAdviceDetailPanel";
 import TripDetailPanel from "@/components/TripDetailPanel";
 import CollapsibleSearchForm from "@/components/CollapsibleSearchForm";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
+import WidgetContainer from "@/components/WidgetContainer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useWidgetManager } from "@/hooks/use-widget-manager";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
+import type { SavedRoute } from "@shared/schema";
 
 interface TripLeg {
   trainType: string;
@@ -80,6 +83,7 @@ export default function JourneyPlanner() {
   const [addChangeTime, setAddChangeTime] = useState<number>(0);
   const [accessible, setAccessible] = useState<boolean>(false);
   const { toast } = useToast();
+  const { config, addSavedRoute, removeSavedRoute, isRouteAlreadySaved } = useWidgetManager();
 
   const swapStations = () => {
     const temp = from;
@@ -203,6 +207,57 @@ export default function JourneyPlanner() {
     if (isMobile) {
       setIsSearchFormOpen(false);
     }
+  };
+
+  const handleSaveRoute = () => {
+    if (!searchedFrom || !searchedTo) return;
+    
+    const cleanViaStations = searchedViaStations.filter(v => v.trim() !== "");
+    
+    if (isRouteAlreadySaved(searchedFrom, searchedTo, cleanViaStations)) {
+      toast({
+        title: "Route al opgeslagen",
+        description: "Deze route staat al in je opgeslagen routes",
+      });
+      return;
+    }
+    
+    const routeName = cleanViaStations.length > 0 
+      ? `${searchedFrom} → ${searchedTo} (via ${cleanViaStations.join(', ')})`
+      : `${searchedFrom} → ${searchedTo}`;
+    
+    addSavedRoute({
+      name: routeName,
+      from: searchedFrom,
+      to: searchedTo,
+      viaStations: cleanViaStations,
+    });
+    
+    toast({
+      title: "Route opgeslagen",
+      description: "Je kunt deze route nu snel terugvinden in je widgets",
+    });
+  };
+
+  const handleLoadSavedRoute = (route: SavedRoute) => {
+    setFrom(route.from);
+    setTo(route.to);
+    setViaStations(route.viaStations.length > 0 ? route.viaStations : []);
+    
+    setTimeout(() => {
+      setSearchedFrom(route.from);
+      setSearchedTo(route.to);
+      setSearchedViaStations(route.viaStations);
+      setSelectedTripIndex(null);
+      setSelectedTrain(null);
+      setDetailMode(null);
+      hasAutoSelectedRef.current = false;
+    }, 100);
+    
+    toast({
+      title: "Route geladen",
+      description: `Reisadviezen voor ${route.from} → ${route.to} worden gezocht...`,
+    });
   };
 
   const formatTime = (dateTime: string) => {
@@ -482,25 +537,39 @@ export default function JourneyPlanner() {
         </CollapsibleContent>
       </Collapsible>
 
-      <Button 
-        className="w-full" 
-        size="lg" 
-        onClick={handleSearch}
-        disabled={isLoading}
-        data-testid="button-search-trips"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Bezig met zoeken...
-          </>
-        ) : (
-          <>
-            <Search className="w-4 h-4 mr-2" />
-            Zoek reis
-          </>
+      <div className="flex gap-2">
+        <Button 
+          className="flex-1" 
+          size="lg" 
+          onClick={handleSearch}
+          disabled={isLoading}
+          data-testid="button-search-trips"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Bezig met zoeken...
+            </>
+          ) : (
+            <>
+              <Search className="w-4 h-4 mr-2" />
+              Zoek reis
+            </>
+          )}
+        </Button>
+        {searchedFrom && searchedTo && trips.length > 0 && !isLoading && (
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleSaveRoute}
+            disabled={isRouteAlreadySaved(searchedFrom, searchedTo, searchedViaStations)}
+            data-testid="button-save-route"
+            className="shrink-0"
+          >
+            <Star className={`w-4 h-4 ${isRouteAlreadySaved(searchedFrom, searchedTo, searchedViaStations) ? 'fill-current' : ''}`} />
+          </Button>
         )}
-      </Button>
+      </div>
     </>
   );
 
@@ -572,6 +641,17 @@ export default function JourneyPlanner() {
       {searchedFrom && searchedTo && !isLoading && trips.length === 0 && !error && (
         <div className="flex-1 flex items-center justify-center px-4">
           <p className="text-muted-foreground">Geen reismogelijkheden gevonden voor deze route.</p>
+        </div>
+      )}
+
+      {!searchedFrom && !searchedTo && !isLoading && (
+        <div className="flex-1 px-4 pb-6 overflow-y-auto">
+          <WidgetContainer
+            activeWidgets={config.activeWidgets}
+            savedRoutes={config.savedRoutes}
+            onRouteClick={handleLoadSavedRoute}
+            onRouteRemove={removeSavedRoute}
+          />
         </div>
       )}
     </div>
