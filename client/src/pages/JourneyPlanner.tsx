@@ -349,7 +349,7 @@ export default function JourneyPlanner() {
     return diffMins > 0 ? diffMins : undefined;
   };
 
-  const trips: SelectedTrip[] = tripsData?.trips?.map((trip: any) => {
+  const trips: SelectedTrip[] = (tripsData?.trips?.map((trip: any) => {
     const legs: TripLeg[] = trip.legs
       ?.filter((leg: any) => leg.product?.categoryCode)
       ?.map((leg: any) => {
@@ -399,7 +399,7 @@ export default function JourneyPlanner() {
       delayMinutes: delayMinutes > 0 ? delayMinutes : undefined,
       status: trip.status,
     };
-  }) || [];
+  }) ?? []) as SelectedTrip[];
 
   useEffect(() => {
     hasAutoSelectedRef.current = false;
