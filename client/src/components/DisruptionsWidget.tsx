@@ -1,11 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Construction, X, Plus, Loader2 } from "lucide-react";
+import { AlertTriangle, Construction, X, Plus, Loader2, ChevronRight } from "lucide-react";
 import type { DisruptionStation } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import StationSearch from "./StationSearch";
+import DisruptionDetailPanel from "./DisruptionDetailPanel";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface DisruptionsWidgetProps {
   stations: DisruptionStation[];
@@ -43,8 +45,10 @@ export default function DisruptionsWidget({
   onStationAdd,
   onStationRemove,
 }: DisruptionsWidgetProps) {
+  const isMobile = useIsMobile();
   const [newStationName, setNewStationName] = useState("");
   const [isAddingStation, setIsAddingStation] = useState(false);
+  const [selectedDisruption, setSelectedDisruption] = useState<Disruption | null>(null);
 
   const { data: allDisruptions, isLoading } = useQuery<any>({
     queryKey: ["/api/disruptions"],
@@ -93,7 +97,7 @@ export default function DisruptionsWidget({
 
   const canAddMoreStations = stations.length < 3;
 
-  return (
+  const widgetContent = (
     <Card className="p-6">
       <div className="flex items-center gap-3 mb-4">
         <AlertTriangle className="w-5 h-5 text-primary" />
@@ -180,18 +184,23 @@ export default function DisruptionsWidget({
                     ) : hasDisruptions ? (
                       <div className="space-y-2">
                         {stationDisruptions.map((disruption) => (
-                          <div
+                          <Card
                             key={disruption.id}
-                            className="flex items-start gap-2 text-sm"
+                            className="p-3 hover-elevate cursor-pointer"
+                            onClick={() => setSelectedDisruption(disruption)}
+                            data-testid={`disruption-item-${disruption.id}`}
                           >
-                            {getDisruptionIcon(disruption.type)}
-                            <div className="flex-1 min-w-0">
-                              <Badge variant="secondary" className="text-xs mb-1">
-                                {getDisruptionType(disruption.type)}
-                              </Badge>
-                              <p className="text-xs leading-relaxed">{disruption.title}</p>
+                            <div className="flex items-start gap-2 text-sm">
+                              {getDisruptionIcon(disruption.type)}
+                              <div className="flex-1 min-w-0">
+                                <Badge variant="secondary" className="text-xs mb-1">
+                                  {getDisruptionType(disruption.type)}
+                                </Badge>
+                                <p className="text-xs leading-relaxed line-clamp-2">{disruption.title}</p>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                             </div>
-                          </div>
+                          </Card>
                         ))}
                       </div>
                     ) : (
@@ -250,5 +259,19 @@ export default function DisruptionsWidget({
         </div>
       )}
     </Card>
+  );
+
+  return (
+    <>
+      {widgetContent}
+      {selectedDisruption && !isMobile && (
+        <DisruptionDetailPanel
+          disruptionId={selectedDisruption.id}
+          disruptionType={selectedDisruption.type}
+          open={!!selectedDisruption}
+          onClose={() => setSelectedDisruption(null)}
+        />
+      )}
+    </>
   );
 }
