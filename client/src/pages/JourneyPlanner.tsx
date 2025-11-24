@@ -578,7 +578,7 @@ export default function JourneyPlanner() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto h-full">
+    <div className="max-w-6xl mx-auto h-full overflow-hidden">
       <MasterDetailLayout
         master={masterContent}
         detail={
