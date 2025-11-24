@@ -243,7 +243,7 @@ export default function TripDetailPanel({
           <div className="space-y-2">
             <p className="text-lg font-semibold">Geen gegevens beschikbaar</p>
             <p className="text-sm text-muted-foreground max-w-md">
-              De NS API geeft helaas geen rit-informatie voor bussen, trams en metro's. Het is nog onbekend of hier verandering in komt.
+              De NS API geeft helaas geen rit-informatie voor bussen, trams en metro's.
             </p>
           </div>
         </div>

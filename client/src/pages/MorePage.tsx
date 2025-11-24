@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -8,40 +7,14 @@ import {
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Github, Moon, Sun, Info, Heart, AlertTriangle, ChevronRight, Blocks } from "lucide-react";
+import { Github, Moon, Sun, Info, Heart, AlertTriangle, ChevronRight } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import PageContainer from "@/components/PageContainer";
-import { localStorageUtils } from "@/lib/localStorage";
-import { widgetRegistry } from "@/lib/widgetRegistry";
-import "@/widgets";
 
 export default function MorePage() {
   const { theme, toggleTheme } = useTheme();
-  const [widgetSettings, setWidgetSettings] = useState(localStorageUtils.getWidgetSettings());
-
-  useEffect(() => {
-    const handleSettingsChange = () => {
-      setWidgetSettings(localStorageUtils.getWidgetSettings());
-    };
-
-    window.addEventListener("storage", handleSettingsChange);
-    window.addEventListener("widgetSettingsChanged", handleSettingsChange);
-
-    return () => {
-      window.removeEventListener("storage", handleSettingsChange);
-      window.removeEventListener("widgetSettingsChanged", handleSettingsChange);
-    };
-  }, []);
-
-  const handleToggleWidget = (widgetId: string, enabled: boolean) => {
-    localStorageUtils.toggleWidget(widgetId, enabled);
-    setWidgetSettings(localStorageUtils.getWidgetSettings());
-    window.dispatchEvent(new Event("widgetSettingsChanged"));
-  };
-
-  const allWidgets = widgetRegistry.getAll();
 
   return (
     <PageContainer>
@@ -69,43 +42,6 @@ export default function MorePage() {
             </CardHeader>
           </Card>
         </Link>
-
-        <Card data-testid="card-widgets">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Blocks className="w-5 h-5 text-primary" />
-              <div>
-                <CardTitle>Widgets</CardTitle>
-                <CardDescription>Beheer widgets op de homepagina</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {allWidgets.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Geen widgets beschikbaar</p>
-            ) : (
-              allWidgets.map((widget) => {
-                const isEnabled = widgetSettings[widget.id]?.enabled ?? widget.defaultEnabled;
-                return (
-                  <div key={widget.id} className="flex items-center justify-between" data-testid={`widget-toggle-${widget.id}`}>
-                    <div className="flex-1">
-                      <Label htmlFor={`widget-${widget.id}`} className="cursor-pointer font-medium">
-                        {widget.name}
-                      </Label>
-                      <p className="text-sm text-muted-foreground">{widget.description}</p>
-                    </div>
-                    <Switch
-                      id={`widget-${widget.id}`}
-                      checked={isEnabled}
-                      onCheckedChange={(checked) => handleToggleWidget(widget.id, checked)}
-                      data-testid={`switch-widget-${widget.id}`}
-                    />
-                  </div>
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
 
         <Card data-testid="card-theme">
           <CardHeader>
