@@ -531,7 +531,7 @@ export default function JourneyPlanner() {
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-left font-normal"
+                  className="w-full justify-start text-left font-normal bg-muted/50"
                   data-testid="button-select-date"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
