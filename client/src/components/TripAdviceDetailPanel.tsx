@@ -157,23 +157,11 @@ export default function TripAdviceDetailPanel({
                     <div className="p-4">
                       <div className="flex items-start gap-3 mb-3">
                         <TrainBadge type={leg.trainType} number={leg.trainNumber} />
-                        <div className="ml-auto flex items-center gap-2">
-                          {leg.cancelled && (
-                            <Badge variant="destructive">
-                              Geannuleerd
-                            </Badge>
-                          )}
-                          {leg.platform && (
-                            <Badge variant="outline">
-                              Spoor {leg.platform}
-                            </Badge>
-                          )}
-                          {leg.arrivalPlatform && leg.arrivalPlatform !== leg.platform && (
-                            <Badge variant="outline">
-                              → Spoor {leg.arrivalPlatform}
-                            </Badge>
-                          )}
-                        </div>
+                        {leg.cancelled && (
+                          <Badge variant="destructive" className="ml-auto">
+                            Geannuleerd
+                          </Badge>
+                        )}
                       </div>
                       
                       <div className="space-y-2">
@@ -188,7 +176,14 @@ export default function TripAdviceDetailPanel({
                                 </Badge>
                               )}
                             </div>
-                            <div className="text-sm text-muted-foreground truncate">{leg.from}</div>
+                            <div className="flex items-center justify-between">
+                              <div className="text-sm text-muted-foreground truncate">{leg.from}</div>
+                              {leg.platform && (
+                                <Badge variant="outline" className="ml-2 shrink-0">
+                                  Spoor {leg.platform}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
                         
@@ -207,7 +202,14 @@ export default function TripAdviceDetailPanel({
                                 </Badge>
                               )}
                             </div>
-                            <div className="text-sm text-muted-foreground truncate">{leg.to}</div>
+                            <div className="flex items-center justify-between">
+                              <div className="text-sm text-muted-foreground truncate">{leg.to}</div>
+                              {leg.arrivalPlatform && (
+                                <Badge variant="outline" className="ml-2 shrink-0">
+                                  Spoor {leg.arrivalPlatform}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
