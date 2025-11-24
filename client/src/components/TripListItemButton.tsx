@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, ArrowRight, Train, AlertCircle, Users } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import type { TripLeg } from "@shared/schema";
-import { useQueries } from "@tanstack/react-query";
 
 const crowdingColors = {
   LOW: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
@@ -42,46 +41,15 @@ export default function TripListItemButton({
   const firstLeg = legs[0];
   const lastLeg = legs[legs.length - 1];
 
-  // Fetch crowding data for all train legs
-  const crowdingQueries = useQueries({
-    queries: legs.map(leg => ({
-      queryKey: ["/api/train-crowding", leg.trainNumber, leg.departureDateTime],
-      enabled: !!leg.trainNumber,
-      queryFn: async () => {
-        const url = leg.departureDateTime 
-          ? `/api/train-crowding/${leg.trainNumber}?departureTime=${encodeURIComponent(leg.departureDateTime)}`
-          : `/api/train-crowding/${leg.trainNumber}`;
-        const response = await fetch(url);
-        if (!response.ok) {
-          if (response.status === 404) return null;
-          throw new Error("Failed to fetch crowding data");
-        }
-        return response.json();
-      },
-      retry: 1,
-      staleTime: 60000, // Cache for 1 minute
-    })),
-  });
-
-  // Calculate average crowding level based on boarding stations
+  // Calculate average crowding level from embedded crowdForecast data
   const getAverageCrowding = () => {
     const crowdingLevels: number[] = [];
     
-    crowdingQueries.forEach((query, idx) => {
-      if (!query.data?.prognoses || !Array.isArray(query.data.prognoses)) return;
-      
-      const leg = legs[idx];
-      
-      // Find the crowding prognosis for the boarding station (where user gets on the train)
-      // Match by UIC code if available, otherwise use first available prognosis
-      const prognosis = leg.fromUicCode 
-        ? query.data.prognoses.find((p: any) => p.stationUic === leg.fromUicCode)
-        : query.data.prognoses.find((p: any) => p.classification);
-      
-      if (!prognosis?.classification) return;
+    legs.forEach((leg) => {
+      if (!leg.crowdForecast) return;
       
       // Convert to numeric value
-      const value = prognosis.classification === 'HIGH' ? 3 : prognosis.classification === 'MEDIUM' ? 2 : 1;
+      const value = leg.crowdForecast === 'HIGH' ? 3 : leg.crowdForecast === 'MEDIUM' ? 2 : 1;
       crowdingLevels.push(value);
     });
     

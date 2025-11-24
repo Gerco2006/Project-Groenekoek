@@ -47,6 +47,7 @@ export const tripLegSchema = z.object({
   fromUicCode: z.string().optional(),
   toUicCode: z.string().optional(),
   departureDateTime: z.string().optional(),
+  crowdForecast: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(),
 });
 
 export const savedTripSchema = z.object({

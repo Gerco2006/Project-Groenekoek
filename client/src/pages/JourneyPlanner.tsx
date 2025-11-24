@@ -358,6 +358,7 @@ export default function JourneyPlanner() {
           fromUicCode: leg.origin.uicCode,
           toUicCode: leg.destination.uicCode,
           departureDateTime: plannedDeparture,
+          crowdForecast: leg.crowdForecast as 'LOW' | 'MEDIUM' | 'HIGH' | undefined,
         };
       }) || [];
 
