@@ -182,11 +182,18 @@ export default function DisruptionsWidget({
                         <span>Laden...</span>
                       </div>
                     ) : hasDisruptions ? (
-                      <div className="space-y-2 md:px-0 -mx-4 md:mx-0">
-                        {stationDisruptions.map((disruption) => (
+                      <div className="space-y-0 md:space-y-2 md:px-0 -mx-4 md:mx-0 -mb-4 md:mb-0">
+                        {stationDisruptions.map((disruption, idx) => {
+                          const isFirst = idx === 0;
+                          const isLast = idx === stationDisruptions.length - 1;
+                          const roundingClass = isMobile 
+                            ? (isFirst ? 'rounded-t-md' : isLast ? 'rounded-b-md' : 'rounded-none')
+                            : 'rounded-md';
+                          
+                          return (
                           <Card
                             key={disruption.id}
-                            className="md:p-3 py-3 px-4 md:px-3 pb-0 md:pb-3 hover-elevate cursor-pointer"
+                            className={`md:p-3 py-3 px-4 md:px-3 pb-0 md:pb-3 hover-elevate cursor-pointer ${roundingClass}`}
                             onClick={() => setSelectedDisruption(disruption)}
                             data-testid={`disruption-item-${disruption.id}`}
                           >
@@ -201,7 +208,8 @@ export default function DisruptionsWidget({
                               <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                             </div>
                           </Card>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">
