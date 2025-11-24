@@ -357,6 +357,7 @@ export default function JourneyPlanner() {
           cancelled: leg.cancelled || false,
           fromUicCode: leg.origin.uicCode,
           toUicCode: leg.destination.uicCode,
+          departureDateTime: plannedDeparture,
         };
       }) || [];
 

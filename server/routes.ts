@@ -335,19 +335,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/train-crowding/:ritnummer", async (req, res) => {
     try {
       const { ritnummer } = req.params;
+      const { departureTime } = req.query;
       
       if (!ritnummer) {
         return res.status(400).json({ error: "Journey number parameter is required" });
       }
 
-      const response = await fetch(
-        `https://gateway.apiportal.ns.nl/virtual-train-api/v1/prognose/${ritnummer}`,
-        {
-          headers: {
-            "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "",
-          },
-        }
-      );
+      // Build URL with optional query parameters
+      let url = `https://gateway.apiportal.ns.nl/virtual-train-api/v1/prognose/${ritnummer}`;
+      const params = new URLSearchParams();
+      
+      if (departureTime) {
+        // Extract date from ISO timestamp (YYYY-MM-DD format)
+        const date = (departureTime as string).split('T')[0];
+        params.append('date', date);
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "",
+        },
+      });
 
       if (!response.ok) {
         if (response.status === 404) {

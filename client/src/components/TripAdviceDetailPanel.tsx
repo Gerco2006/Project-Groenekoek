@@ -59,10 +59,13 @@ export default function TripAdviceDetailPanel({
   // Fetch crowding data for all train legs
   const crowdingQueries = useQueries({
     queries: legs.map(leg => ({
-      queryKey: ["/api/train-crowding", leg.trainNumber],
+      queryKey: ["/api/train-crowding", leg.trainNumber, leg.departureDateTime],
       enabled: open && !!leg.trainNumber,
       queryFn: async () => {
-        const response = await fetch(`/api/train-crowding/${leg.trainNumber}`);
+        const url = leg.departureDateTime 
+          ? `/api/train-crowding/${leg.trainNumber}?departureTime=${encodeURIComponent(leg.departureDateTime)}`
+          : `/api/train-crowding/${leg.trainNumber}`;
+        const response = await fetch(url);
         if (!response.ok) {
           if (response.status === 404) return null;
           throw new Error("Failed to fetch crowding data");
@@ -221,20 +224,11 @@ export default function TripAdviceDetailPanel({
               const getLegCrowding = () => {
                 if (!crowdingData?.prognoses || !Array.isArray(crowdingData.prognoses)) return null;
                 
-                // Debug logging
-                console.log(`[Crowding Debug] Train ${leg.trainNumber} from ${leg.from}:`);
-                console.log(`  fromUicCode: ${leg.fromUicCode}`);
-                console.log(`  Available prognoses:`, crowdingData.prognoses.map((p: any) => 
-                  `Station ${p.stationUic}: ${p.classification}`
-                ));
-                
                 // Find the crowding prognosis for the boarding station (where user gets on the train)
                 // Match by UIC code if available, otherwise use first available prognosis
                 const prognosis = leg.fromUicCode 
                   ? crowdingData.prognoses.find((p: any) => p.stationUic === leg.fromUicCode)
                   : crowdingData.prognoses.find((p: any) => p.classification);
-                
-                console.log(`  Matched prognosis:`, prognosis);
                 
                 return prognosis?.classification || null;
               };

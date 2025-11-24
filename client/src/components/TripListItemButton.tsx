@@ -45,10 +45,13 @@ export default function TripListItemButton({
   // Fetch crowding data for all train legs
   const crowdingQueries = useQueries({
     queries: legs.map(leg => ({
-      queryKey: ["/api/train-crowding", leg.trainNumber],
+      queryKey: ["/api/train-crowding", leg.trainNumber, leg.departureDateTime],
       enabled: !!leg.trainNumber,
       queryFn: async () => {
-        const response = await fetch(`/api/train-crowding/${leg.trainNumber}`);
+        const url = leg.departureDateTime 
+          ? `/api/train-crowding/${leg.trainNumber}?departureTime=${encodeURIComponent(leg.departureDateTime)}`
+          : `/api/train-crowding/${leg.trainNumber}`;
+        const response = await fetch(url);
         if (!response.ok) {
           if (response.status === 404) return null;
           throw new Error("Failed to fetch crowding data");

@@ -46,6 +46,7 @@ export const tripLegSchema = z.object({
   cancelled: z.boolean().optional(),
   fromUicCode: z.string().optional(),
   toUicCode: z.string().optional(),
+  departureDateTime: z.string().optional(),
 });
 
 export const savedTripSchema = z.object({
