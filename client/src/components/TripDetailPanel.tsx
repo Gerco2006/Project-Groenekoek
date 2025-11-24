@@ -183,14 +183,12 @@ export default function TripDetailPanel({
     const scrollToCurrentStop = () => {
       const targetIndex = Math.floor(currentLocationIndex);
       const stopElement = document.querySelector(`[data-testid="row-stop-${targetIndex}"]`) as HTMLElement;
-      const scrollContainer = isMobile ? mobileScrollRef.current : scrollAreaRef.current;
       
-      if (stopElement && scrollContainer) {
-        const elementTop = stopElement.offsetTop;
-        const containerHeight = scrollContainer.clientHeight;
-        const scrollPosition = Math.max(0, elementTop - containerHeight / 4);
-        
-        scrollContainer.scrollTop = scrollPosition;
+      if (stopElement) {
+        stopElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center'
+        });
       }
     };
 
@@ -198,7 +196,7 @@ export default function TripDetailPanel({
     timeouts.forEach(delay => {
       setTimeout(scrollToCurrentStop, delay);
     });
-  }, [open, journeyData?.payload?.stops, currentLocationIndex]);
+  }, [open, journeyData?.payload?.stops, currentLocationIndex, isMobile]);
   
   const content = (
     <div className={`flex flex-col ${isMobile ? '' : 'h-full'}`}>
