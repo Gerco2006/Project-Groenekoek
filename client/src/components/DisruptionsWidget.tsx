@@ -182,11 +182,11 @@ export default function DisruptionsWidget({
                         <span>Laden...</span>
                       </div>
                     ) : hasDisruptions ? (
-                      <div className="space-y-2">
+                      <div className="space-y-2 md:px-0 -mx-4 md:mx-0">
                         {stationDisruptions.map((disruption) => (
                           <Card
                             key={disruption.id}
-                            className="p-3 hover-elevate cursor-pointer"
+                            className="md:p-3 py-3 px-4 md:px-3 pb-0 md:pb-3 hover-elevate cursor-pointer"
                             onClick={() => setSelectedDisruption(disruption)}
                             data-testid={`disruption-item-${disruption.id}`}
                           >
