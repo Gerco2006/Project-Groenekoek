@@ -102,7 +102,7 @@ export default function TrainLookup() {
     <PageContainer>
       <div className="min-h-screen bg-background md:px-4 pt-0 pb-3 md:py-6 space-y-6">
 
-        <div className="backdrop-blur-sm bg-card/80 md:rounded-xl rounded-b-xl p-6 space-y-4 border">
+        <div className="backdrop-blur-sm bg-card/80 rounded-t-none md:rounded-xl rounded-b-xl p-6 space-y-4 border">
           <div className="space-y-2">
             <Label className="text-sm font-medium">Zoek op</Label>
             <Tabs value={searchMode} onValueChange={(value) => setSearchMode(value as "journey" | "material")} className="w-full">

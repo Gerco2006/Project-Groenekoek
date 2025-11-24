@@ -254,7 +254,7 @@ export default function DepartureBoard() {
 
   const searchForm = (
     <Collapsible open={searchOpen} onOpenChange={setSearchOpen}>
-      <Card className="backdrop-blur-sm bg-card/80 md:rounded-xl rounded-b-xl">
+      <Card className="backdrop-blur-sm bg-card/80 rounded-t-none md:rounded-xl rounded-b-xl">
         <CollapsibleTrigger asChild>
           <Button 
             variant="ghost" 
