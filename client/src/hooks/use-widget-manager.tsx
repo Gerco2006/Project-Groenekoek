@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { useLocalStorage } from './use-local-storage';
-import type { SavedRoute, SavedTrip, WidgetConfig } from '@shared/schema';
+import type { SavedRoute, SavedTrip, WidgetConfig, DisruptionStation } from '@shared/schema';
 
 const DEFAULT_CONFIG: WidgetConfig = {
   activeWidgets: [],
   savedRoutes: [],
   savedTrips: [],
+  disruptionStations: [],
 };
 
 export function useWidgetManager() {
@@ -76,7 +77,33 @@ export function useWidgetManager() {
     }));
   };
 
-  const toggleWidget = (widgetId: 'savedRoutes' | 'savedTrips') => {
+  const addDisruptionStation = (stationName: string) => {
+    setConfig((prev) => {
+      if (prev.disruptionStations.length >= 3) {
+        return prev;
+      }
+      
+      const newStation: DisruptionStation = {
+        id: crypto.randomUUID(),
+        stationName,
+        createdAt: new Date().toISOString(),
+      };
+      
+      return {
+        ...prev,
+        disruptionStations: [...prev.disruptionStations, newStation],
+      };
+    });
+  };
+
+  const removeDisruptionStation = (id: string) => {
+    setConfig((prev) => ({
+      ...prev,
+      disruptionStations: prev.disruptionStations.filter((station) => station.id !== id),
+    }));
+  };
+
+  const toggleWidget = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => {
     setConfig((prev) => ({
       ...prev,
       activeWidgets: prev.activeWidgets.includes(widgetId)
@@ -85,7 +112,7 @@ export function useWidgetManager() {
     }));
   };
 
-  const moveWidgetUp = (widgetId: 'savedRoutes' | 'savedTrips') => {
+  const moveWidgetUp = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => {
     setConfig((prev) => {
       const currentIndex = prev.activeWidgets.indexOf(widgetId);
       if (currentIndex <= 0) return prev;
@@ -101,7 +128,7 @@ export function useWidgetManager() {
     });
   };
 
-  const moveWidgetDown = (widgetId: 'savedRoutes' | 'savedTrips') => {
+  const moveWidgetDown = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => {
     setConfig((prev) => {
       const currentIndex = prev.activeWidgets.indexOf(widgetId);
       if (currentIndex === -1 || currentIndex >= prev.activeWidgets.length - 1) return prev;
@@ -141,6 +168,8 @@ export function useWidgetManager() {
     removeSavedRoute,
     addSavedTrip,
     removeSavedTrip,
+    addDisruptionStation,
+    removeDisruptionStation,
     toggleWidget,
     moveWidgetUp,
     moveWidgetDown,

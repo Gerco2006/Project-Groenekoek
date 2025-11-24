@@ -63,10 +63,19 @@ export const savedTripSchema = z.object({
 export type TripLeg = z.infer<typeof tripLegSchema>;
 export type SavedTrip = z.infer<typeof savedTripSchema>;
 
+export const disruptionStationSchema = z.object({
+  id: z.string(),
+  stationName: z.string(),
+  createdAt: z.string(),
+});
+
+export type DisruptionStation = z.infer<typeof disruptionStationSchema>;
+
 export const widgetConfigSchema = z.object({
-  activeWidgets: z.array(z.enum(['savedRoutes', 'savedTrips'])).default([]),
+  activeWidgets: z.array(z.enum(['savedRoutes', 'savedTrips', 'disruptions'])).default([]),
   savedRoutes: z.array(savedRouteSchema).default([]),
   savedTrips: z.array(savedTripSchema).default([]),
+  disruptionStations: z.array(disruptionStationSchema).default([]),
 });
 
 export type WidgetConfig = z.infer<typeof widgetConfigSchema>;

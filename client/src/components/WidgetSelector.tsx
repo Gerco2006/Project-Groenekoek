@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, MapPin, X, Star, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, MapPin, X, Star, ChevronUp, ChevronDown, AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
 import { useState } from "react";
 
 interface WidgetOption {
-  id: 'savedRoutes' | 'savedTrips';
+  id: 'savedRoutes' | 'savedTrips' | 'disruptions';
   name: string;
   description: string;
   icon: JSX.Element;
@@ -31,13 +31,19 @@ const AVAILABLE_WIDGETS: WidgetOption[] = [
     description: 'Favoriete reisadviezen voor snel terugvinden',
     icon: <Star className="w-5 h-5" />,
   },
+  {
+    id: 'disruptions',
+    name: 'Storingen & Werkzaamheden',
+    description: 'Volg storingen van tot 3 stations',
+    icon: <AlertTriangle className="w-5 h-5" />,
+  },
 ];
 
 interface WidgetSelectorProps {
   activeWidgets: string[];
-  onToggleWidget: (widgetId: 'savedRoutes' | 'savedTrips') => void;
-  onMoveWidgetUp: (widgetId: 'savedRoutes' | 'savedTrips') => void;
-  onMoveWidgetDown: (widgetId: 'savedRoutes' | 'savedTrips') => void;
+  onToggleWidget: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
+  onMoveWidgetUp: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
+  onMoveWidgetDown: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
 }
 
 export default function WidgetSelector({ activeWidgets, onToggleWidget, onMoveWidgetUp, onMoveWidgetDown }: WidgetSelectorProps) {

@@ -1,31 +1,38 @@
 import SavedRoutesWidget from "./SavedRoutesWidget";
 import SavedTripsWidget from "./SavedTripsWidget";
+import DisruptionsWidget from "./DisruptionsWidget";
 import WidgetSelector from "./WidgetSelector";
 import { Card } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
-import type { SavedRoute, SavedTrip } from "@shared/schema";
+import type { SavedRoute, SavedTrip, DisruptionStation } from "@shared/schema";
 
 interface WidgetContainerProps {
   activeWidgets: string[];
   savedRoutes: SavedRoute[];
   savedTrips: SavedTrip[];
+  disruptionStations: DisruptionStation[];
   onRouteClick: (route: SavedRoute) => void;
   onRouteRemove: (id: string) => void;
   onTripClick: (trip: SavedTrip) => void;
   onTripRemove: (id: string) => void;
-  onToggleWidget: (widgetId: 'savedRoutes' | 'savedTrips') => void;
-  onMoveWidgetUp: (widgetId: 'savedRoutes' | 'savedTrips') => void;
-  onMoveWidgetDown: (widgetId: 'savedRoutes' | 'savedTrips') => void;
+  onDisruptionStationAdd: (stationName: string) => void;
+  onDisruptionStationRemove: (id: string) => void;
+  onToggleWidget: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
+  onMoveWidgetUp: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
+  onMoveWidgetDown: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
 }
 
 export default function WidgetContainer({
   activeWidgets,
   savedRoutes,
   savedTrips,
+  disruptionStations,
   onRouteClick,
   onRouteRemove,
   onTripClick,
   onTripRemove,
+  onDisruptionStationAdd,
+  onDisruptionStationRemove,
   onToggleWidget,
   onMoveWidgetUp,
   onMoveWidgetDown,
@@ -74,6 +81,16 @@ export default function WidgetContainer({
               trips={savedTrips}
               onTripClick={onTripClick}
               onTripRemove={onTripRemove}
+            />
+          );
+        }
+        if (widgetId === 'disruptions') {
+          return (
+            <DisruptionsWidget
+              key={widgetId}
+              stations={disruptionStations}
+              onStationAdd={onDisruptionStationAdd}
+              onStationRemove={onDisruptionStationRemove}
             />
           );
         }
