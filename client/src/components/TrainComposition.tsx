@@ -156,7 +156,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
             </CollapsibleTrigger>
             
             <CollapsibleContent>
-              <div className="px-4 pb-4 space-y-4">
+              <div className={`px-4 pb-4 space-y-4 ${isMobile ? 'max-h-[50vh] overflow-y-auto' : ''}`}>
                 {/* Overview Card */}
                 <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
                   {/* Capacity Overview */}
