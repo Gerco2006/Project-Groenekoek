@@ -83,7 +83,7 @@ export default function JourneyPlanner() {
   const [addChangeTime, setAddChangeTime] = useState<number>(0);
   const [accessible, setAccessible] = useState<boolean>(false);
   const { toast } = useToast();
-  const { config, addSavedRoute, removeSavedRoute, isRouteAlreadySaved } = useWidgetManager();
+  const { config, addSavedRoute, removeSavedRoute, isRouteAlreadySaved, toggleWidget } = useWidgetManager();
 
   const swapStations = () => {
     const temp = from;
@@ -651,6 +651,7 @@ export default function JourneyPlanner() {
             savedRoutes={config.savedRoutes}
             onRouteClick={handleLoadSavedRoute}
             onRouteRemove={removeSavedRoute}
+            onToggleWidget={toggleWidget}
           />
         </div>
       )}

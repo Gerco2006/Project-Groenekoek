@@ -2,7 +2,7 @@ import { useLocalStorage } from './use-local-storage';
 import type { SavedRoute, WidgetConfig } from '@shared/schema';
 
 const DEFAULT_CONFIG: WidgetConfig = {
-  activeWidgets: ['savedRoutes'],
+  activeWidgets: [],
   savedRoutes: [],
 };
 

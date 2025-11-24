@@ -1,0 +1,128 @@
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, MapPin, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
+
+interface WidgetOption {
+  id: 'savedRoutes';
+  name: string;
+  description: string;
+  icon: JSX.Element;
+}
+
+const AVAILABLE_WIDGETS: WidgetOption[] = [
+  {
+    id: 'savedRoutes',
+    name: 'Opgeslagen Routes',
+    description: 'Snel toegang tot je meest gebruikte routes',
+    icon: <MapPin className="w-5 h-5" />,
+  },
+];
+
+interface WidgetSelectorProps {
+  activeWidgets: string[];
+  onToggleWidget: (widgetId: 'savedRoutes') => void;
+}
+
+export default function WidgetSelector({ activeWidgets, onToggleWidget }: WidgetSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const availableToAdd = AVAILABLE_WIDGETS.filter(
+    widget => !activeWidgets.includes(widget.id)
+  );
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="gap-2" data-testid="button-add-widget">
+          <Plus className="w-4 h-4" />
+          Widget toevoegen
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Widgets beheren</DialogTitle>
+          <DialogDescription>
+            Kies welke widgets je wilt zien op je startpagina
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {activeWidgets.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold mb-3">Actieve widgets</h3>
+              <div className="space-y-2">
+                {AVAILABLE_WIDGETS.filter(w => activeWidgets.includes(w.id)).map((widget) => (
+                  <Card key={widget.id} className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-primary">{widget.icon}</div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm">{widget.name}</h4>
+                        <p className="text-xs text-muted-foreground">{widget.description}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onToggleWidget(widget.id)}
+                        data-testid={`button-remove-widget-${widget.id}`}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {availableToAdd.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold mb-3">
+                {activeWidgets.length > 0 ? 'Meer widgets' : 'Beschikbare widgets'}
+              </h3>
+              <div className="space-y-2">
+                {availableToAdd.map((widget) => (
+                  <Card key={widget.id} className="p-4 hover-elevate cursor-pointer" onClick={() => {
+                    onToggleWidget(widget.id);
+                  }} data-testid={`widget-option-${widget.id}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="text-primary">{widget.icon}</div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm">{widget.name}</h4>
+                        <p className="text-xs text-muted-foreground">{widget.description}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleWidget(widget.id);
+                        }}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeWidgets.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Je hebt nog geen widgets toegevoegd. Selecteer er een om te beginnen!
+            </p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
