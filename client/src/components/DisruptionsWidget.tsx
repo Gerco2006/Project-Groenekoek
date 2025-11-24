@@ -161,7 +161,7 @@ export default function DisruptionsWidget({
             const hasDisruptions = stationDisruptions.length > 0;
 
             return (
-              <Card key={station.id} className="p-4">
+              <Card key={station.id} className="p-4 md:overflow-visible overflow-visible">
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-2 md:mb-2">
@@ -177,7 +177,11 @@ export default function DisruptionsWidget({
                       </Button>
                     </div>
                     
-                    {hasDisruptions && <Separator className="md:hidden -mx-4 mb-0" />}
+                    {hasDisruptions && (
+                      <div className="md:hidden -mx-4 mb-0">
+                        <Separator />
+                      </div>
+                    )}
 
                     {isLoading ? (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
