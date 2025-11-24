@@ -10,16 +10,21 @@ interface SavedRoutesWidgetProps {
   onRouteRemove: (id: string) => void;
 }
 
-export default function SavedRoutesWidget({ routes, onRouteClick, onRouteRemove }: SavedRoutesWidgetProps) {
+export default function SavedRoutesWidget({
+  routes,
+  onRouteClick,
+  onRouteRemove,
+}: SavedRoutesWidgetProps) {
   if (routes.length === 0) {
     return (
       <Card className="p-6">
         <div className="flex items-center gap-3 mb-4">
           <MapPin className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-lg">Opgeslagen Routes</h3>
+          <h3 className="font-semibold text-lg">Favoriete Routes</h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          Je hebt nog geen routes opgeslagen. Zoek een route en klik op "Route opslaan" om deze toe te voegen.
+          Je hebt nog geen routes opgeslagen. Zoek een route en klik op "Route
+          opslaan" om deze toe te voegen.
         </p>
       </Card>
     );
@@ -29,7 +34,7 @@ export default function SavedRoutesWidget({ routes, onRouteClick, onRouteRemove 
     <Card className="p-6">
       <div className="flex items-center gap-3 mb-4">
         <MapPin className="w-5 h-5 text-primary" />
-        <h3 className="font-semibold text-lg">Opgeslagen Routes</h3>
+        <h3 className="font-semibold text-lg">Favoriete Routes</h3>
         <Badge variant="secondary" className="ml-auto">
           {routes.length}
         </Badge>
@@ -51,7 +56,7 @@ export default function SavedRoutesWidget({ routes, onRouteClick, onRouteRemove 
                 </div>
                 {route.viaStations.length > 0 && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Via: {route.viaStations.join(', ')}
+                    Via: {route.viaStations.join(", ")}
                   </p>
                 )}
               </div>

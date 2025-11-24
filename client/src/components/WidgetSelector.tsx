@@ -21,7 +21,7 @@ interface WidgetOption {
 const AVAILABLE_WIDGETS: WidgetOption[] = [
   {
     id: 'savedRoutes',
-    name: 'Opgeslagen Routes',
+    name: 'Favoriete Routes',
     description: 'Snel toegang tot je meest gebruikte routes',
     icon: <MapPin className="w-5 h-5" />,
   },
