@@ -14,7 +14,7 @@ export default function TopNav() {
   ];
 
   return (
-    <nav className="hidden md:block fixed top-0 left-0 right-0 bg-card/75 backdrop-blur-lg border-b z-50">
+    <nav className="hidden md:block fixed top-0 left-0 right-0 bg-card/40 backdrop-blur-lg border-b z-50">
       <div className="px-4">
         <div className="flex items-center justify-between h-16">
           <Link href="/">
