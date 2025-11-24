@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import type { TripLeg } from "@shared/schema";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 
 const crowdingColors = {
   LOW: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
@@ -57,8 +57,8 @@ export default function TripAdviceDetailPanel({
   const isMobile = useIsMobile();
 
   // Fetch crowding data for all train legs
-  const crowdingQueries = legs.map(leg => 
-    useQuery({
+  const crowdingQueries = useQueries({
+    queries: legs.map(leg => ({
       queryKey: ["/api/train-crowding", leg.trainNumber],
       enabled: open && !!leg.trainNumber,
       queryFn: async () => {
@@ -70,8 +70,9 @@ export default function TripAdviceDetailPanel({
         return response.json();
       },
       retry: 1,
-    })
-  );
+      staleTime: 60000, // Cache for 1 minute
+    })),
+  });
 
   // Calculate average crowding level
   const getAverageCrowding = () => {
