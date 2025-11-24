@@ -473,7 +473,7 @@ export default function JourneyPlanner() {
       <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
         <CollapsibleContent className="space-y-4 pt-3">
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Tussenstop (optioneel)</Label>
+            <Label className="text-sm font-medium">Tussenstop</Label>
             {viaStations.length === 0 && (
               <Button
                 variant="outline"
@@ -513,7 +513,7 @@ export default function JourneyPlanner() {
             )}
           </div>
 
-          <Separator />
+          <Separator className="h-1" />
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -563,8 +563,6 @@ export default function JourneyPlanner() {
             </div>
           </div>
 
-          <Separator />
-
           <div className="space-y-2">
             <Tabs value={searchMode} onValueChange={(value) => setSearchMode(value as "departure" | "arrival")} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -577,7 +575,7 @@ export default function JourneyPlanner() {
             </p>
           </div>
 
-          <Separator />
+          <Separator className="h-1" />
 
           <div className="space-y-2">
             <Label htmlFor="change-time-input" className="text-sm font-medium">Extra overstaptijd (minuten)</Label>
@@ -594,7 +592,7 @@ export default function JourneyPlanner() {
             <p className="text-xs text-muted-foreground">Extra tijd die wordt toegevoegd aan elke overstap</p>
           </div>
 
-          <Separator />
+          <Separator className="h-1" />
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">

@@ -460,9 +460,175 @@ export default function TripDetailPanel({
               </div>
             </DrawerTitle>
           </DrawerHeader>
-          <div ref={mobileScrollRef} className="flex-1 overflow-y-auto">
-            {content}
-          </div>
+          
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : isNonTrainTransport ? (
+            <div className="flex flex-col items-center justify-center py-12 px-6 text-center gap-4">
+              <AlertCircle className="w-12 h-12 text-muted-foreground" />
+              <div className="space-y-2">
+                <p className="text-lg font-semibold">Geen gegevens beschikbaar</p>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  De NS API geeft helaas geen rit-informatie voor bussen, trams en metro's. Het is nog onbekend of hier verandering in komt.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Fixed Train Composition Section */}
+              <div className="pt-4 shrink-0">
+                <TrainComposition ritnummer={trainNumber} />
+              </div>
+
+              {!isNonTrainTransport && (
+                <div className="px-4 py-3 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllStations(!showAllStations)}
+                    className="gap-2"
+                    data-testid="button-toggle-all-stations"
+                  >
+                    <Info className="w-4 h-4" />
+                    {showAllStations ? "Toon alleen stops" : "Toon alle stations"}
+                  </Button>
+                </div>
+              )}
+
+              {/* Scrollable Station List */}
+              <div ref={mobileScrollRef} className="flex-1 overflow-y-auto px-4 pb-4">
+                <div className="space-y-2">
+                  {displayedStops.map((stop: any, displayIdx: number) => {
+                    const isPassing = stop.status === "PASSING";
+                    const originalIdx = allStops.indexOf(stop);
+                    const isCurrentLocation = currentLocationIndex === originalIdx;
+                    const isBetweenStops = currentLocationIndex === originalIdx - 0.5;
+                    const isPast = currentLocationIndex !== null && 
+                                  !isBetweenStops && 
+                                  !isCurrentLocation && 
+                                  originalIdx < Math.floor(currentLocationIndex);
+                    
+                    const arrival = stop.arrivals?.[0];
+                    const departure = stop.departures?.[0];
+                    
+                    const arrivalTime = formatTime(arrival?.plannedTime);
+                    const departureTime = formatTime(departure?.plannedTime);
+                    const arrivalDelay = calculateDelay(arrival?.plannedTime, arrival?.actualTime);
+                    const departureDelay = calculateDelay(departure?.plannedTime, departure?.actualTime);
+                    const platform = arrival?.actualTrack || arrival?.plannedTrack || 
+                                    departure?.actualTrack || departure?.plannedTrack;
+
+                    // Find crowding data for this stop
+                    const stopCrowding = crowdingData?.prognoses?.find(
+                      (prognosis: any) => prognosis.stationUic === stop.stop?.uicCode
+                    );
+
+                    return (
+                      <div key={originalIdx}>
+                        {isBetweenStops && (
+                          <div className="flex items-center gap-2 py-2 px-3 bg-primary/10 rounded-lg mb-2">
+                            <Navigation className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-medium text-primary">
+                              Trein rijdt nu tussen stations
+                            </span>
+                          </div>
+                        )}
+                        <div
+                          className={`bg-card border rounded-lg p-3 ${
+                            isPassing ? "opacity-60" : isPast ? "opacity-50" : "hover-elevate"
+                          } ${isCurrentLocation ? "border-primary border-2 bg-primary/5" : ""}`}
+                          data-testid={`row-stop-${originalIdx}`}
+                        >
+                          <div className="flex items-start gap-4 w-full">
+                            <div className="flex flex-col items-center pt-1">
+                              {isCurrentLocation ? (
+                                <div className="w-4 h-4 rounded-full bg-primary animate-pulse shrink-0" />
+                              ) : originalIdx === 0 ? (
+                                <div className="w-3 h-3 rounded-full bg-primary shrink-0" />
+                              ) : originalIdx === allStops.length - 1 ? (
+                                <div className="w-3 h-3 rounded-full bg-primary shrink-0" />
+                              ) : isPassing ? (
+                                <div className="w-2 h-2 rounded-full bg-muted-foreground shrink-0" />
+                              ) : (
+                                <div className="w-3 h-3 rounded-full border-2 border-primary bg-background shrink-0" />
+                              )}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <span className={`font-semibold ${isPassing ? "text-muted-foreground" : ""}`}>
+                                  {stop.stop?.name}
+                                </span>
+                                {isCurrentLocation && (
+                                  <Badge variant="default" className="shrink-0">
+                                    <Navigation className="w-3 h-3 mr-1" />
+                                    Nu hier
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              {isPassing ? (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <AlertCircle className="w-3 h-3" />
+                                  <span>Trein stopt hier niet</span>
+                                </div>
+                              ) : (
+                                <div className="space-y-1">
+                                  {arrivalTime && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                      <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                                      <span className="text-muted-foreground">Aankomst:</span>
+                                      <span className="font-medium">{arrivalTime}</span>
+                                      {arrivalDelay > 0 && (
+                                        <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
+                                          +{arrivalDelay}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  )}
+                                  {departureTime && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                      <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                                      <span className="text-muted-foreground">Vertrek:</span>
+                                      <span className="font-medium">{departureTime}</span>
+                                      {departureDelay > 0 && (
+                                        <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
+                                          +{departureDelay}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  )}
+                                  {platform && (
+                                    <div className="flex items-center gap-2 text-sm flex-wrap">
+                                      <Badge variant="outline" className="shrink-0">
+                                        Spoor {platform}
+                                      </Badge>
+                                      {stopCrowding && (
+                                        <Badge 
+                                          variant="outline" 
+                                          className={`shrink-0 gap-1 ${crowdingColors[stopCrowding.classification as keyof typeof crowdingColors]}`}
+                                          data-testid={`crowding-${originalIdx}`}
+                                        >
+                                          <Users className="w-3 h-3" />
+                                          {crowdingLabels[stopCrowding.classification as keyof typeof crowdingLabels]}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
         </DrawerContent>
       </Drawer>
     );
