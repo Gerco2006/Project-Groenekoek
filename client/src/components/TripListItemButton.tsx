@@ -1,8 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ArrowRight, Train, AlertCircle } from "lucide-react";
+import { Clock, ArrowRight, Train, AlertCircle, Users } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import type { TripLeg } from "@shared/schema";
+import { useQueries } from "@tanstack/react-query";
+
+const crowdingColors = {
+  LOW: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
+  MEDIUM: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
+  HIGH: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+};
+
+const crowdingLabels = {
+  LOW: "Rustig",
+  MEDIUM: "Gemiddelde drukte",
+  HIGH: "Druk, mogelijk vol",
+};
 
 interface TripListItemButtonProps {
   departureTime: string;
@@ -29,6 +42,62 @@ export default function TripListItemButton({
   const firstLeg = legs[0];
   const lastLeg = legs[legs.length - 1];
 
+  // Fetch crowding data for all train legs
+  const crowdingQueries = useQueries({
+    queries: legs.map(leg => ({
+      queryKey: ["/api/train-crowding", leg.trainNumber],
+      enabled: !!leg.trainNumber,
+      queryFn: async () => {
+        const response = await fetch(`/api/train-crowding/${leg.trainNumber}`);
+        if (!response.ok) {
+          if (response.status === 404) return null;
+          throw new Error("Failed to fetch crowding data");
+        }
+        return response.json();
+      },
+      retry: 1,
+      staleTime: 60000, // Cache for 1 minute
+    })),
+  });
+
+  // Calculate average crowding level
+  const getAverageCrowding = () => {
+    const crowdingLevels = crowdingQueries
+      .map((query, idx) => {
+        if (!query.data?.prognoses) return null;
+        
+        // Get crowding for origin and destination of this leg
+        const leg = legs[idx];
+        const originPrognosis = query.data.prognoses.find((p: any) => 
+          p.station?.toLowerCase().includes(leg.from.toLowerCase())
+        );
+        const destPrognosis = query.data.prognoses.find((p: any) => 
+          p.station?.toLowerCase().includes(leg.to.toLowerCase())
+        );
+        
+        // Average of origin and destination crowding
+        const crowdings = [originPrognosis?.uitstapPrognose?.classification, destPrognosis?.instapPrognose?.classification]
+          .filter(Boolean);
+        
+        if (crowdings.length === 0) return null;
+        
+        const values = crowdings.map((c: string) => 
+          c === 'HIGH' ? 3 : c === 'MEDIUM' ? 2 : 1
+        );
+        return values.reduce((a: number, b: number) => a + b, 0) / values.length;
+      })
+      .filter((v): v is number => v !== null);
+    
+    if (crowdingLevels.length === 0) return null;
+    
+    const avg = crowdingLevels.reduce((a, b) => a + b, 0) / crowdingLevels.length;
+    if (avg >= 2.5) return 'HIGH';
+    if (avg >= 1.5) return 'MEDIUM';
+    return 'LOW';
+  };
+
+  const averageCrowding = getAverageCrowding();
+
   return (
     <Button
       variant="ghost"
@@ -44,12 +113,20 @@ export default function TripListItemButton({
             <TrainBadge key={idx} type={type} />
           ))}
         </div>
-        {delayMinutes && delayMinutes > 0 && (
-          <Badge variant="destructive" className="gap-1 shrink-0">
-            <AlertCircle className="w-3 h-3" />
-            +{delayMinutes}
-          </Badge>
-        )}
+        <div className="flex gap-1.5 flex-wrap shrink-0">
+          {averageCrowding && (
+            <Badge variant="outline" className={`gap-1 text-xs ${crowdingColors[averageCrowding as keyof typeof crowdingColors]}`}>
+              <Users className="w-3 h-3" />
+              {crowdingLabels[averageCrowding as keyof typeof crowdingLabels]}
+            </Badge>
+          )}
+          {delayMinutes && delayMinutes > 0 && (
+            <Badge variant="destructive" className="gap-1">
+              <AlertCircle className="w-3 h-3" />
+              +{delayMinutes}
+            </Badge>
+          )}
+        </div>
       </div>
       
       <div className="flex items-center justify-between gap-3 mb-3">
