@@ -60,33 +60,28 @@ export default function TripListItemButton({
     })),
   });
 
-  // Calculate average crowding level
+  // Calculate average crowding level based on boarding stations
   const getAverageCrowding = () => {
-    const crowdingLevels = crowdingQueries
-      .map((query, idx) => {
-        if (!query.data?.prognoses) return null;
-        
-        // Get crowding for origin and destination of this leg
-        const leg = legs[idx];
-        const originPrognosis = query.data.prognoses.find((p: any) => 
-          p.station?.toLowerCase().includes(leg.from.toLowerCase())
-        );
-        const destPrognosis = query.data.prognoses.find((p: any) => 
-          p.station?.toLowerCase().includes(leg.to.toLowerCase())
-        );
-        
-        // Average of origin and destination crowding
-        const crowdings = [originPrognosis?.uitstapPrognose?.classification, destPrognosis?.instapPrognose?.classification]
-          .filter(Boolean);
-        
-        if (crowdings.length === 0) return null;
-        
-        const values = crowdings.map((c: string) => 
-          c === 'HIGH' ? 3 : c === 'MEDIUM' ? 2 : 1
-        );
-        return values.reduce((a: number, b: number) => a + b, 0) / values.length;
-      })
-      .filter((v): v is number => v !== null);
+    const crowdingLevels: number[] = [];
+    
+    crowdingQueries.forEach((query, idx) => {
+      if (!query.data?.prognoses) return;
+      
+      // Get crowding for the boarding station (where user gets on the train)
+      const leg = legs[idx];
+      const boardingPrognosis = query.data.prognoses.find((p: any) => 
+        p.station?.toLowerCase().includes(leg.from.toLowerCase())
+      );
+      
+      // Use the boarding (instap) prognose - how crowded it will be when boarding
+      const crowding = boardingPrognosis?.instapPrognose?.classification;
+      
+      if (!crowding) return;
+      
+      // Convert to numeric value
+      const value = crowding === 'HIGH' ? 3 : crowding === 'MEDIUM' ? 2 : 1;
+      crowdingLevels.push(value);
+    });
     
     if (crowdingLevels.length === 0) return null;
     
