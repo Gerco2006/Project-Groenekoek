@@ -647,7 +647,7 @@ export default function JourneyPlanner() {
 
   const masterContent = (
     <div className="h-full flex flex-col">
-      <div className="shrink-0 md:px-4 py-6 space-y-6">
+      <div className="shrink-0 md:px-4 md:py-6 space-y-6">
         <CollapsibleSearchForm
           isOpen={isSearchFormOpen}
           onToggle={() => setIsSearchFormOpen(!isSearchFormOpen)}
