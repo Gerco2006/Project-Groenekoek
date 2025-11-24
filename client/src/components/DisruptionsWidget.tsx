@@ -98,14 +98,20 @@ export default function DisruptionsWidget({
 
   const canAddMoreStations = stations.length < 3;
 
+  // Bereken totaal aantal zichtbare storingen
+  const totalDisruptionsCount = stations.reduce((total, station) => {
+    const stationDisruptions = getStationDisruptions(station.stationName);
+    return total + stationDisruptions.length;
+  }, 0);
+
   const widgetContent = (
     <Card className="p-6">
       <div className="flex items-center gap-3 mb-4">
         <AlertTriangle className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-lg">Storingen & Werkzaamheden</h3>
-        {stations.length > 0 && (
+        {totalDisruptionsCount > 0 && (
           <Badge variant="secondary" className="ml-auto">
-            {stations.length}
+            {totalDisruptionsCount}
           </Badge>
         )}
       </div>
