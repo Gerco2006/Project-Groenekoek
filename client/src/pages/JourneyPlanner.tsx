@@ -475,44 +475,33 @@ export default function JourneyPlanner() {
       <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
         <CollapsibleContent className="space-y-4 pt-3">
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Tussenstop</Label>
-            <div className="space-y-3">
-              {viaStations.map((via, index) => (
-                <div key={index} className="flex gap-2 items-end">
-                  <div className="flex-1">
-                    <StationSearch
-                      label={`Via station ${index + 1}`}
-                      value={via}
-                      onChange={(value) => updateViaStation(index, value)}
-                      placeholder="Bijv. Utrecht Centraal"
-                      testId={`input-via-station-${index}`}
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => removeViaStation(index)}
-                    className="shrink-0 mb-0"
-                    data-testid={`button-remove-via-${index}`}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-              <div className="flex gap-2 items-end">
-                <div className="flex-1">
-                  <StationSearch
-                    value=""
-                    onChange={(value) => {
-                      if (value) {
-                        setViaStations([...viaStations, value]);
-                      }
-                    }}
-                    placeholder="Voeg tussenstop toe..."
-                    testId="input-add-via-station"
-                  />
-                </div>
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <StationSearch
+                  label="Tussenstop"
+                  value={viaStations[0] || ""}
+                  onChange={(value) => {
+                    if (value) {
+                      setViaStations([value]);
+                    } else {
+                      setViaStations([]);
+                    }
+                  }}
+                  placeholder="Bijv. Utrecht Centraal"
+                  testId="input-via-station"
+                />
               </div>
+              {viaStations[0] && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setViaStations([])}
+                  className="shrink-0 mb-0"
+                  data-testid="button-remove-via"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           </div>
 
