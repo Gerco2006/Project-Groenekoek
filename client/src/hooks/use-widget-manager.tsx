@@ -119,9 +119,14 @@ export function useWidgetManager() {
         createdAt: new Date().toISOString(),
       };
       
+      const newActiveWidgets = prev.activeWidgets.includes('materieelTracker')
+        ? prev.activeWidgets
+        : [...prev.activeWidgets, 'materieelTracker'];
+      
       return {
         ...prev,
         trackedMaterials: [...prev.trackedMaterials, newMaterial],
+        activeWidgets: newActiveWidgets,
       };
     });
   };
