@@ -75,16 +75,55 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
 
   const materieeldelen = compositionData.materieeldelen || [];
 
+  // Helper function to get seat counts from various possible data structures
+  const getSeatsFromDeel = (deel: any) => {
+    // Try zitplaatsen object first (older API structure)
+    if (deel.zitplaatsen) {
+      return {
+        firstClass: (deel.zitplaatsen.zitplaatsEersteKlas || 0) + (deel.zitplaatsen.klapstoelEersteKlas || 0),
+        secondClass: (deel.zitplaatsen.zitplaatsTweedeKlas || 0) + (deel.zitplaatsen.klapstoelTweedeKlas || 0),
+        bikes: deel.zitplaatsen.fietsplekken || 0
+      };
+    }
+    
+    // Try bakken (carriage sections) - aggregate from all bakken
+    if (deel.bakken && Array.isArray(deel.bakken)) {
+      let firstClass = 0, secondClass = 0, bikes = 0;
+      deel.bakken.forEach((bak: any) => {
+        if (bak.zitplaatsen) {
+          firstClass += (bak.zitplaatsen.zitplaatsEersteKlas || 0) + (bak.zitplaatsen.klapstoelEersteKlas || 0);
+          secondClass += (bak.zitplaatsen.zitplaatsTweedeKlas || 0) + (bak.zitplaatsen.klapstoelTweedeKlas || 0);
+          bikes += bak.zitplaatsen.fietsplekken || 0;
+        }
+        // Alternative field names in bakken
+        firstClass += bak.aantalZitplaatsenEersteKlas || 0;
+        secondClass += bak.aantalZitplaatsenTweedeKlas || 0;
+        bikes += bak.aantalFietsplekken || 0;
+      });
+      return { firstClass, secondClass, bikes };
+    }
+    
+    // Direct fields on deel (alternative naming)
+    return {
+      firstClass: deel.aantalZitplaatsenEersteKlas || deel.zitplaatsenEersteKlas || 0,
+      secondClass: deel.aantalZitplaatsenTweedeKlas || deel.zitplaatsenTweedeKlas || 0,
+      bikes: deel.aantalFietsplekken || deel.fietsplekken || 0
+    };
+  };
+
   // Bereken totaal aantal zitplaatsen en fietsplekken
-  const totalSeatsFirstClass = materieeldelen.reduce((sum: number, deel: any) => 
-    sum + (deel.zitplaatsen?.zitplaatsEersteKlas || 0) + (deel.zitplaatsen?.klapstoelEersteKlas || 0), 0
-  );
-  const totalSeatsSecondClass = materieeldelen.reduce((sum: number, deel: any) => 
-    sum + (deel.zitplaatsen?.zitplaatsTweedeKlas || 0) + (deel.zitplaatsen?.klapstoelTweedeKlas || 0), 0
-  );
-  const totalBikeSpots = materieeldelen.reduce((sum: number, deel: any) => 
-    sum + (deel.zitplaatsen?.fietsplekken || 0), 0
-  );
+  const totals = materieeldelen.reduce((acc: { firstClass: number, secondClass: number, bikes: number }, deel: any) => {
+    const seats = getSeatsFromDeel(deel);
+    return {
+      firstClass: acc.firstClass + seats.firstClass,
+      secondClass: acc.secondClass + seats.secondClass,
+      bikes: acc.bikes + seats.bikes
+    };
+  }, { firstClass: 0, secondClass: 0, bikes: 0 });
+
+  const totalSeatsFirstClass = totals.firstClass;
+  const totalSeatsSecondClass = totals.secondClass;
+  const totalBikeSpots = totals.bikes;
 
   const allFacilities = new Set<string>();
   materieeldelen.forEach((deel: any) => {
@@ -177,15 +216,15 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                     <p className="text-xs text-muted-foreground font-medium mb-3 text-center">Totale capaciteit materieel</p>
                     <div className="grid grid-cols-3 gap-3 text-center">
                       <div className="space-y-1">
-                        <p className="text-2xl font-bold text-primary">{totalSeatsFirstClass}</p>
+                        <p className="text-2xl font-bold text-primary">{totalSeatsFirstClass || "—"}</p>
                         <p className="text-xs text-muted-foreground">Zitplaatsen 1e klas</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-2xl font-bold text-primary">{totalSeatsSecondClass}</p>
+                        <p className="text-2xl font-bold text-primary">{totalSeatsSecondClass || "—"}</p>
                         <p className="text-xs text-muted-foreground">Zitplaatsen 2e klas</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-2xl font-bold text-primary">{totalBikeSpots}</p>
+                        <p className="text-2xl font-bold text-primary">{totalBikeSpots || "—"}</p>
                         <p className="text-xs text-muted-foreground">Beschikbare Fietsplekken</p>
                       </div>
                     </div>
@@ -212,6 +251,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                 <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
                   {materieeldelen.map((deel: any, index: number) => {
                     const isTracked = isMaterialTracked(deel.materieelnummer);
+                    const deelSeats = getSeatsFromDeel(deel);
                     return (
                     <Card key={index} className="bg-card/80 p-4 space-y-3" data-testid={`material-part-${index}`}>
                       <div className="flex items-center justify-between gap-2">
@@ -242,15 +282,15 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                       {/* Seats */}
                       <div className="grid grid-cols-3 gap-2 text-xs">
                         <div>
-                          <p className="font-semibold">{(deel.zitplaatsen?.zitplaatsEersteKlas || 0) + (deel.zitplaatsen?.klapstoelEersteKlas || 0)}</p>
+                          <p className="font-semibold">{deelSeats.firstClass || "—"}</p>
                           <p className="text-muted-foreground">1e klas</p>
                         </div>
                         <div>
-                          <p className="font-semibold">{(deel.zitplaatsen?.zitplaatsTweedeKlas || 0) + (deel.zitplaatsen?.klapstoelTweedeKlas || 0)}</p>
+                          <p className="font-semibold">{deelSeats.secondClass || "—"}</p>
                           <p className="text-muted-foreground">2e klas</p>
                         </div>
                         <div>
-                          <p className="font-semibold">{deel.zitplaatsen?.fietsplekken || 0}</p>
+                          <p className="font-semibold">{deelSeats.bikes || "—"}</p>
                           <p className="text-muted-foreground">Fietsplekken</p>
                         </div>
                       </div>

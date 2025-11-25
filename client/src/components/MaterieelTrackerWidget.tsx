@@ -160,31 +160,34 @@ function MaterialCard({
   const trainType = getTrainType(categoryCode, shortCategoryName);
 
 
-  // Find the next stop based on departure time in the future
-  const now = new Date();
-  
+  // Find the next stop based on status and actualTime fields
   const getNextStop = () => {
-    // First check for a stop with status PASSING or STOP
-    const currentStop = stops.find(s => s.status === "PASSING" || s.status === "STOP");
-    if (currentStop) return { stop: currentStop, isPassing: currentStop.status === "PASSING" };
-    
-    // Otherwise find the first stop where departure is in the future
-    for (const stop of stops) {
+    for (let i = 0; i < stops.length; i++) {
+      const stop = stops[i];
+      const isLastStop = i === stops.length - 1;
       const dep = stop.departures?.[0];
-      if (dep) {
-        const depTime = new Date(dep.actualTime || dep.plannedTime);
-        if (depTime > now) {
-          return { stop, isPassing: false };
+      const arr = stop.arrivals?.[0];
+      
+      // Check if this stop has been passed (departure has actualTime or status indicates passed)
+      const hasDeparted = dep?.actualTime || dep?.cancelled;
+      
+      // For the last stop, check arrival instead
+      if (isLastStop) {
+        const hasArrived = arr?.actualTime;
+        if (!hasArrived) {
+          return { stop, label: "Aankomst", time: arr };
         }
+        continue;
       }
-    }
-    
-    // Fallback: find the last stop (destination) if no departures left
-    const lastStop = stops[stops.length - 1];
-    if (lastStop?.arrivals?.[0]) {
-      const arrTime = new Date(lastStop.arrivals[0].actualTime || lastStop.arrivals[0].plannedTime);
-      if (arrTime > now) {
-        return { stop: lastStop, isPassing: false, isArrival: true };
+      
+      // If not yet departed, this is our next stop
+      if (!hasDeparted) {
+        // Check if train has arrived but not departed yet
+        const hasArrived = arr?.actualTime;
+        if (hasArrived) {
+          return { stop, label: "Vertrekt", time: dep };
+        }
+        return { stop, label: "Volgende", time: dep };
       }
     }
     
@@ -195,24 +198,11 @@ function MaterialCard({
   const displayStop = nextStopInfo?.stop;
 
   const getNextDepartureTime = () => {
-    if (!displayStop) return null;
-    
-    // If this is the final arrival
-    if (nextStopInfo?.isArrival && displayStop.arrivals?.[0]) {
-      const arr = displayStop.arrivals[0];
-      return {
-        time: formatTime(arr.actualTime || arr.plannedTime),
-        delay: arr.delayInSeconds ? Math.round(arr.delayInSeconds / 60) : 0,
-        isArrival: true
-      };
-    }
-    
-    if (!displayStop.departures?.[0]) return null;
-    const dep = displayStop.departures[0];
+    if (!nextStopInfo?.time) return null;
+    const timeData = nextStopInfo.time;
     return {
-      time: formatTime(dep.actualTime || dep.plannedTime),
-      delay: dep.delayInSeconds ? Math.round(dep.delayInSeconds / 60) : 0,
-      isArrival: false
+      time: formatTime(timeData.actualTime || timeData.plannedTime),
+      delay: timeData.delayInSeconds ? Math.round(timeData.delayInSeconds / 60) : 0
     };
   };
 
@@ -300,15 +290,11 @@ function MaterialCard({
                       <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                       <span className="font-medium truncate">{destination}</span>
                     </div>
-                    {displayStop && (
+                    {displayStop && nextStopInfo && (
                       <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         <span>
-                          {nextStopInfo?.isPassing 
-                            ? "Passeert" 
-                            : nextDep?.isArrival 
-                              ? "Aankomst" 
-                              : "Volgende"}: {displayStop.stop.name}
+                          {nextStopInfo.label}: {displayStop.stop.name}
                         </span>
                         {nextDep && (
                           <span className="font-medium">
