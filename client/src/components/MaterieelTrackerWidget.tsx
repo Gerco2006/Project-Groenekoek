@@ -16,6 +16,12 @@ interface MaterieelTrackerWidgetProps {
   onMaterialNameUpdate: (materialNumber: string, name: string) => void;
 }
 
+interface ProductInfo {
+  categoryCode?: string;
+  shortCategoryName?: string;
+  longCategoryName?: string;
+}
+
 interface JourneyData {
   ritnummer: string;
   journeyData: {
@@ -33,6 +39,7 @@ interface JourneyData {
           delayInSeconds?: number;
           cancelled?: boolean;
           status?: string;
+          product?: ProductInfo;
         }>;
         departures?: Array<{
           plannedTime: string;
@@ -40,14 +47,11 @@ interface JourneyData {
           delayInSeconds?: number;
           cancelled?: boolean;
           status?: string;
+          product?: ProductInfo;
         }>;
         status?: string;
       }>;
-      product?: {
-        categoryCode: string;
-        shortCategoryName?: string;
-        longCategoryName?: string;
-      };
+      product?: ProductInfo;
     };
   };
 }
@@ -157,8 +161,21 @@ function MaterialCard({
   const stops = trainInfo?.stops || [];
   const origin = stops.length > 0 ? stops[0]?.stop?.name : null;
   const destination = stops.length > 0 ? stops[stops.length - 1]?.stop?.name : null;
-  const categoryCode = trainInfo?.product?.categoryCode;
-  const shortCategoryName = trainInfo?.product?.shortCategoryName;
+  
+  // Get product info from stops (NS API returns it there for material lookups)
+  const getProductFromStops = () => {
+    for (const stop of stops) {
+      const depProduct = stop.departures?.[0]?.product;
+      if (depProduct?.categoryCode) return depProduct;
+      const arrProduct = stop.arrivals?.[0]?.product;
+      if (arrProduct?.categoryCode) return arrProduct;
+    }
+    return null;
+  };
+  
+  const product = trainInfo?.product || getProductFromStops();
+  const categoryCode = product?.categoryCode;
+  const shortCategoryName = product?.shortCategoryName;
   const trainType = getTrainType(categoryCode, shortCategoryName);
 
 
