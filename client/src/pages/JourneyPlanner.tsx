@@ -76,8 +76,7 @@ export default function JourneyPlanner() {
     removeSavedRoute, 
     isRouteAlreadySaved, 
     toggleWidget, 
-    moveWidgetUp, 
-    moveWidgetDown, 
+    reorderWidgets, 
     addSavedTrip, 
     removeSavedTrip, 
     isTripAlreadySaved,
@@ -734,8 +733,7 @@ export default function JourneyPlanner() {
             onMaterialRemove={removeTrackedMaterial}
             onMaterialNameUpdate={updateTrackedMaterialName}
             onToggleWidget={toggleWidget}
-            onMoveWidgetUp={moveWidgetUp}
-            onMoveWidgetDown={moveWidgetDown}
+            onReorderWidgets={reorderWidgets}
           />
         </div>
       )}

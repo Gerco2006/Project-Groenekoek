@@ -199,6 +199,13 @@ export function useWidgetManager() {
     });
   };
 
+  const reorderWidgets = (newOrder: ('savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker')[]) => {
+    setConfig((prev) => ({
+      ...prev,
+      activeWidgets: newOrder,
+    }));
+  };
+
   const isRouteAlreadySaved = (from: string, to: string, viaStations: string[] = []) => {
     return config.savedRoutes.some(
       (route) =>
@@ -232,6 +239,7 @@ export function useWidgetManager() {
     toggleWidget,
     moveWidgetUp,
     moveWidgetDown,
+    reorderWidgets,
     isRouteAlreadySaved,
     isTripAlreadySaved,
   };

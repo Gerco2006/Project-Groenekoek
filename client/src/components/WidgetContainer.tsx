@@ -25,8 +25,7 @@ interface WidgetContainerProps {
   onMaterialRemove: (id: string) => void;
   onMaterialNameUpdate: (materialNumber: string, name: string) => void;
   onToggleWidget: (widgetId: WidgetId) => void;
-  onMoveWidgetUp: (widgetId: WidgetId) => void;
-  onMoveWidgetDown: (widgetId: WidgetId) => void;
+  onReorderWidgets: (newOrder: WidgetId[]) => void;
 }
 
 export default function WidgetContainer({
@@ -45,8 +44,7 @@ export default function WidgetContainer({
   onMaterialRemove,
   onMaterialNameUpdate,
   onToggleWidget,
-  onMoveWidgetUp,
-  onMoveWidgetDown,
+  onReorderWidgets,
 }: WidgetContainerProps) {
   return (
     <div className="space-y-4" data-testid="widget-container">
@@ -58,8 +56,7 @@ export default function WidgetContainer({
         <WidgetSelector 
           activeWidgets={activeWidgets} 
           onToggleWidget={onToggleWidget}
-          onMoveWidgetUp={onMoveWidgetUp}
-          onMoveWidgetDown={onMoveWidgetDown}
+          onReorderWidgets={onReorderWidgets}
         />
       </div>
 
