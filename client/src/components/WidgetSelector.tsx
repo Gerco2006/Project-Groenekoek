@@ -296,7 +296,7 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
         <div>
           <h3 className="text-sm font-semibold mb-3">Actieve widgets</h3>
           <p className="text-xs text-muted-foreground mb-3">Sleep om te herordenen</p>
-          <div className="space-y-2 relative" ref={containerRef}>
+          <div className="space-y-2 relative" ref={containerRef} data-vaul-no-drag>
             {activeWidgetsList.map((widget, index) => (
               <Card 
                 key={widget.id}
@@ -308,6 +308,7 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
                 }`}
                 style={getItemStyle(index)}
                 data-testid={`draggable-widget-${widget.id}`}
+                data-vaul-no-drag
               >
                 <div className="flex items-center gap-3">
                   <div 
@@ -316,6 +317,7 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
                     style={{ touchAction: 'none' }}
                     onMouseDown={(e) => handleMouseDown(e, index)}
                     data-testid={`drag-handle-${widget.id}`}
+                    data-vaul-no-drag
                   >
                     <GripVertical className="w-5 h-5" />
                   </div>
