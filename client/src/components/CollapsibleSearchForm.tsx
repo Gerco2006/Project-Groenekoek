@@ -25,10 +25,10 @@ export default function CollapsibleSearchForm({
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
-            className="w-full justify-between p-4 h-auto hover-elevate rounded-none"
+            className="w-full justify-between px-4 py-2 md:py-4 h-auto hover-elevate rounded-none"
             data-testid="button-toggle-search"
           >
-            <span className="font-semibold text-lg">{title}</span>
+            <span className="font-semibold text-base md:text-lg">{title}</span>
             {isOpen ? (
               <ChevronUp className="w-5 h-5" />
             ) : (
