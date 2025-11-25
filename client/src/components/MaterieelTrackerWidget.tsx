@@ -160,78 +160,66 @@ function MaterialCard({
   const trainType = getTrainType(categoryCode, shortCategoryName);
 
 
-  // Find the next stop based on status and actualTime fields
+  // Find the next stop based on time comparison and status fields
   const getNextStop = () => {
     const now = new Date();
     
     for (let i = 0; i < stops.length; i++) {
       const stop = stops[i];
-      const status = stop.status?.toUpperCase();
+      const stopStatus = stop.status?.toUpperCase();
       const isLastStop = i === stops.length - 1;
+      const isFirstStop = i === 0;
       const dep = stop.departures?.[0];
       const arr = stop.arrivals?.[0];
       
-      // Skip stops that are explicitly marked as passed
-      if (status === 'PASSED' || status === 'ORIGIN') {
+      // Get effective times (actual if available, otherwise planned)
+      const effectiveArrival = arr ? new Date(arr.actualTime || arr.plannedTime) : null;
+      const effectiveDeparture = dep ? new Date(dep.actualTime || dep.plannedTime) : null;
+      
+      // Check status flags at stop level and event level
+      const depStatus = dep?.status?.toUpperCase();
+      const arrStatus = arr?.status?.toUpperCase();
+      const isPassing = stopStatus === 'PASSING' || depStatus === 'PASSING' || arrStatus === 'PASSING';
+      const isExplicitlyPassed = stopStatus === 'PASSED' || depStatus === 'PASSED';
+      
+      // Skip first stop (origin) - train has already departed
+      if (isFirstStop && effectiveDeparture && effectiveDeparture <= now) {
         continue;
       }
       
-      // Check if this is a passing station (train doesn't stop here)
-      const isPassing = status === 'PASSING';
-      
-      // For the last stop, check arrival
-      if (isLastStop) {
-        const hasArrived = arr?.actualTime;
-        if (!hasArrived) {
-          return { stop, label: "Aankomst", time: arr };
-        }
+      // Skip if explicitly marked as passed
+      if (isExplicitlyPassed) {
         continue;
       }
       
-      // Check departure status
-      const hasDeparted = dep?.actualTime;
-      
-      if (!hasDeparted) {
-        // Train hasn't departed from this station yet
-        const hasArrived = arr?.actualTime;
-        
-        if (isPassing) {
-          // This is a passing station
-          return { stop, label: "Passeert", time: dep || arr };
+      // For intermediate stops: check if departure time is in the past
+      if (!isLastStop && effectiveDeparture) {
+        if (effectiveDeparture <= now) {
+          // This stop's departure is in the past - train has passed
+          continue;
         }
         
-        if (hasArrived && !hasDeparted) {
-          // Train has arrived but not departed - currently at station
-          return { stop, label: "Vertrekt", time: dep };
-        }
-        
-        // Train hasn't arrived yet - this is the next stop
-        return { stop, label: "Volgende", time: arr || dep };
-      }
-    }
-    
-    // All stops passed - journey complete or use time-based fallback
-    // Find the first stop where planned time is in the future
-    for (let i = 0; i < stops.length; i++) {
-      const stop = stops[i];
-      const isLastStop = i === stops.length - 1;
-      const dep = stop.departures?.[0];
-      const arr = stop.arrivals?.[0];
-      const status = stop.status?.toUpperCase();
-      const isPassing = status === 'PASSING';
-      
-      const timeToCheck = isLastStop ? arr : dep;
-      if (!timeToCheck) continue;
-      
-      const plannedTime = new Date(timeToCheck.actualTime || timeToCheck.plannedTime);
-      if (plannedTime > now) {
-        if (isLastStop) {
-          return { stop, label: "Aankomst", time: arr };
-        }
+        // Departure is in the future - this is a candidate stop
         if (isPassing) {
           return { stop, label: "Passeert", time: dep };
         }
-        return { stop, label: "Volgende", time: dep };
+        
+        // Check if train is currently at this station (arrived but not departed)
+        if (effectiveArrival && effectiveArrival <= now && effectiveDeparture > now) {
+          return { stop, label: "Vertrekt", time: dep };
+        }
+        
+        // Train hasn't arrived yet
+        return { stop, label: "Volgende", time: arr || dep };
+      }
+      
+      // For last stop: check arrival time
+      if (isLastStop && effectiveArrival) {
+        if (effectiveArrival <= now) {
+          // Already arrived at destination
+          continue;
+        }
+        return { stop, label: "Aankomst", time: arr };
       }
     }
     
