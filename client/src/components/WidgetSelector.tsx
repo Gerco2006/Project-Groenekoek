@@ -86,6 +86,13 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
   
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dragHandleRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dragStateRef = useRef(dragState);
+  
+  // Keep ref in sync with state for use in event listeners
+  useEffect(() => {
+    dragStateRef.current = dragState;
+  }, [dragState]);
 
   const availableToAdd = AVAILABLE_WIDGETS.filter(
     widget => !activeWidgets.includes(widget.id)
@@ -94,16 +101,21 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
   const activeWidgetsList = activeWidgets
     .map(id => AVAILABLE_WIDGETS.find(w => w.id === id))
     .filter((w): w is WidgetOption => w !== undefined);
+  
+  const activeWidgetsListRef = useRef(activeWidgetsList);
+  useEffect(() => {
+    activeWidgetsListRef.current = activeWidgetsList;
+  }, [activeWidgetsList]);
 
-  const getTargetIndex = useCallback((currentY: number, startY: number, draggedIndex: number, itemHeight: number) => {
+  const getTargetIndex = useCallback((currentY: number, startY: number, draggedIndex: number, itemHeight: number, listLength: number) => {
     const deltaY = currentY - startY;
     const indexOffset = Math.round(deltaY / itemHeight);
     let newIndex = draggedIndex + indexOffset;
-    newIndex = Math.max(0, Math.min(newIndex, activeWidgetsList.length - 1));
+    newIndex = Math.max(0, Math.min(newIndex, listLength - 1));
     return newIndex;
-  }, [activeWidgetsList.length]);
+  }, []);
 
-  const handleDragStart = (index: number, clientY: number) => {
+  const handleDragStart = useCallback((index: number, clientY: number) => {
     const item = itemRefs.current[index];
     if (!item) return;
     
@@ -115,27 +127,35 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
       targetIndex: index,
       startY: clientY,
       currentY: clientY,
-      itemHeight: rect.height + 8, // including gap
+      itemHeight: rect.height + 8,
     });
-  };
+  }, []);
 
   const handleDragMove = useCallback((clientY: number) => {
-    if (!dragState.isDragging || dragState.draggedIndex === null) return;
+    const state = dragStateRef.current;
+    if (!state.isDragging || state.draggedIndex === null) return;
     
-    const newTargetIndex = getTargetIndex(clientY, dragState.startY, dragState.draggedIndex, dragState.itemHeight);
+    const newTargetIndex = getTargetIndex(
+      clientY, 
+      state.startY, 
+      state.draggedIndex, 
+      state.itemHeight,
+      activeWidgetsListRef.current.length
+    );
     
     setDragState(prev => ({
       ...prev,
       currentY: clientY,
       targetIndex: newTargetIndex,
     }));
-  }, [dragState.isDragging, dragState.draggedIndex, dragState.startY, dragState.itemHeight, getTargetIndex]);
+  }, [getTargetIndex]);
 
   const handleDragEnd = useCallback(() => {
-    if (dragState.draggedIndex !== null && dragState.targetIndex !== null && dragState.draggedIndex !== dragState.targetIndex) {
-      const newOrder = [...activeWidgetsList];
-      const [draggedItem] = newOrder.splice(dragState.draggedIndex, 1);
-      newOrder.splice(dragState.targetIndex, 0, draggedItem);
+    const state = dragStateRef.current;
+    if (state.draggedIndex !== null && state.targetIndex !== null && state.draggedIndex !== state.targetIndex) {
+      const newOrder = [...activeWidgetsListRef.current];
+      const [draggedItem] = newOrder.splice(state.draggedIndex, 1);
+      newOrder.splice(state.targetIndex, 0, draggedItem);
       onReorderWidgets(newOrder.map(w => w.id));
     }
     
@@ -147,14 +167,37 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
       currentY: 0,
       itemHeight: 0,
     });
-  }, [dragState.draggedIndex, dragState.targetIndex, activeWidgetsList, onReorderWidgets]);
+  }, [onReorderWidgets]);
 
-  // Mouse events
-  const handleMouseDown = (e: React.MouseEvent, index: number) => {
-    e.preventDefault();
-    handleDragStart(index, e.clientY);
-  };
+  // Attach native event listeners to drag handles with passive: false
+  useEffect(() => {
+    const handles = dragHandleRefs.current;
+    
+    const createTouchStartHandler = (index: number) => (e: TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const touch = e.touches[0];
+      handleDragStart(index, touch.clientY);
+    };
+    
+    const handlers: Array<{ element: HTMLDivElement; handler: (e: TouchEvent) => void }> = [];
+    
+    handles.forEach((handle, index) => {
+      if (handle) {
+        const handler = createTouchStartHandler(index);
+        handle.addEventListener('touchstart', handler, { passive: false });
+        handlers.push({ element: handle, handler });
+      }
+    });
+    
+    return () => {
+      handlers.forEach(({ element, handler }) => {
+        element.removeEventListener('touchstart', handler);
+      });
+    };
+  }, [activeWidgetsList.length, handleDragStart]);
 
+  // Global move and end listeners
   useEffect(() => {
     if (!dragState.isDragging) return;
 
@@ -189,12 +232,9 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
     };
   }, [dragState.isDragging, handleDragMove, handleDragEnd]);
 
-  // Touch events - only start needs to be on the element
-  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+  const handleMouseDown = (e: React.MouseEvent, index: number) => {
     e.preventDefault();
-    e.stopPropagation();
-    const touch = e.touches[0];
-    handleDragStart(index, touch.clientY);
+    handleDragStart(index, e.clientY);
   };
 
   const getItemStyle = (index: number): React.CSSProperties => {
@@ -202,7 +242,6 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
       return {};
     }
 
-    // The dragged item follows the cursor
     if (index === dragState.draggedIndex) {
       const translateY = dragState.currentY - dragState.startY;
       return {
@@ -213,12 +252,10 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
       };
     }
 
-    // Other items make room
     const draggedIdx = dragState.draggedIndex;
     const targetIdx = dragState.targetIndex;
 
     if (draggedIdx < targetIdx) {
-      // Dragging down: items between draggedIdx and targetIdx move up
       if (index > draggedIdx && index <= targetIdx) {
         return {
           transform: `translateY(-${dragState.itemHeight}px)`,
@@ -226,7 +263,6 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
         };
       }
     } else if (draggedIdx > targetIdx) {
-      // Dragging up: items between targetIdx and draggedIdx move down
       if (index >= targetIdx && index < draggedIdx) {
         return {
           transform: `translateY(${dragState.itemHeight}px)`,
@@ -261,9 +297,10 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
               >
                 <div className="flex items-center gap-3">
                   <div 
-                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors touch-none"
+                    ref={(el) => { dragHandleRefs.current[index] = el; }}
+                    className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
+                    style={{ touchAction: 'none' }}
                     onMouseDown={(e) => handleMouseDown(e, index)}
-                    onTouchStart={(e) => handleTouchStart(e, index)}
                     data-testid={`drag-handle-${widget.id}`}
                   >
                     <GripVertical className="w-5 h-5" />
