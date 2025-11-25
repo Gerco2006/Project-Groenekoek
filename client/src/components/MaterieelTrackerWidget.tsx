@@ -92,17 +92,18 @@ function MaterialCard({
     if (!compositionData?.materieeldelen) return null;
     
     const materieeldelen = compositionData.materieeldelen;
+    const searchNum = String(material.materialNumber);
     
     // Try exact match first
     let deel = materieeldelen.find(
-      (d: any) => d.materieelnummer === material.materialNumber
+      (d: any) => String(d.materieelnummer) === searchNum
     );
     
     // Try partial match
     if (!deel) {
       deel = materieeldelen.find(
-        (d: any) => d.materieelnummer?.includes(material.materialNumber) ||
-                    material.materialNumber.includes(d.materieelnummer)
+        (d: any) => String(d.materieelnummer).includes(searchNum) ||
+                    searchNum.includes(String(d.materieelnummer))
       );
     }
     
