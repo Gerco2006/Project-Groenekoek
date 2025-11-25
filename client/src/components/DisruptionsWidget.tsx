@@ -167,7 +167,7 @@ export default function DisruptionsWidget({
             const hasDisruptions = stationDisruptions.length > 0;
 
             return (
-              <Card key={station.id} className="p-3 md:overflow-visible overflow-visible">
+              <Card key={station.id} className="p-2 md:overflow-visible overflow-visible">
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-2 md:mb-2">
@@ -184,7 +184,7 @@ export default function DisruptionsWidget({
                     </div>
                     
                     {hasDisruptions && (
-                      <div className="md:hidden -mx-3 mb-0">
+                      <div className="md:hidden -mx-2 mb-0">
                         <Separator />
                       </div>
                     )}
@@ -195,14 +195,14 @@ export default function DisruptionsWidget({
                         <span>Laden...</span>
                       </div>
                     ) : hasDisruptions ? (
-                      <div className="md:space-y-2 md:px-0 -mx-3 md:mx-0 -mb-3 md:mb-0">
+                      <div className="md:space-y-2 md:px-0 -mx-2 md:mx-0 -mb-2 md:mb-0">
                         {stationDisruptions.map((disruption, idx) => {
                           const isLast = idx === stationDisruptions.length - 1;
                           
                           return (
                           <div key={disruption.id}>
                             <div
-                              className="md:p-3 py-3 px-3 md:rounded-md md:border hover-elevate cursor-pointer"
+                              className="md:p-2 py-2 px-2 md:rounded-md md:border hover-elevate cursor-pointer"
                               onClick={() => setSelectedDisruption(disruption)}
                               data-testid={`disruption-item-${disruption.id}`}
                             >

@@ -166,7 +166,7 @@ function MaterialCard({
   const hasJourneyData = data && trainInfo;
 
   return (
-    <Card className="p-3 md:overflow-visible overflow-visible group">
+    <Card className="p-2 md:overflow-visible overflow-visible group">
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-2 md:mb-2">
@@ -207,7 +207,7 @@ function MaterialCard({
           </div>
           
           {hasJourneyData && (
-            <div className="md:hidden -mx-3 mb-0">
+            <div className="md:hidden -mx-2 mb-0">
               <Separator />
             </div>
           )}
@@ -223,9 +223,9 @@ function MaterialCard({
               <span>Niet in dienst of niet gevonden</span>
             </div>
           ) : hasJourneyData ? (
-            <div className="md:space-y-2 md:px-0 -mx-3 md:mx-0 -mb-3 md:mb-0">
+            <div className="md:space-y-2 md:px-0 -mx-2 md:mx-0 -mb-2 md:mb-0">
               <div 
-                className="md:p-3 py-3 px-3 md:rounded-md md:border hover-elevate cursor-pointer"
+                className="md:p-2 py-2 px-2 md:rounded-md md:border hover-elevate cursor-pointer"
                 onClick={() => onShowDetail(data)}
                 data-testid={`material-journey-${material.id}`}
               >
