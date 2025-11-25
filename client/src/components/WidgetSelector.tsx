@@ -166,29 +166,34 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
       handleDragEnd();
     };
 
+    const handleTouchMoveGlobal = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      handleDragMove(touch.clientY);
+    };
+
+    const handleTouchEndGlobal = () => {
+      handleDragEnd();
+    };
+
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMoveGlobal, { passive: false });
+    document.addEventListener('touchend', handleTouchEndGlobal);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMoveGlobal);
+      document.removeEventListener('touchend', handleTouchEndGlobal);
     };
   }, [dragState.isDragging, handleDragMove, handleDragEnd]);
 
-  // Touch events
+  // Touch events - only start needs to be on the element
   const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    e.stopPropagation();
     const touch = e.touches[0];
     handleDragStart(index, touch.clientY);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!dragState.isDragging) return;
-    const touch = e.touches[0];
-    handleDragMove(touch.clientY);
-  };
-
-  const handleTouchEnd = () => {
-    handleDragEnd();
   };
 
   const getItemStyle = (index: number): React.CSSProperties => {
@@ -258,8 +263,6 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
                     className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors touch-none"
                     onMouseDown={(e) => handleMouseDown(e, index)}
                     onTouchStart={(e) => handleTouchStart(e, index)}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
                     data-testid={`drag-handle-${widget.id}`}
                   >
                     <GripVertical className="w-5 h-5" />
