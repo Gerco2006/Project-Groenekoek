@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Train, X, Plus, Loader2, ChevronRight, RefreshCw, AlertCircle, MapPin, Clock } from "lucide-react";
 import type { TrackedMaterial } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TripDetailPanel from "./TripDetailPanel";
 
 interface MaterieelTrackerWidgetProps {
   trackedMaterials: TrackedMaterial[];
   onMaterialAdd: (materialNumber: string, name?: string) => void;
   onMaterialRemove: (id: string) => void;
+  onMaterialNameUpdate: (materialNumber: string, name: string) => void;
 }
 
 interface JourneyData {
@@ -51,11 +52,13 @@ interface JourneyData {
 function MaterialCard({ 
   material, 
   onRemove,
-  onShowDetail 
+  onShowDetail,
+  onNameUpdate
 }: { 
   material: TrackedMaterial; 
   onRemove: () => void;
   onShowDetail: (data: JourneyData) => void;
+  onNameUpdate: (name: string) => void;
 }) {
   const { data, isLoading, error, refetch, isFetching } = useQuery<JourneyData>({
     queryKey: ["/api/journey-by-material", material.materialNumber],
@@ -94,7 +97,14 @@ function MaterialCard({
   const origin = stops.length > 0 ? stops[0]?.stop?.name : null;
   const destination = stops.length > 0 ? stops[stops.length - 1]?.stop?.name : null;
   const categoryCode = trainInfo?.product?.categoryCode;
-  const trainType = getTrainType(categoryCode, trainInfo?.product?.shortCategoryName);
+  const shortCategoryName = trainInfo?.product?.shortCategoryName;
+  const trainType = getTrainType(categoryCode, shortCategoryName);
+
+  useEffect(() => {
+    if (data && shortCategoryName && !material.name) {
+      onNameUpdate(shortCategoryName);
+    }
+  }, [data, shortCategoryName, material.name, onNameUpdate]);
 
   const currentStop = stops.find(s => s.status === "PASSING" || s.status === "STOP");
   const nextStop = stops.find(s => !s.arrivals?.[0]?.actualTime && s.departures?.[0]?.plannedTime);
@@ -217,6 +227,7 @@ export default function MaterieelTrackerWidget({
   trackedMaterials,
   onMaterialAdd,
   onMaterialRemove,
+  onMaterialNameUpdate,
 }: MaterieelTrackerWidgetProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newMaterialNumber, setNewMaterialNumber] = useState("");
@@ -307,6 +318,7 @@ export default function MaterieelTrackerWidget({
                 material={material}
                 onRemove={() => onMaterialRemove(material.id)}
                 onShowDetail={setSelectedMaterial}
+                onNameUpdate={(name) => onMaterialNameUpdate(material.materialNumber, name)}
               />
             ))}
 

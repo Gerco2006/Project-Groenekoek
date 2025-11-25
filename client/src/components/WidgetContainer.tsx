@@ -23,6 +23,7 @@ interface WidgetContainerProps {
   onDisruptionStationRemove: (id: string) => void;
   onMaterialAdd: (materialNumber: string, name?: string) => void;
   onMaterialRemove: (id: string) => void;
+  onMaterialNameUpdate: (materialNumber: string, name: string) => void;
   onToggleWidget: (widgetId: WidgetId) => void;
   onMoveWidgetUp: (widgetId: WidgetId) => void;
   onMoveWidgetDown: (widgetId: WidgetId) => void;
@@ -42,6 +43,7 @@ export default function WidgetContainer({
   onDisruptionStationRemove,
   onMaterialAdd,
   onMaterialRemove,
+  onMaterialNameUpdate,
   onToggleWidget,
   onMoveWidgetUp,
   onMoveWidgetDown,
@@ -110,6 +112,7 @@ export default function WidgetContainer({
               trackedMaterials={trackedMaterials}
               onMaterialAdd={onMaterialAdd}
               onMaterialRemove={onMaterialRemove}
+              onMaterialNameUpdate={onMaterialNameUpdate}
             />
           );
         }

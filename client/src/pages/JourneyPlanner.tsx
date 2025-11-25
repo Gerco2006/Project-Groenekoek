@@ -85,6 +85,7 @@ export default function JourneyPlanner() {
     removeDisruptionStation,
     addTrackedMaterial,
     removeTrackedMaterial,
+    updateTrackedMaterialName,
   } = useWidgetManager();
 
   const swapStations = () => {
@@ -731,6 +732,7 @@ export default function JourneyPlanner() {
             onDisruptionStationRemove={removeDisruptionStation}
             onMaterialAdd={addTrackedMaterial}
             onMaterialRemove={removeTrackedMaterial}
+            onMaterialNameUpdate={updateTrackedMaterialName}
             onToggleWidget={toggleWidget}
             onMoveWidgetUp={moveWidgetUp}
             onMoveWidgetDown={moveWidgetDown}

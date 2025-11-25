@@ -143,6 +143,17 @@ export function useWidgetManager() {
     }));
   };
 
+  const updateTrackedMaterialName = (materialNumber: string, name: string) => {
+    setConfig((prev) => ({
+      ...prev,
+      trackedMaterials: prev.trackedMaterials.map((material) =>
+        material.materialNumber === materialNumber
+          ? { ...material, name }
+          : material
+      ),
+    }));
+  };
+
   const isMaterialTracked = (materialNumber: string) => {
     return config.trackedMaterials.some(m => m.materialNumber === materialNumber);
   };
@@ -216,6 +227,7 @@ export function useWidgetManager() {
     removeDisruptionStation,
     addTrackedMaterial,
     removeTrackedMaterial,
+    updateTrackedMaterialName,
     isMaterialTracked,
     toggleWidget,
     moveWidgetUp,
