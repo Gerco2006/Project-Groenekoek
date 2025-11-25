@@ -108,6 +108,10 @@ export function useWidgetManager() {
 
   const addTrackedMaterial = (materialNumber: string, name?: string) => {
     setConfig((prev) => {
+      if (prev.trackedMaterials.length >= 3) {
+        return prev;
+      }
+      
       if (prev.trackedMaterials.some(m => m.materialNumber === materialNumber)) {
         return prev;
       }
@@ -119,9 +123,10 @@ export function useWidgetManager() {
         createdAt: new Date().toISOString(),
       };
       
-      const newActiveWidgets = prev.activeWidgets.includes('materieelTracker')
-        ? prev.activeWidgets
-        : [...prev.activeWidgets, 'materieelTracker'];
+      const newActiveWidgets: ('savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker')[] = 
+        prev.activeWidgets.includes('materieelTracker')
+          ? prev.activeWidgets
+          : [...prev.activeWidgets, 'materieelTracker'];
       
       return {
         ...prev,

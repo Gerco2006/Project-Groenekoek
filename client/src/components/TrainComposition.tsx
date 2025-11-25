@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Wifi, Bike, BatteryCharging, Accessibility, BellOff, Bath, Train as TrainIcon, ChevronDown, ChevronUp, Star } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useWidgetManager } from "@/hooks/use-widget-manager";
-import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import {
   Collapsible,
@@ -36,24 +35,15 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   const isMobile = useIsMobile();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const { addTrackedMaterial, removeTrackedMaterial, isMaterialTracked, config } = useWidgetManager();
-  const { toast } = useToast();
 
   const handleToggleTrack = (materialNumber: string, materialType: string) => {
     if (isMaterialTracked(materialNumber)) {
       const material = config.trackedMaterials.find(m => m.materialNumber === materialNumber);
       if (material) {
         removeTrackedMaterial(material.id);
-        toast({
-          title: "Materieel verwijderd",
-          description: `${materialType} ${materialNumber} is verwijderd uit je gevolgde treinen`,
-        });
       }
     } else {
       addTrackedMaterial(materialNumber, `${materialType} ${materialNumber}`);
-      toast({
-        title: "Materieel toegevoegd",
-        description: `${materialType} ${materialNumber} wordt nu gevolgd in de Materieel Tracker widget`,
-      });
     }
   };
 
