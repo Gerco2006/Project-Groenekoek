@@ -120,9 +120,16 @@ function MaterialCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <Badge variant="outline" className="text-xs font-mono">
-                #{material.materialNumber}
-              </Badge>
+              <div className="flex items-center gap-2 flex-wrap">
+                {material.name && (
+                  <span className="font-semibold text-sm">
+                    {material.name.replace(material.materialNumber, '').trim()}
+                  </span>
+                )}
+                <Badge variant="outline" className="text-xs font-mono">
+                  #{material.materialNumber}
+                </Badge>
+              </div>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               <Button
