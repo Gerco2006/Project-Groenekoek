@@ -404,6 +404,19 @@ export default function MaterieelTrackerWidget({
   const origin = stops.length > 0 ? stops[0]?.stop?.name : null;
   const destination = stops.length > 0 ? stops[stops.length - 1]?.stop?.name : null;
 
+  // Get product info from stops (NS API returns it there for material lookups)
+  const getProductFromStops = () => {
+    for (const stop of stops) {
+      const depProduct = stop.departures?.[0]?.product;
+      if (depProduct?.categoryCode) return depProduct;
+      const arrProduct = stop.arrivals?.[0]?.product;
+      if (arrProduct?.categoryCode) return arrProduct;
+    }
+    return null;
+  };
+  
+  const product = trainInfo?.product || getProductFromStops();
+
   return (
     <>
       <Card className="p-4">
@@ -526,7 +539,7 @@ export default function MaterieelTrackerWidget({
         <TripDetailPanel
           open={!!selectedMaterial}
           onClose={() => setSelectedMaterial(null)}
-          trainType={getTrainType(trainInfo.product?.categoryCode, trainInfo.product?.shortCategoryName)}
+          trainType={getTrainType(product?.categoryCode, product?.shortCategoryName)}
           trainNumber={selectedMaterial.ritnummer}
           from={origin || "Onbekend"}
           to={destination || "Onbekend"}
