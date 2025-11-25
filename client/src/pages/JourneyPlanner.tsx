@@ -476,43 +476,44 @@ export default function JourneyPlanner() {
         <CollapsibleContent className="space-y-4 pt-3">
           <div className="space-y-3">
             <Label className="text-sm font-medium">Tussenstop</Label>
-            {viaStations.length === 0 && (
-              <Button
-                variant="outline"
-                onClick={addViaStation}
-                className="gap-2 w-full"
-                data-testid="button-add-via-station"
-              >
-                <Plus className="w-4 h-4" />
-                Tussenstop toevoegen
-              </Button>
-            )}
-            {viaStations.length > 0 && (
-              <div className="space-y-3">
-                {viaStations.map((via, index) => (
-                  <div key={index} className="flex gap-2 items-end">
-                    <div className="flex-1">
-                      <StationSearch
-                        label={`Via station ${index + 1}`}
-                        value={via}
-                        onChange={(value) => updateViaStation(index, value)}
-                        placeholder="Bijv. Utrecht Centraal"
-                        testId={`input-via-station-${index}`}
-                      />
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeViaStation(index)}
-                      className="shrink-0 mb-0"
-                      data-testid={`button-remove-via-${index}`}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+            <div className="space-y-3">
+              {viaStations.map((via, index) => (
+                <div key={index} className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <StationSearch
+                      label={`Via station ${index + 1}`}
+                      value={via}
+                      onChange={(value) => updateViaStation(index, value)}
+                      placeholder="Bijv. Utrecht Centraal"
+                      testId={`input-via-station-${index}`}
+                    />
                   </div>
-                ))}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeViaStation(index)}
+                    className="shrink-0 mb-0"
+                    data-testid={`button-remove-via-${index}`}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <StationSearch
+                    value=""
+                    onChange={(value) => {
+                      if (value) {
+                        setViaStations([...viaStations, value]);
+                      }
+                    }}
+                    placeholder="Voeg tussenstop toe..."
+                    testId="input-add-via-station"
+                  />
+                </div>
               </div>
-            )}
+            </div>
           </div>
 
           <Separator className="h-1" />
