@@ -73,6 +73,19 @@ function MaterialCard({
     retry: 1,
   });
 
+  const ritnummer = data?.ritnummer;
+  
+  const { data: compositionData } = useQuery({
+    queryKey: ["/api/train-composition", ritnummer],
+    queryFn: async () => {
+      const response = await fetch(`/api/train-composition/${ritnummer}`);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!ritnummer && !material.name,
+    retry: 1,
+  });
+
   const formatTime = (dateTime: string) => {
     if (!dateTime) return null;
     const date = new Date(dateTime);
@@ -101,10 +114,15 @@ function MaterialCard({
   const trainType = getTrainType(categoryCode, shortCategoryName);
 
   useEffect(() => {
-    if (data && shortCategoryName && !material.name) {
-      onNameUpdate(shortCategoryName);
+    if (compositionData && !material.name) {
+      const materieeldeel = compositionData.materieeldelen?.find(
+        (deel: any) => deel.materieelnummer === material.materialNumber
+      );
+      if (materieeldeel?.type) {
+        onNameUpdate(materieeldeel.type);
+      }
     }
-  }, [data, shortCategoryName, material.name, onNameUpdate]);
+  }, [compositionData, material.name, material.materialNumber, onNameUpdate]);
 
   const currentStop = stops.find(s => s.status === "PASSING" || s.status === "STOP");
   const nextStop = stops.find(s => !s.arrivals?.[0]?.actualTime && s.departures?.[0]?.plannedTime);
