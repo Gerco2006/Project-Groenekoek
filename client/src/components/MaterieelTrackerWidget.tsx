@@ -206,7 +206,7 @@ function MaterialCard({
         
         // Check if train is currently at this station (arrived but not departed)
         if (effectiveArrival && effectiveArrival <= now && effectiveDeparture > now) {
-          return { stop, label: "Vertrekt", time: dep };
+          return { stop, label: "Op station", time: dep };
         }
         
         // Train hasn't arrived yet
