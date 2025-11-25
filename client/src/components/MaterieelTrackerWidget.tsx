@@ -32,12 +32,14 @@ interface JourneyData {
           actualTime?: string;
           delayInSeconds?: number;
           cancelled?: boolean;
+          status?: string;
         }>;
         departures?: Array<{
           plannedTime: string;
           actualTime?: string;
           delayInSeconds?: number;
           cancelled?: boolean;
+          status?: string;
         }>;
         status?: string;
       }>;
@@ -204,8 +206,8 @@ function MaterialCard({
           return { stop, label: "Passeert", time: dep };
         }
         
-        // Check if train is currently at this station (arrived but not departed)
-        if (effectiveArrival && effectiveArrival <= now && effectiveDeparture > now) {
+        // No arrival time (origin station) or train has arrived - train is at station
+        if (!effectiveArrival || (effectiveArrival <= now && effectiveDeparture > now)) {
           return { stop, label: "Op station", time: dep };
         }
         
