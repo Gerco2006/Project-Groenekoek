@@ -171,7 +171,7 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
 
   // Attach native event listeners to drag handles with passive: false
   useEffect(() => {
-    // Small delay to ensure DOM is ready after Dialog/Drawer opens
+    // Delay to ensure DOM is ready after Dialog/Drawer opens
     const timeoutId = setTimeout(() => {
       const handles = dragHandleRefs.current;
       
@@ -195,7 +195,7 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
           handle.addEventListener('touchstart', handler, { passive: false });
         }
       });
-    }, 50);
+    }, 500);
     
     return () => {
       clearTimeout(timeoutId);
