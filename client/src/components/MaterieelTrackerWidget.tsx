@@ -162,16 +162,24 @@ function MaterialCard({
 
   // Find the next stop based on status and actualTime fields
   const getNextStop = () => {
+    const now = new Date();
+    
     for (let i = 0; i < stops.length; i++) {
       const stop = stops[i];
+      const status = stop.status?.toUpperCase();
       const isLastStop = i === stops.length - 1;
       const dep = stop.departures?.[0];
       const arr = stop.arrivals?.[0];
       
-      // Check if this stop has been passed (departure has actualTime or status indicates passed)
-      const hasDeparted = dep?.actualTime || dep?.cancelled;
+      // Skip stops that are explicitly marked as passed
+      if (status === 'PASSED' || status === 'ORIGIN') {
+        continue;
+      }
       
-      // For the last stop, check arrival instead
+      // Check if this is a passing station (train doesn't stop here)
+      const isPassing = status === 'PASSING';
+      
+      // For the last stop, check arrival
       if (isLastStop) {
         const hasArrived = arr?.actualTime;
         if (!hasArrived) {
@@ -180,12 +188,48 @@ function MaterialCard({
         continue;
       }
       
-      // If not yet departed, this is our next stop
+      // Check departure status
+      const hasDeparted = dep?.actualTime;
+      
       if (!hasDeparted) {
-        // Check if train has arrived but not departed yet
+        // Train hasn't departed from this station yet
         const hasArrived = arr?.actualTime;
-        if (hasArrived) {
+        
+        if (isPassing) {
+          // This is a passing station
+          return { stop, label: "Passeert", time: dep || arr };
+        }
+        
+        if (hasArrived && !hasDeparted) {
+          // Train has arrived but not departed - currently at station
           return { stop, label: "Vertrekt", time: dep };
+        }
+        
+        // Train hasn't arrived yet - this is the next stop
+        return { stop, label: "Volgende", time: arr || dep };
+      }
+    }
+    
+    // All stops passed - journey complete or use time-based fallback
+    // Find the first stop where planned time is in the future
+    for (let i = 0; i < stops.length; i++) {
+      const stop = stops[i];
+      const isLastStop = i === stops.length - 1;
+      const dep = stop.departures?.[0];
+      const arr = stop.arrivals?.[0];
+      const status = stop.status?.toUpperCase();
+      const isPassing = status === 'PASSING';
+      
+      const timeToCheck = isLastStop ? arr : dep;
+      if (!timeToCheck) continue;
+      
+      const plannedTime = new Date(timeToCheck.actualTime || timeToCheck.plannedTime);
+      if (plannedTime > now) {
+        if (isLastStop) {
+          return { stop, label: "Aankomst", time: arr };
+        }
+        if (isPassing) {
+          return { stop, label: "Passeert", time: dep };
         }
         return { stop, label: "Volgende", time: dep };
       }
