@@ -75,29 +75,46 @@ function MaterialCard({
 
   const ritnummer = data?.ritnummer;
   
-  useEffect(() => {
-    const fetchMaterieelType = async () => {
-      if (!ritnummer) return;
-      
-      try {
-        const response = await fetch(`/api/train-composition/${ritnummer}`);
-        if (!response.ok) return;
-        
-        const compositionData = await response.json();
-        const materieeldeel = compositionData.materieeldelen?.find(
-          (deel: any) => deel.materieelnummer === material.materialNumber
-        );
-        
-        if (materieeldeel?.type && materieeldeel.type !== material.name) {
-          onNameUpdate(materieeldeel.type);
-        }
-      } catch (e) {
-        // Silently fail
-      }
-    };
+  const { data: compositionData } = useQuery({
+    queryKey: ["/api/train-composition", ritnummer],
+    queryFn: async () => {
+      const response = await fetch(`/api/train-composition/${ritnummer}`);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!ritnummer,
+    staleTime: 60000,
+  });
+  
+  // Get materieel type from composition data
+  const getMaterieelType = () => {
+    if (material.name) return material.name;
+    if (!compositionData?.materieeldelen) return null;
     
-    fetchMaterieelType();
-  }, [ritnummer, material.materialNumber]);
+    const materieeldelen = compositionData.materieeldelen;
+    
+    // Try exact match first
+    let deel = materieeldelen.find(
+      (d: any) => d.materieelnummer === material.materialNumber
+    );
+    
+    // Try partial match
+    if (!deel) {
+      deel = materieeldelen.find(
+        (d: any) => d.materieelnummer?.includes(material.materialNumber) ||
+                    material.materialNumber.includes(d.materieelnummer)
+      );
+    }
+    
+    // Fallback to first
+    if (!deel && materieeldelen.length > 0) {
+      deel = materieeldelen[0];
+    }
+    
+    return deel?.type || null;
+  };
+  
+  const materieelType = getMaterieelType();
 
   const formatTime = (dateTime: string) => {
     if (!dateTime) return null;
@@ -152,9 +169,9 @@ function MaterialCard({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                {material.name && (
+                {materieelType && (
                   <span className="font-semibold text-sm">
-                    {material.name.replace(material.materialNumber, '').trim()}
+                    {materieelType.replace(material.materialNumber, '').trim()}
                   </span>
                 )}
                 <Badge variant="outline" className="text-xs font-mono">
