@@ -36,14 +36,15 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const { addTrackedMaterial, removeTrackedMaterial, isMaterialTracked, config } = useWidgetManager();
 
-  const handleToggleTrack = (materialNumber: string, materialType: string) => {
-    if (isMaterialTracked(materialNumber)) {
-      const material = config.trackedMaterials.find(m => m.materialNumber === materialNumber);
+  const handleToggleTrack = (materialNumber: string | number, materialType: string) => {
+    const matNumStr = String(materialNumber);
+    if (isMaterialTracked(matNumStr)) {
+      const material = config.trackedMaterials.find(m => m.materialNumber === matNumStr);
       if (material) {
         removeTrackedMaterial(material.id);
       }
     } else {
-      addTrackedMaterial(materialNumber, `${materialType} ${materialNumber}`);
+      addTrackedMaterial(matNumStr, `${materialType} ${matNumStr}`);
     }
   };
 
@@ -250,7 +251,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                 {/* Material Parts */}
                 <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
                   {materieeldelen.map((deel: any, index: number) => {
-                    const isTracked = isMaterialTracked(deel.materieelnummer);
+                    const isTracked = isMaterialTracked(String(deel.materieelnummer));
                     const deelSeats = getSeatsFromDeel(deel);
                     return (
                     <Card key={index} className="bg-card/80 p-4 space-y-3" data-testid={`material-part-${index}`}>
