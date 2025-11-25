@@ -75,16 +75,29 @@ function MaterialCard({
 
   const ritnummer = data?.ritnummer;
   
-  const { data: compositionData } = useQuery({
-    queryKey: ["/api/train-composition", ritnummer],
-    queryFn: async () => {
-      const response = await fetch(`/api/train-composition/${ritnummer}`);
-      if (!response.ok) return null;
-      return response.json();
-    },
-    enabled: !!ritnummer && !material.name,
-    retry: 1,
-  });
+  useEffect(() => {
+    const fetchMaterieelType = async () => {
+      if (!ritnummer) return;
+      
+      try {
+        const response = await fetch(`/api/train-composition/${ritnummer}`);
+        if (!response.ok) return;
+        
+        const compositionData = await response.json();
+        const materieeldeel = compositionData.materieeldelen?.find(
+          (deel: any) => deel.materieelnummer === material.materialNumber
+        );
+        
+        if (materieeldeel?.type && materieeldeel.type !== material.name) {
+          onNameUpdate(materieeldeel.type);
+        }
+      } catch (e) {
+        // Silently fail
+      }
+    };
+    
+    fetchMaterieelType();
+  }, [ritnummer, material.materialNumber]);
 
   const formatTime = (dateTime: string) => {
     if (!dateTime) return null;
@@ -113,16 +126,6 @@ function MaterialCard({
   const shortCategoryName = trainInfo?.product?.shortCategoryName;
   const trainType = getTrainType(categoryCode, shortCategoryName);
 
-  useEffect(() => {
-    if (compositionData && !material.name) {
-      const materieeldeel = compositionData.materieeldelen?.find(
-        (deel: any) => deel.materieelnummer === material.materialNumber
-      );
-      if (materieeldeel?.type) {
-        onNameUpdate(materieeldeel.type);
-      }
-    }
-  }, [compositionData, material.name, material.materialNumber, onNameUpdate]);
 
   const currentStop = stops.find(s => s.status === "PASSING" || s.status === "STOP");
   const nextStop = stops.find(s => !s.arrivals?.[0]?.actualTime && s.departures?.[0]?.plannedTime);
