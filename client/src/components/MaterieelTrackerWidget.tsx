@@ -308,8 +308,8 @@ export default function MaterieelTrackerWidget({
 
   return (
     <>
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-4">
+      <Card className="p-4">
+        <div className="flex items-center gap-3 mb-3">
           <Train className="w-5 h-5 text-primary" />
           <h3 className="font-semibold text-lg">Materieel Tracker</h3>
           {trackedMaterials.length > 0 && (

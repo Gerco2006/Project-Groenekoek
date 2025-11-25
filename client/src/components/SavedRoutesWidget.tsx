@@ -17,8 +17,8 @@ export default function SavedRoutesWidget({
 }: SavedRoutesWidgetProps) {
   if (routes.length === 0) {
     return (
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-4">
+      <Card className="p-4">
+        <div className="flex items-center gap-3 mb-3">
           <MapPin className="w-5 h-5 text-primary" />
           <h3 className="font-semibold text-lg">Favoriete Routes</h3>
         </div>
@@ -31,8 +31,8 @@ export default function SavedRoutesWidget({
   }
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center gap-3 mb-4">
+    <Card className="p-4">
+      <div className="flex items-center gap-3 mb-3">
         <MapPin className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-lg">Favoriete Routes</h3>
         <Badge variant="secondary" className="ml-auto">
@@ -43,7 +43,7 @@ export default function SavedRoutesWidget({
         {routes.map((route) => (
           <Card
             key={route.id}
-            className="p-4 hover-elevate cursor-pointer group"
+            className="p-2 hover-elevate cursor-pointer group"
             onClick={() => onRouteClick(route)}
             data-testid={`saved-route-${route.id}`}
           >

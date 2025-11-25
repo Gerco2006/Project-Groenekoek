@@ -105,8 +105,8 @@ export default function DisruptionsWidget({
   }, 0);
 
   const widgetContent = (
-    <Card className="p-6">
-      <div className="flex items-center gap-3 mb-4">
+    <Card className="p-4">
+      <div className="flex items-center gap-3 mb-3">
         <AlertTriangle className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-lg">Storingen & Werkzaamheden</h3>
         {totalDisruptionsCount > 0 && (
