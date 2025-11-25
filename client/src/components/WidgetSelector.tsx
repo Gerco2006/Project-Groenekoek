@@ -171,31 +171,45 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
 
   // Attach native event listeners to drag handles with passive: false
   useEffect(() => {
-    const handles = dragHandleRefs.current;
-    
-    const createTouchStartHandler = (index: number) => (e: TouchEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const touch = e.touches[0];
-      handleDragStart(index, touch.clientY);
-    };
-    
-    const handlers: Array<{ element: HTMLDivElement; handler: (e: TouchEvent) => void }> = [];
-    
-    handles.forEach((handle, index) => {
-      if (handle) {
-        const handler = createTouchStartHandler(index);
-        handle.addEventListener('touchstart', handler, { passive: false });
-        handlers.push({ element: handle, handler });
-      }
-    });
+    // Small delay to ensure DOM is ready after Dialog/Drawer opens
+    const timeoutId = setTimeout(() => {
+      const handles = dragHandleRefs.current;
+      
+      const createTouchStartHandler = (index: number) => (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const touch = e.touches[0];
+        handleDragStart(index, touch.clientY);
+      };
+      
+      handles.forEach((handle, index) => {
+        if (handle) {
+          // Remove any existing listener first
+          const existingHandler = (handle as any)._touchHandler;
+          if (existingHandler) {
+            handle.removeEventListener('touchstart', existingHandler);
+          }
+          
+          const handler = createTouchStartHandler(index);
+          (handle as any)._touchHandler = handler;
+          handle.addEventListener('touchstart', handler, { passive: false });
+        }
+      });
+    }, 50);
     
     return () => {
-      handlers.forEach(({ element, handler }) => {
-        element.removeEventListener('touchstart', handler);
+      clearTimeout(timeoutId);
+      dragHandleRefs.current.forEach((handle) => {
+        if (handle) {
+          const handler = (handle as any)._touchHandler;
+          if (handler) {
+            handle.removeEventListener('touchstart', handler);
+            delete (handle as any)._touchHandler;
+          }
+        }
       });
     };
-  }, [activeWidgetsList.length, handleDragStart]);
+  }, [isOpen, activeWidgetsList.length, handleDragStart]);
 
   // Global move and end listeners
   useEffect(() => {
