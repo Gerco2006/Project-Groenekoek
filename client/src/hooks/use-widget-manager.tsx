@@ -15,10 +15,12 @@ export function useWidgetManager() {
   useEffect(() => {
     const cleanupExpiredTrips = () => {
       const now = new Date();
+      const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+      
       setConfig((prev) => {
         const validTrips = prev.savedTrips.filter((trip) => {
-          const departureTime = new Date(trip.departureTime);
-          return departureTime >= now;
+          const arrivalTime = new Date(trip.arrivalTime);
+          return arrivalTime >= fiveMinutesAgo;
         });
         
         if (validTrips.length === prev.savedTrips.length) {

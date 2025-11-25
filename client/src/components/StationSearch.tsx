@@ -114,7 +114,7 @@ export default function StationSearch({
         zIndex: 9999
       }}
     >
-      <div className="relative bg-card/40 backdrop-blur-lg border rounded-lg shadow-lg max-h-60 overflow-auto">
+      <div className="relative bg-card/70 backdrop-blur-lg border rounded-lg shadow-lg max-h-60 overflow-auto">
         {filteredStations.map((station, idx) => (
           <button
             key={idx}
