@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, MapPin, X, Star, ChevronUp, ChevronDown, AlertTriangle } from "lucide-react";
+import { Plus, MapPin, X, Star, ChevronUp, ChevronDown, AlertTriangle, Train } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,8 +20,10 @@ import {
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 
+type WidgetId = 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker';
+
 interface WidgetOption {
-  id: 'savedRoutes' | 'savedTrips' | 'disruptions';
+  id: WidgetId;
   name: string;
   description: string;
   icon: JSX.Element;
@@ -46,13 +48,19 @@ const AVAILABLE_WIDGETS: WidgetOption[] = [
     description: 'Volg storingen van tot 3 stations',
     icon: <AlertTriangle className="w-5 h-5" />,
   },
+  {
+    id: 'materieelTracker',
+    name: 'Materieel Tracker',
+    description: 'Volg specifieke treinstellen en hun actuele ritten',
+    icon: <Train className="w-5 h-5" />,
+  },
 ];
 
 interface WidgetSelectorProps {
   activeWidgets: string[];
-  onToggleWidget: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
-  onMoveWidgetUp: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
-  onMoveWidgetDown: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
+  onToggleWidget: (widgetId: WidgetId) => void;
+  onMoveWidgetUp: (widgetId: WidgetId) => void;
+  onMoveWidgetDown: (widgetId: WidgetId) => void;
 }
 
 export default function WidgetSelector({ activeWidgets, onToggleWidget, onMoveWidgetUp, onMoveWidgetDown }: WidgetSelectorProps) {

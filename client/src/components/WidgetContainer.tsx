@@ -1,25 +1,31 @@
 import SavedRoutesWidget from "./SavedRoutesWidget";
 import SavedTripsWidget from "./SavedTripsWidget";
 import DisruptionsWidget from "./DisruptionsWidget";
+import MaterieelTrackerWidget from "./MaterieelTrackerWidget";
 import WidgetSelector from "./WidgetSelector";
 import { Card } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
-import type { SavedRoute, SavedTrip, DisruptionStation } from "@shared/schema";
+import type { SavedRoute, SavedTrip, DisruptionStation, TrackedMaterial } from "@shared/schema";
+
+type WidgetId = 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker';
 
 interface WidgetContainerProps {
   activeWidgets: string[];
   savedRoutes: SavedRoute[];
   savedTrips: SavedTrip[];
   disruptionStations: DisruptionStation[];
+  trackedMaterials: TrackedMaterial[];
   onRouteClick: (route: SavedRoute) => void;
   onRouteRemove: (id: string) => void;
   onTripClick: (trip: SavedTrip) => void;
   onTripRemove: (id: string) => void;
   onDisruptionStationAdd: (stationName: string) => void;
   onDisruptionStationRemove: (id: string) => void;
-  onToggleWidget: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
-  onMoveWidgetUp: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
-  onMoveWidgetDown: (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => void;
+  onMaterialAdd: (materialNumber: string, name?: string) => void;
+  onMaterialRemove: (id: string) => void;
+  onToggleWidget: (widgetId: WidgetId) => void;
+  onMoveWidgetUp: (widgetId: WidgetId) => void;
+  onMoveWidgetDown: (widgetId: WidgetId) => void;
 }
 
 export default function WidgetContainer({
@@ -27,12 +33,15 @@ export default function WidgetContainer({
   savedRoutes,
   savedTrips,
   disruptionStations,
+  trackedMaterials,
   onRouteClick,
   onRouteRemove,
   onTripClick,
   onTripRemove,
   onDisruptionStationAdd,
   onDisruptionStationRemove,
+  onMaterialAdd,
+  onMaterialRemove,
   onToggleWidget,
   onMoveWidgetUp,
   onMoveWidgetDown,
@@ -91,6 +100,16 @@ export default function WidgetContainer({
               stations={disruptionStations}
               onStationAdd={onDisruptionStationAdd}
               onStationRemove={onDisruptionStationRemove}
+            />
+          );
+        }
+        if (widgetId === 'materieelTracker') {
+          return (
+            <MaterieelTrackerWidget
+              key={widgetId}
+              trackedMaterials={trackedMaterials}
+              onMaterialAdd={onMaterialAdd}
+              onMaterialRemove={onMaterialRemove}
             />
           );
         }

@@ -83,6 +83,8 @@ export default function JourneyPlanner() {
     isTripAlreadySaved,
     addDisruptionStation,
     removeDisruptionStation,
+    addTrackedMaterial,
+    removeTrackedMaterial,
   } = useWidgetManager();
 
   const swapStations = () => {
@@ -720,12 +722,15 @@ export default function JourneyPlanner() {
             savedRoutes={config.savedRoutes}
             savedTrips={config.savedTrips}
             disruptionStations={config.disruptionStations}
+            trackedMaterials={config.trackedMaterials}
             onRouteClick={handleLoadSavedRoute}
             onRouteRemove={removeSavedRoute}
             onTripClick={handleLoadSavedTrip}
             onTripRemove={removeSavedTrip}
             onDisruptionStationAdd={addDisruptionStation}
             onDisruptionStationRemove={removeDisruptionStation}
+            onMaterialAdd={addTrackedMaterial}
+            onMaterialRemove={removeTrackedMaterial}
             onToggleWidget={toggleWidget}
             onMoveWidgetUp={moveWidgetUp}
             onMoveWidgetDown={moveWidgetDown}
