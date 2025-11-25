@@ -191,6 +191,7 @@ export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorde
 
   // Touch events - only start needs to be on the element
   const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    e.preventDefault();
     e.stopPropagation();
     const touch = e.touches[0];
     handleDragStart(index, touch.clientY);
