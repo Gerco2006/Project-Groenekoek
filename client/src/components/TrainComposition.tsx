@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Wifi, Bike, BatteryCharging, Accessibility, BellOff, Bath, Train as TrainIcon, ChevronDown, ChevronUp, Heart } from "lucide-react";
+import { Wifi, Bike, BatteryCharging, Accessibility, BellOff, Bath, Train as TrainIcon, ChevronDown, ChevronUp, Star } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useWidgetManager } from "@/hooks/use-widget-manager";
 import { useToast } from "@/hooks/use-toast";
@@ -238,10 +238,10 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleToggleTrack(deel.materieelnummer, deel.type)}
-                            className={isTracked ? "text-red-500 hover:text-red-600" : "text-muted-foreground hover:text-foreground"}
+                            className={isTracked ? "text-yellow-500 hover:text-yellow-600" : "text-muted-foreground hover:text-foreground"}
                             data-testid={`button-track-material-${index}`}
                           >
-                            <Heart className={`w-4 h-4 ${isTracked ? "fill-current" : ""}`} />
+                            <Star className={`w-4 h-4 ${isTracked ? "fill-current" : ""}`} />
                           </Button>
                           <Badge variant="outline" className="text-xs">
                             {deel.bakken?.length || 0} bakken
