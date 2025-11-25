@@ -144,7 +144,7 @@ function MaterialCard({
     if (categoryCode === "SPR") return "Sprinter";
     if (categoryCode === "IC") return "Intercity";
     if (categoryCode === "INT") return "International";
-    return shortName || categoryCode || "Trein";
+    return shortName || categoryCode || "Onbekend";
   };
 
   const getTrainTypeColor = (categoryCode?: string) => {
@@ -379,7 +379,7 @@ export default function MaterieelTrackerWidget({
     if (categoryCode === "SPR") return "Sprinter";
     if (categoryCode === "IC") return "Intercity";
     if (categoryCode === "INT") return "International";
-    return shortName || categoryCode || "Trein";
+    return shortName || categoryCode || "Onbekend";
   };
 
   const trainInfo = selectedMaterial?.journeyData?.payload;
