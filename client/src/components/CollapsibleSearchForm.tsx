@@ -31,11 +31,18 @@ export default function CollapsibleSearchForm({
             data-testid="button-toggle-search"
           >
             <span className="font-semibold text-base md:text-lg">{title}</span>
-            {isOpen ? (
-              <ChevronUp className="w-5 h-5" />
-            ) : (
-              <ChevronDown className="w-5 h-5" />
-            )}
+            <span className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              isOpen 
+                ? 'bg-muted text-muted-foreground' 
+                : 'bg-blue-500/15 text-blue-600 dark:bg-blue-400/20 dark:text-blue-400'
+            }`}>
+              {isOpen ? 'Inklappen' : 'Uitklappen'}
+              {isOpen ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </span>
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent>
