@@ -160,16 +160,59 @@ function MaterialCard({
   const trainType = getTrainType(categoryCode, shortCategoryName);
 
 
-  const currentStop = stops.find(s => s.status === "PASSING" || s.status === "STOP");
-  const nextStop = stops.find(s => !s.arrivals?.[0]?.actualTime && s.departures?.[0]?.plannedTime);
-  const displayStop = currentStop || nextStop;
+  // Find the next stop based on departure time in the future
+  const now = new Date();
+  
+  const getNextStop = () => {
+    // First check for a stop with status PASSING or STOP
+    const currentStop = stops.find(s => s.status === "PASSING" || s.status === "STOP");
+    if (currentStop) return { stop: currentStop, isPassing: currentStop.status === "PASSING" };
+    
+    // Otherwise find the first stop where departure is in the future
+    for (const stop of stops) {
+      const dep = stop.departures?.[0];
+      if (dep) {
+        const depTime = new Date(dep.actualTime || dep.plannedTime);
+        if (depTime > now) {
+          return { stop, isPassing: false };
+        }
+      }
+    }
+    
+    // Fallback: find the last stop (destination) if no departures left
+    const lastStop = stops[stops.length - 1];
+    if (lastStop?.arrivals?.[0]) {
+      const arrTime = new Date(lastStop.arrivals[0].actualTime || lastStop.arrivals[0].plannedTime);
+      if (arrTime > now) {
+        return { stop: lastStop, isPassing: false, isArrival: true };
+      }
+    }
+    
+    return null;
+  };
+  
+  const nextStopInfo = getNextStop();
+  const displayStop = nextStopInfo?.stop;
 
   const getNextDepartureTime = () => {
-    if (!displayStop?.departures?.[0]) return null;
+    if (!displayStop) return null;
+    
+    // If this is the final arrival
+    if (nextStopInfo?.isArrival && displayStop.arrivals?.[0]) {
+      const arr = displayStop.arrivals[0];
+      return {
+        time: formatTime(arr.actualTime || arr.plannedTime),
+        delay: arr.delayInSeconds ? Math.round(arr.delayInSeconds / 60) : 0,
+        isArrival: true
+      };
+    }
+    
+    if (!displayStop.departures?.[0]) return null;
     const dep = displayStop.departures[0];
     return {
       time: formatTime(dep.actualTime || dep.plannedTime),
-      delay: dep.delayInSeconds ? Math.round(dep.delayInSeconds / 60) : 0
+      delay: dep.delayInSeconds ? Math.round(dep.delayInSeconds / 60) : 0,
+      isArrival: false
     };
   };
 
@@ -261,7 +304,11 @@ function MaterialCard({
                       <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         <span>
-                          {displayStop.status === "PASSING" ? "Passeert" : "Volgende"}: {displayStop.stop.name}
+                          {nextStopInfo?.isPassing 
+                            ? "Passeert" 
+                            : nextDep?.isArrival 
+                              ? "Aankomst" 
+                              : "Volgende"}: {displayStop.stop.name}
                         </span>
                         {nextDep && (
                           <span className="font-medium">
