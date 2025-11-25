@@ -76,11 +76,21 @@ export const disruptionStationSchema = z.object({
 
 export type DisruptionStation = z.infer<typeof disruptionStationSchema>;
 
+export const trackedMaterialSchema = z.object({
+  id: z.string(),
+  materialNumber: z.string(),
+  name: z.string().optional(),
+  createdAt: z.string(),
+});
+
+export type TrackedMaterial = z.infer<typeof trackedMaterialSchema>;
+
 export const widgetConfigSchema = z.object({
-  activeWidgets: z.array(z.enum(['savedRoutes', 'savedTrips', 'disruptions'])).default([]),
+  activeWidgets: z.array(z.enum(['savedRoutes', 'savedTrips', 'disruptions', 'materieelTracker'])).default([]),
   savedRoutes: z.array(savedRouteSchema).default([]),
   savedTrips: z.array(savedTripSchema).default([]),
   disruptionStations: z.array(disruptionStationSchema).default([]),
+  trackedMaterials: z.array(trackedMaterialSchema).default([]),
 });
 
 export type WidgetConfig = z.infer<typeof widgetConfigSchema>;

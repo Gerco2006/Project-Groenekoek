@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import { useLocalStorage } from './use-local-storage';
-import type { SavedRoute, SavedTrip, WidgetConfig, DisruptionStation } from '@shared/schema';
+import type { SavedRoute, SavedTrip, WidgetConfig, DisruptionStation, TrackedMaterial } from '@shared/schema';
 
 const DEFAULT_CONFIG: WidgetConfig = {
   activeWidgets: [],
   savedRoutes: [],
   savedTrips: [],
   disruptionStations: [],
+  trackedMaterials: [],
 };
 
 export function useWidgetManager() {
@@ -105,7 +106,38 @@ export function useWidgetManager() {
     }));
   };
 
-  const toggleWidget = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => {
+  const addTrackedMaterial = (materialNumber: string, name?: string) => {
+    setConfig((prev) => {
+      if (prev.trackedMaterials.some(m => m.materialNumber === materialNumber)) {
+        return prev;
+      }
+      
+      const newMaterial: TrackedMaterial = {
+        id: crypto.randomUUID(),
+        materialNumber,
+        name,
+        createdAt: new Date().toISOString(),
+      };
+      
+      return {
+        ...prev,
+        trackedMaterials: [...prev.trackedMaterials, newMaterial],
+      };
+    });
+  };
+
+  const removeTrackedMaterial = (id: string) => {
+    setConfig((prev) => ({
+      ...prev,
+      trackedMaterials: prev.trackedMaterials.filter((material) => material.id !== id),
+    }));
+  };
+
+  const isMaterialTracked = (materialNumber: string) => {
+    return config.trackedMaterials.some(m => m.materialNumber === materialNumber);
+  };
+
+  const toggleWidget = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker') => {
     setConfig((prev) => ({
       ...prev,
       activeWidgets: prev.activeWidgets.includes(widgetId)
@@ -114,7 +146,7 @@ export function useWidgetManager() {
     }));
   };
 
-  const moveWidgetUp = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => {
+  const moveWidgetUp = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker') => {
     setConfig((prev) => {
       const currentIndex = prev.activeWidgets.indexOf(widgetId);
       if (currentIndex <= 0) return prev;
@@ -130,7 +162,7 @@ export function useWidgetManager() {
     });
   };
 
-  const moveWidgetDown = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions') => {
+  const moveWidgetDown = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker') => {
     setConfig((prev) => {
       const currentIndex = prev.activeWidgets.indexOf(widgetId);
       if (currentIndex === -1 || currentIndex >= prev.activeWidgets.length - 1) return prev;
@@ -172,6 +204,9 @@ export function useWidgetManager() {
     removeSavedTrip,
     addDisruptionStation,
     removeDisruptionStation,
+    addTrackedMaterial,
+    removeTrackedMaterial,
+    isMaterialTracked,
     toggleWidget,
     moveWidgetUp,
     moveWidgetDown,
