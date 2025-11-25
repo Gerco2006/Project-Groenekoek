@@ -166,24 +166,22 @@ function MaterialCard({
   const hasJourneyData = data && trainInfo;
 
   return (
-    <div className="md:p-4 md:rounded-lg md:border group">
-      <div className="flex items-start gap-3 py-3 px-6 md:p-0">
-        <div className="p-2 rounded-lg bg-primary/10 text-primary flex-shrink-0">
-          <Train className="w-5 h-5" />
-        </div>
+    <Card className="p-4 md:overflow-visible overflow-visible group">
+      <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                {materieelType && (
-                  <span className="font-semibold text-sm">
-                    {materieelType.replace(material.materialNumber, '').trim()}
-                  </span>
-                )}
-                <Badge variant="outline" className="text-xs font-mono">
-                  #{material.materialNumber}
-                </Badge>
+          <div className="flex items-center justify-between mb-2 md:mb-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="p-1.5 rounded-md bg-primary/10 text-primary flex-shrink-0">
+                <Train className="w-4 h-4" />
               </div>
+              {materieelType && (
+                <span className="font-semibold text-sm">
+                  {materieelType.replace(material.materialNumber, '').trim()}
+                </span>
+              )}
+              <Badge variant="outline" className="text-xs font-mono">
+                #{material.materialNumber}
+              </Badge>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               <Button
@@ -207,70 +205,75 @@ function MaterialCard({
               </Button>
             </div>
           </div>
+          
+          {hasJourneyData && (
+            <div className="md:hidden -mx-4 mb-0">
+              <Separator />
+            </div>
+          )}
 
           {isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-3 h-3 animate-spin" />
               <span>Ritinfo laden...</span>
             </div>
           ) : error ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <AlertCircle className="w-3 h-3" />
               <span>Niet in dienst of niet gevonden</span>
             </div>
-          ) : null}
-        </div>
-      </div>
-      
-      {hasJourneyData && (
-        <>
-          <Separator className="md:hidden" />
-          <div 
-            className="md:mt-3 md:p-3 py-3 px-6 md:rounded-lg md:border hover-elevate cursor-pointer md:mx-0"
-            onClick={() => onShowDetail(data)}
-            data-testid={`material-journey-${material.id}`}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge className={`text-xs ${getTrainTypeColor(categoryCode)}`}>
-                    {trainType}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {data.ritnummer}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-sm">
-                  <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                  <span className="font-medium truncate">{origin}</span>
-                  <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                  <span className="font-medium truncate">{destination}</span>
-                </div>
-                {displayStop && (
-                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                    <Clock className="w-3 h-3" />
-                    <span>
-                      {displayStop.status === "PASSING" ? "Passeert" : "Volgende"}: {displayStop.stop.name}
-                    </span>
-                    {nextDep && (
-                      <span className="font-medium">
-                        {nextDep.time}
-                        {nextDep.delay > 0 && (
-                          <span className="text-destructive ml-1">+{nextDep.delay}</span>
-                        )}
+          ) : hasJourneyData ? (
+            <div className="md:space-y-2 md:px-0 -mx-4 md:mx-0 -mb-4 md:mb-0">
+              <div 
+                className="md:p-3 py-3 px-4 md:px-3 md:rounded-md md:border hover-elevate cursor-pointer"
+                onClick={() => onShowDetail(data)}
+                data-testid={`material-journey-${material.id}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge className={`text-xs ${getTrainTypeColor(categoryCode)}`}>
+                        {trainType}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {data.ritnummer}
                       </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm">
+                      <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                      <span className="font-medium truncate">{origin}</span>
+                      <ChevronRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                      <span className="font-medium truncate">{destination}</span>
+                    </div>
+                    {displayStop && (
+                      <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                        <Clock className="w-3 h-3" />
+                        <span>
+                          {displayStop.status === "PASSING" ? "Passeert" : "Volgende"}: {displayStop.stop.name}
+                        </span>
+                        {nextDep && (
+                          <span className="font-medium">
+                            {nextDep.time}
+                            {nextDep.delay > 0 && (
+                              <span className="text-destructive ml-1">+{nextDep.delay}</span>
+                            )}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
             </div>
-          </div>
-        </>
-      )}
-      
-      {!isLast && <Separator className="md:hidden mt-3" />}
-    </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Geen actieve rit gevonden
+            </p>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -362,62 +365,59 @@ export default function MaterieelTrackerWidget({
             )}
           </div>
         ) : (
-          <div className="md:space-y-3 -mx-6 md:mx-0 -mb-6 md:mb-0">
-            <Separator className="md:hidden" />
-            {trackedMaterials.map((material, idx) => (
+          <div className="space-y-4">
+            {trackedMaterials.map((material) => (
               <MaterialCard
                 key={material.id}
                 material={material}
                 onRemove={() => onMaterialRemove(material.id)}
                 onShowDetail={setSelectedMaterial}
                 onNameUpdate={(name) => onMaterialNameUpdate(material.materialNumber, name)}
-                isLast={idx === trackedMaterials.length - 1}
+                isLast={false}
               />
             ))}
 
-            <div className="px-6 md:px-0 pt-3 md:pt-0 pb-6 md:pb-0">
-              {!isAdding ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsAdding(true)}
-                  className="w-full gap-2"
-                  data-testid="button-add-another-material"
-                >
-                  <Plus className="w-4 h-4" />
-                  Materieel toevoegen
-                </Button>
-              ) : (
-                <Card className="p-4">
-                  <div className="space-y-2">
-                    <Input
-                      type="text"
-                      value={newMaterialNumber}
-                      onChange={(e) => setNewMaterialNumber(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                      placeholder="Bijv. 8743"
-                      data-testid="input-add-material-number"
-                    />
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleAdd} data-testid="button-confirm-add-another-material">
-                        Toevoegen
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setIsAdding(false);
-                          setNewMaterialNumber("");
-                        }}
-                        data-testid="button-cancel-add-another-material"
-                      >
-                        Annuleren
-                      </Button>
-                    </div>
+            {!isAdding ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAdding(true)}
+                className="w-full gap-2"
+                data-testid="button-add-another-material"
+              >
+                <Plus className="w-4 h-4" />
+                Materieel toevoegen
+              </Button>
+            ) : (
+              <Card className="p-4">
+                <div className="space-y-2">
+                  <Input
+                    type="text"
+                    value={newMaterialNumber}
+                    onChange={(e) => setNewMaterialNumber(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                    placeholder="Bijv. 8743"
+                    data-testid="input-add-material-number"
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleAdd} data-testid="button-confirm-add-another-material">
+                      Toevoegen
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setIsAdding(false);
+                        setNewMaterialNumber("");
+                      }}
+                      data-testid="button-cancel-add-another-material"
+                    >
+                      Annuleren
+                    </Button>
                   </div>
-                </Card>
-              )}
-            </div>
+                </div>
+              </Card>
+            )}
           </div>
         )}
       </Card>
