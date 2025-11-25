@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Train, X, Plus, Loader2, ChevronRight, RefreshCw, AlertCircle, MapPin, Clock } from "lucide-react";
 import type { TrackedMaterial } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import TripDetailPanel from "./TripDetailPanel";
 
 interface MaterieelTrackerWidgetProps {
@@ -78,6 +78,7 @@ function MaterialCard({
 
   const ritnummer = data?.ritnummer;
   
+  // Only fetch composition if we don't have the name saved yet
   const { data: compositionData } = useQuery({
     queryKey: ["/api/train-composition", ritnummer],
     queryFn: async () => {
@@ -85,9 +86,12 @@ function MaterialCard({
       if (!response.ok) return null;
       return response.json();
     },
-    enabled: !!ritnummer,
+    enabled: !!ritnummer && !material.name,
     staleTime: 60000,
   });
+  
+  // Track if we've already saved the name to prevent duplicate updates
+  const hasSavedName = useRef(false);
   
   // Get materieel type from composition data
   const getMaterieelType = () => {
@@ -119,6 +123,14 @@ function MaterialCard({
   };
   
   const materieelType = getMaterieelType();
+  
+  // Save type to localStorage when we get it from the API
+  useEffect(() => {
+    if (materieelType && !material.name && !hasSavedName.current) {
+      hasSavedName.current = true;
+      onNameUpdate(materieelType);
+    }
+  }, [materieelType, material.name, onNameUpdate]);
 
   const formatTime = (dateTime: string) => {
     if (!dateTime) return null;
@@ -287,8 +299,10 @@ export default function MaterieelTrackerWidget({
   const [newMaterialNumber, setNewMaterialNumber] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState<JourneyData | null>(null);
 
+  const canAddMore = trackedMaterials.length < 3;
+
   const handleAdd = () => {
-    if (!newMaterialNumber.trim()) return;
+    if (!newMaterialNumber.trim() || !canAddMore) return;
     onMaterialAdd(newMaterialNumber.trim());
     setNewMaterialNumber("");
     setIsAdding(false);
@@ -322,7 +336,7 @@ export default function MaterieelTrackerWidget({
         {trackedMaterials.length === 0 ? (
           <div className="text-center py-4">
             <p className="text-sm text-muted-foreground mb-4">
-              Volg specifieke treinstellen om hun actuele ritten te zien
+              Volg tot 3 treinstellen om hun actuele ritten te zien
             </p>
             {!isAdding ? (
               <Button
@@ -377,7 +391,7 @@ export default function MaterieelTrackerWidget({
               />
             ))}
 
-            {!isAdding ? (
+            {canAddMore && !isAdding && (
               <Button
                 variant="outline"
                 size="sm"
@@ -386,9 +400,11 @@ export default function MaterieelTrackerWidget({
                 data-testid="button-add-another-material"
               >
                 <Plus className="w-4 h-4" />
-                Materieel toevoegen
+                Materieel toevoegen ({trackedMaterials.length}/3)
               </Button>
-            ) : (
+            )}
+
+            {isAdding && (
               <Card className="p-4">
                 <div className="space-y-2">
                   <Input
