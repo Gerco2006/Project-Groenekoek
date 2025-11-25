@@ -28,7 +28,7 @@ export default function CollapsibleSearchForm({
             className="w-full justify-between p-4 h-auto hover-elevate rounded-none"
             data-testid="button-toggle-search"
           >
-            <span className="font-semibold">{title}</span>
+            <span className="font-semibold text-lg">{title}</span>
             {isOpen ? (
               <ChevronUp className="w-5 h-5" />
             ) : (
