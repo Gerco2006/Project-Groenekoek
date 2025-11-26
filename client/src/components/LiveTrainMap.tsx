@@ -453,6 +453,12 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
               : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             }
           />
+          {/* OpenRailwayMap overlay for railway tracks */}
+          <TileLayer
+            attribution='&copy; <a href="https://www.openrailwaymap.org">OpenRailwayMap</a>'
+            url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
+            opacity={isDark ? 0.8 : 0.7}
+          />
           <MapController center={NETHERLANDS_CENTER} zoom={DEFAULT_ZOOM} />
           
           <MapClickHandler onMapClick={() => setSelectedTrain(null)} />
