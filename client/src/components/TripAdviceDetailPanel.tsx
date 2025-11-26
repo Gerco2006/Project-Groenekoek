@@ -198,6 +198,11 @@ export default function TripAdviceDetailPanel({
                     <div className="p-4">
                       <div className="flex items-start gap-3 mb-3 flex-wrap">
                         <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                        {leg.direction && (
+                          <span className="text-sm text-muted-foreground">
+                            Richting <span className="font-medium text-foreground">{leg.direction}</span>
+                          </span>
+                        )}
                         {legCrowding && (
                           <Badge variant="outline" className={`gap-1 text-xs ${crowdingColors[legCrowding as keyof typeof crowdingColors]}`}>
                             <Users className="w-3 h-3" />

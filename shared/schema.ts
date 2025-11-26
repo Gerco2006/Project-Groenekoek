@@ -35,6 +35,7 @@ export const tripLegSchema = z.object({
   to: z.string(),
   departure: z.string(),
   arrival: z.string(),
+  direction: z.string().optional(),
   platform: z.string().optional(),
   arrivalPlatform: z.string().optional(),
   plannedDeparture: z.string().optional(),
