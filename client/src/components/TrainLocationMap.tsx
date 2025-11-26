@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
@@ -7,6 +7,27 @@ import { Map, ChevronDown, ChevronUp, Loader2, Gauge } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import "leaflet/dist/leaflet.css";
+
+function MapTouchHandler({ children }: { children: React.ReactNode }) {
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation();
+  }, []);
+  
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  return (
+    <div 
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      style={{ touchAction: 'none' }}
+      className="h-full w-full"
+    >
+      {children}
+    </div>
+  );
+}
 
 interface TrainVehicle {
   treinNummer: number;
@@ -180,67 +201,63 @@ function MapContent({
 
   return (
     <>
-      <MapContainer
-        center={trainPosition}
-        zoom={12}
-        className="h-[200px] w-full"
-        ref={(map) => setMapInstance(map)}
-        zoomControl={true}
-      >
-        <TileLayer
-          key={isDark ? "dark" : "light"}
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url={isDark 
-            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          }
-        />
-        {/* OpenRailwayMap overlay for railway tracks */}
-        <TileLayer
-          attribution='&copy; <a href="https://www.openrailwaymap.org">OpenRailwayMap</a>'
-          url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
-          opacity={isDark ? 0.4 : 0.35}
-        />
-        <MapCenterer position={trainPosition} />
-        
-        {/* Route line connecting stops */}
-        {routePositions.length > 1 && (
-          <Polyline
-            positions={routePositions}
-            pathOptions={{
-              color: isDark ? "#6b7280" : "#9ca3af",
-              weight: 3,
-              opacity: 0.6,
-              dashArray: "5, 10",
-            }}
+      <MapTouchHandler>
+        <MapContainer
+          center={trainPosition}
+          zoom={12}
+          className="h-[200px] w-full"
+          ref={(map) => setMapInstance(map)}
+          zoomControl={true}
+        >
+          <TileLayer
+            key={isDark ? "dark" : "light"}
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url={isDark 
+              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            }
           />
-        )}
-        
-        {/* Station markers */}
-        {stops.map((stopData, index) => {
-          const { stop, isPassed, isNext } = stopData;
-          if (!stop.stop?.lat || !stop.stop?.lng || stop.status === "PASSING") return null;
+          <MapCenterer position={trainPosition} />
           
-          return (
-            <Marker
-              key={`${stop.stop.uicCode}-${index}`}
-              position={[stop.stop.lat, stop.stop.lng]}
-              icon={createStationIcon(isPassed, isNext, isDark)}
+          {/* Route line connecting stops */}
+          {routePositions.length > 1 && (
+            <Polyline
+              positions={routePositions}
+              pathOptions={{
+                color: isDark ? "#6b7280" : "#9ca3af",
+                weight: 3,
+                opacity: 0.6,
+                dashArray: "5, 10",
+              }}
             />
-          );
-        })}
-        
-        {/* Train marker (on top) */}
-        <Marker
-          position={trainPosition}
-          icon={createTrainIcon(
-            train.type || "",
-            train.richting || 0,
-            isDark
           )}
-          zIndexOffset={1000}
-        />
-      </MapContainer>
+          
+          {/* Station markers */}
+          {stops.map((stopData, index) => {
+            const { stop, isPassed, isNext } = stopData;
+            if (!stop.stop?.lat || !stop.stop?.lng || stop.status === "PASSING") return null;
+            
+            return (
+              <Marker
+                key={`${stop.stop.uicCode}-${index}`}
+                position={[stop.stop.lat, stop.stop.lng]}
+                icon={createStationIcon(isPassed, isNext, isDark)}
+              />
+            );
+          })}
+          
+          {/* Train marker (on top) */}
+          <Marker
+            position={trainPosition}
+            icon={createTrainIcon(
+              train.type || "",
+              train.richting || 0,
+              isDark
+            )}
+            zIndexOffset={1000}
+          />
+        </MapContainer>
+      </MapTouchHandler>
 
       <div 
         className="absolute bottom-3 left-3 z-[1000] rounded-lg px-3 py-1.5 shadow-lg flex items-center gap-2"
