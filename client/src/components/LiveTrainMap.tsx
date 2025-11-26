@@ -117,7 +117,7 @@ function TrainInfoPanel({ train, onClose, onViewJourney }: TrainInfoPanelProps) 
   const trainTypeTextColor = train.type === "IC" ? "text-black" : "text-white";
 
   return (
-    <div className="absolute bottom-14 left-3 right-3 z-[1001] bg-card border rounded-xl shadow-xl overflow-hidden">
+    <div className="absolute bottom-14 left-3 right-3 z-[1001] bg-card/95 backdrop-blur-md border rounded-xl shadow-xl overflow-hidden">
       <div className="p-3 border-b flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className={`w-8 h-8 rounded-lg ${trainTypeColor} ${trainTypeTextColor} flex items-center justify-center font-bold text-xs`}>
