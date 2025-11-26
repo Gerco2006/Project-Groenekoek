@@ -490,6 +490,7 @@ export default function JourneyPlanner() {
                   }}
                   placeholder="Bijv. Utrecht Centraal"
                   testId="input-via-station"
+                  showClearButton={false}
                 />
               </div>
               {viaStations[0] && (

@@ -12,6 +12,7 @@ interface StationSearchProps {
   onChange: (value: string) => void;
   placeholder?: string;
   testId?: string;
+  showClearButton?: boolean;
 }
 
 interface Station {
@@ -46,7 +47,8 @@ export default function StationSearch({
   value, 
   onChange, 
   placeholder = "Zoek station...",
-  testId = "input-station"
+  testId = "input-station",
+  showClearButton = true
 }: StationSearchProps) {
   const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState(value);
@@ -264,9 +266,9 @@ export default function StationSearch({
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 200)}
             placeholder={placeholder}
-            className={`pl-9 ${isMobile && inputValue ? 'pr-9' : ''}`}
+            className={`pl-9 ${isMobile && inputValue && showClearButton ? 'pr-9' : ''}`}
           />
-          {isMobile && inputValue && (
+          {isMobile && inputValue && showClearButton && (
             <button
               type="button"
               onClick={handleClear}
