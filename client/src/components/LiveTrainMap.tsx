@@ -367,8 +367,10 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
   }, [collapsed]);
 
   useEffect(() => {
-    if (mapInstance) {
-      mapInstance.invalidateSize();
+    if (mapInstance && !isCollapsed) {
+      setTimeout(() => {
+        mapInstance.invalidateSize();
+      }, 350);
     }
   }, [isCollapsed, mapInstance]);
 
@@ -399,6 +401,9 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
   }
 
   const handleToggleCollapse = () => {
+    if (!isCollapsed) {
+      setSelectedTrain(null);
+    }
     setIsCollapsed(!isCollapsed);
   };
 
