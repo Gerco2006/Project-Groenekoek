@@ -340,7 +340,7 @@ export default function DepartureBoard() {
     <div className="h-full flex flex-col">
       <div className="shrink-0 md:px-4 pt-0 pb-3 md:py-6 space-y-4">
         {searchForm}
-        <LiveTrainMap onTrainClick={handleMapTrainClick} />
+        <LiveTrainMap onTrainClick={handleMapTrainClick} collapsed={!!searchedStation} />
       </div>
 
       {!isLoading && searchedStation && activeDisruptions.length > 0 && (

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Train, Maximize2, Minimize2, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTheme } from "@/components/ThemeProvider";
 import "leaflet/dist/leaflet.css";
 
 interface TrainVehicle {
@@ -37,6 +38,7 @@ interface TrainsMapResponse {
 
 interface LiveTrainMapProps {
   onTrainClick?: (ritId: string, trainNumber: number, trainType: string) => void;
+  collapsed?: boolean;
 }
 
 interface TrainJourneyInfo {
@@ -280,10 +282,13 @@ function RefreshButton({ onClick, isLoading }: { onClick: () => void; isLoading:
   );
 }
 
-export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
+export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTrainMapProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const scrollToMap = useCallback(() => {
     if (mapContainerRef.current) {
@@ -307,13 +312,20 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
   const trains = data?.payload?.treinen || [];
 
   useEffect(() => {
+    if (collapsed) {
+      setIsCollapsed(true);
+      setIsExpanded(false);
+    }
+  }, [collapsed]);
+
+  useEffect(() => {
     if (mapRef.current) {
       mapRef.current.invalidateSize();
     }
     if (isExpanded) {
       setTimeout(scrollToMap, 100);
     }
-  }, [isExpanded, scrollToMap]);
+  }, [isExpanded, isCollapsed, scrollToMap]);
 
   const handleViewJourney = (train: TrainVehicle) => {
     if (onTrainClick) {
@@ -336,6 +348,14 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
     );
   }
 
+  const handleToggleCollapse = () => {
+    if (isCollapsed) {
+      setIsCollapsed(false);
+    } else {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
   return (
     <Card className="overflow-hidden" data-testid="live-train-map" ref={mapContainerRef}>
       <div className="p-3 border-b flex items-center justify-between">
@@ -347,10 +367,12 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={handleToggleCollapse}
             data-testid="button-expand-map"
           >
-            {isExpanded ? (
+            {isCollapsed ? (
+              <Maximize2 className="w-4 h-4" />
+            ) : isExpanded ? (
               <Minimize2 className="w-4 h-4" />
             ) : (
               <Maximize2 className="w-4 h-4" />
@@ -358,15 +380,17 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
           </Button>
         </div>
       </div>
-      <div className="px-3 py-2 bg-muted/50 border-b flex items-start gap-2">
-        <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-        <p className="text-xs text-muted-foreground">
-          Alleen treinen met GPS-apparatuur zijn zichtbaar. Oudere materieeltypes kunnen ontbreken.
-        </p>
-      </div>
+      {!isCollapsed && (
+        <div className="px-3 py-2 bg-muted/50 border-b flex items-start gap-2">
+          <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground">
+            Alleen treinen met GPS-apparatuur zijn zichtbaar. Oudere materieeltypes kunnen ontbreken.
+          </p>
+        </div>
+      )}
       <div 
-        className={`relative transition-all duration-300 ${
-          isExpanded ? "h-[500px]" : "h-[300px]"
+        className={`relative transition-all duration-300 overflow-hidden ${
+          isCollapsed ? "h-0" : isExpanded ? "h-[500px]" : "h-[300px]"
         }`}
       >
         <MapContainer
@@ -378,7 +402,10 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            url={isDark 
+              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            }
           />
           <MapController center={NETHERLANDS_CENTER} zoom={DEFAULT_ZOOM} />
           
