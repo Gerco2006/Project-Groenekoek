@@ -195,79 +195,78 @@ export default function TripAdviceDetailPanel({
                     onClick={() => onTrainClick?.(leg)}
                     data-testid={`card-leg-${idx}`}
                   >
-                    <div className="p-4">
-                      <div className="mb-3 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                    <div className="p-3 sm:p-4">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                        <div className="flex items-center gap-1.5 shrink-0">
                           {leg.cancelled && (
-                            <Badge variant="destructive">
-                              Geannuleerd
+                            <Badge variant="destructive" className="text-[10px] sm:text-xs px-1.5 py-0.5 h-5">
+                              Vervalt
+                            </Badge>
+                          )}
+                          {legCrowding && (
+                            <Badge variant="outline" className={`gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 h-5 ${crowdingColors[legCrowding as keyof typeof crowdingColors]}`}>
+                              <Users className="w-3 h-3" />
+                              <span className="hidden sm:inline">{crowdingLabels[legCrowding as keyof typeof crowdingLabels]}</span>
                             </Badge>
                           )}
                         </div>
-                        {(leg.direction || legCrowding) && (
-                          <div className="flex items-center gap-3 text-sm">
-                            {leg.direction && (
-                              <span className="text-muted-foreground">
-                                Richting <span className="font-medium text-foreground">{leg.direction}</span>
-                              </span>
-                            )}
-                            {legCrowding && (
-                              <Badge variant="outline" className={`gap-1 text-xs ${crowdingColors[legCrowding as keyof typeof crowdingColors]}`}>
-                                <Users className="w-3 h-3" />
-                                {crowdingLabels[legCrowding as keyof typeof crowdingLabels]}
+                      </div>
+                      
+                      {leg.direction && (
+                        <div className="text-xs sm:text-sm text-muted-foreground truncate mb-3 min-w-0">
+                          <span className="sm:hidden">→ </span>
+                          <span className="hidden sm:inline">Richting </span>
+                          <span className="font-medium text-foreground">{leg.direction}</span>
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-[12px,1fr] gap-x-3">
+                        <div className="relative flex flex-col items-center">
+                          <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                          <div className="flex-1 w-px bg-border my-1" />
+                          <div className="w-2 h-2 rounded-full bg-muted-foreground/40 shrink-0" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2 min-w-0">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-sm sm:text-base font-semibold">{leg.departure}</span>
+                                {leg.departureDelayMinutes && leg.departureDelayMinutes > 0 && (
+                                  <Badge variant="destructive" className="text-[10px] px-1 py-0 h-4">
+                                    +{leg.departureDelayMinutes}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs sm:text-sm text-muted-foreground truncate">{leg.from}</div>
+                            </div>
+                            {leg.platform && (
+                              <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0.5 h-5 shrink-0">
+                                <span className="sm:hidden">Sp. {leg.platform}</span>
+                                <span className="hidden sm:inline">Spoor {leg.platform}</span>
                               </Badge>
                             )}
                           </div>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-semibold">{leg.departure}</span>
-                              {leg.departureDelayMinutes && leg.departureDelayMinutes > 0 && (
-                                <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
-                                  +{leg.departureDelayMinutes}
-                                </Badge>
-                              )}
+                          
+                          <div className="flex items-center justify-between gap-2 min-w-0">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-sm sm:text-base font-semibold">{leg.arrival}</span>
+                                {leg.arrivalDelayMinutes && leg.arrivalDelayMinutes > 0 && (
+                                  <Badge variant="destructive" className="text-[10px] px-1 py-0 h-4">
+                                    +{leg.arrivalDelayMinutes}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs sm:text-sm text-muted-foreground truncate">{leg.to}</div>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm text-muted-foreground truncate">{leg.from}</div>
-                              {leg.platform && (
-                                <Badge variant="outline" className="ml-2 shrink-0">
-                                  Spoor {leg.platform}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-3 pl-[7px]">
-                          <div className="w-px h-6 bg-border" />
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-border shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-semibold">{leg.arrival}</span>
-                              {leg.arrivalDelayMinutes && leg.arrivalDelayMinutes > 0 && (
-                                <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
-                                  +{leg.arrivalDelayMinutes}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm text-muted-foreground truncate">{leg.to}</div>
-                              {leg.arrivalPlatform && (
-                                <Badge variant="outline" className="ml-2 shrink-0">
-                                  Spoor {leg.arrivalPlatform}
-                                </Badge>
-                              )}
-                            </div>
+                            {leg.arrivalPlatform && (
+                              <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0.5 h-5 shrink-0">
+                                <span className="sm:hidden">Sp. {leg.arrivalPlatform}</span>
+                                <span className="hidden sm:inline">Spoor {leg.arrivalPlatform}</span>
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -98,41 +98,41 @@ export default function TripCard({
                 }}
                 data-testid={`button-train-${idx}`}
               >
-                <div className="p-4">
-                  <div className="mb-3 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <TrainBadge type={leg.trainType} number={leg.trainNumber} />
-                      {leg.platform && (
-                        <Badge variant="outline" className="shrink-0">
-                          Spoor {leg.platform}
-                        </Badge>
-                      )}
-                    </div>
-                    {leg.direction && (
-                      <div className="text-sm text-muted-foreground">
-                        Richting <span className="font-medium text-foreground">{leg.direction}</span>
-                      </div>
+                <div className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                    {leg.platform && (
+                      <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0.5 h-5 shrink-0">
+                        <span className="sm:hidden">Sp. {leg.platform}</span>
+                        <span className="hidden sm:inline">Spoor {leg.platform}</span>
+                      </Badge>
                     )}
                   </div>
                   
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
+                  {leg.direction && (
+                    <div className="text-xs sm:text-sm text-muted-foreground truncate mb-3 min-w-0">
+                      <span className="sm:hidden">→ </span>
+                      <span className="hidden sm:inline">Richting </span>
+                      <span className="font-medium text-foreground">{leg.direction}</span>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-[12px,1fr] gap-x-3">
+                    <div className="relative flex flex-col items-center">
                       <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                      <div className="flex-1">
-                        <div className="font-semibold">{leg.departure}</div>
-                        <div className="text-sm text-muted-foreground">{leg.from}</div>
+                      <div className="flex-1 w-px bg-border my-1" />
+                      <div className="w-2 h-2 rounded-full bg-muted-foreground/40 shrink-0" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="min-w-0">
+                        <div className="text-sm sm:text-base font-semibold">{leg.departure}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground truncate">{leg.from}</div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 pl-[7px]">
-                      <div className="w-px h-6 bg-border" />
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-border shrink-0" />
-                      <div className="flex-1">
-                        <div className="font-semibold">{leg.arrival}</div>
-                        <div className="text-sm text-muted-foreground">{leg.to}</div>
+                      
+                      <div className="min-w-0">
+                        <div className="text-sm sm:text-base font-semibold">{leg.arrival}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground truncate">{leg.to}</div>
                       </div>
                     </div>
                   </div>
