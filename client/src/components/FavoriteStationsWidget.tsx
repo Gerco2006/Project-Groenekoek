@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Navigation, ChevronRight, Settings, Check } from "lucide-react";
 import {
   Dialog,
@@ -302,9 +303,9 @@ export default function FavoriteStationsWidget({
                   <Settings className="w-4 h-4" />
                 </Button>
               )}
-              <span className="text-xs text-muted-foreground font-normal">
+              <Badge variant="secondary" className="ml-auto">
                 {displayedStations.length}/{allFavoriteStations.length}
-              </span>
+              </Badge>
             </div>
           </CardTitle>
         </CardHeader>
