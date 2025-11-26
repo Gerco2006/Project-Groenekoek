@@ -143,12 +143,14 @@ function TrainInfoPanel({ train, map, onClose, onViewJourney }: TrainInfoPanelPr
   let left = position.x - panelWidth / 2;
   left = Math.max(8, left);
 
+  const arrowLeftPos = Math.max(16, Math.min(position.x - left, panelWidth - 16));
+
   return (
     <div 
       className="absolute z-[1001]"
       style={{
         left: `${left}px`,
-        bottom: `calc(100% - ${position.y - 24}px)`,
+        bottom: `calc(100% - ${position.y - 28}px)`,
         width: `${panelWidth}px`,
       }}
     >
@@ -160,14 +162,20 @@ function TrainInfoPanel({ train, map, onClose, onViewJourney }: TrainInfoPanelPr
         }}
       >
         <div 
-          className="absolute w-4 h-4 rotate-45 border-r border-b border-border/40 bg-white/60 dark:bg-gray-900/60"
+          className="absolute flex items-center justify-center text-muted-foreground"
           style={{
-            left: `${Math.max(12, Math.min(position.x - left - 8, panelWidth - 20))}px`,
-            bottom: '-8px',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            left: `${arrowLeftPos - 10}px`,
+            bottom: '-14px',
           }}
-        />
+        >
+          <svg width="20" height="14" viewBox="0 0 20 14" fill="none" className="drop-shadow-sm">
+            <path 
+              d="M10 14L0 0H20L10 14Z" 
+              className="fill-white/60 dark:fill-gray-900/60 stroke-border/40"
+              strokeWidth="1"
+            />
+          </svg>
+        </div>
         
         <div className="p-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -211,7 +219,7 @@ function TrainInfoPanel({ train, map, onClose, onViewJourney }: TrainInfoPanelPr
               )}
               
               <div className="text-[10px] text-muted-foreground">
-                {Math.round(train.snelheid)} km/u
+                Snelheid: {Math.round(train.snelheid)} km/u
               </div>
             </div>
           ) : null}
