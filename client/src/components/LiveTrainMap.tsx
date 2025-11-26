@@ -42,8 +42,6 @@ interface LiveTrainMapProps {
 interface TrainJourneyInfo {
   origin: string;
   destination: string;
-  trainNumber: number;
-  materieelTypes: string[];
 }
 
 function TrainPopupContent({ 
@@ -66,25 +64,10 @@ function TrainPopupContent({
           const stops = data?.payload?.stops || [];
           const stoppingStops = stops.filter((s: any) => s.status !== "PASSING");
           
-          const materieelTypes: string[] = [];
-          if (data?.payload?.productNumbers) {
-            data.payload.productNumbers.forEach((pn: any) => {
-              if (pn.materieeldelen) {
-                pn.materieeldelen.forEach((md: any) => {
-                  if (md.type && !materieelTypes.includes(md.type)) {
-                    materieelTypes.push(md.type);
-                  }
-                });
-              }
-            });
-          }
-          
           if (stoppingStops.length > 0) {
             setJourneyInfo({
               origin: stoppingStops[0]?.stop?.name || "",
               destination: stoppingStops[stoppingStops.length - 1]?.stop?.name || "",
-              trainNumber: train.treinNummer,
-              materieelTypes,
             });
           }
         }
@@ -98,129 +81,79 @@ function TrainPopupContent({
     fetchJourneyInfo();
   }, [train.treinNummer]);
 
-  const trainTypeLabel = train.type === "IC" ? "Intercity" : train.type === "SPR" ? "Sprinter" : train.type || "Trein";
-  const trainTypeColor = train.type === "IC" ? "#FFC917" : train.type === "SPR" ? "#003082" : "#00A651";
-
   return (
     <div style={{ 
-      minWidth: "220px", 
-      fontFamily: "system-ui, -apple-system, sans-serif",
-      padding: "2px"
+      minWidth: "180px", 
+      maxWidth: "200px",
+      fontFamily: "system-ui, -apple-system, sans-serif"
     }}>
       <div style={{ 
-        display: "flex", 
-        alignItems: "center", 
-        gap: "8px",
-        marginBottom: "12px",
-        paddingBottom: "10px",
-        borderBottom: "1px solid #e5e5e5"
+        fontWeight: 600, 
+        fontSize: "14px", 
+        color: "#111",
+        marginBottom: "8px"
       }}>
-        <div style={{
-          width: "36px",
-          height: "36px",
-          borderRadius: "8px",
-          backgroundColor: trainTypeColor,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: train.type === "IC" ? "#000" : "#fff",
-          fontWeight: 700,
-          fontSize: "12px"
-        }}>
-          {train.type || "?"}
-        </div>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: "15px", color: "#111" }}>
-            {trainTypeLabel} {train.treinNummer}
-          </div>
-          {!isLoadingJourney && journeyInfo?.materieelTypes.length ? (
-            <div style={{ fontSize: "12px", color: "#666" }}>
-              {journeyInfo.materieelTypes.join(" + ")}
-            </div>
-          ) : null}
-        </div>
+        Trein {train.treinNummer}
       </div>
       
       {isLoadingJourney ? (
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
-          gap: "8px",
-          padding: "8px 0",
+          gap: "6px",
           color: "#666",
-          fontSize: "13px"
+          fontSize: "12px",
+          marginBottom: "8px"
         }}>
           <div style={{
-            width: "14px",
-            height: "14px",
+            width: "12px",
+            height: "12px",
             border: "2px solid #ddd",
             borderTopColor: "#3b82f6",
             borderRadius: "50%",
             animation: "spin 0.8s linear infinite"
           }} />
-          Route laden...
+          Laden...
         </div>
       ) : journeyInfo ? (
-        <div style={{ marginBottom: "12px" }}>
+        <div style={{ marginBottom: "8px" }}>
           <div style={{ 
             display: "flex", 
-            alignItems: "flex-start", 
-            gap: "10px",
-            position: "relative",
-            paddingLeft: "4px"
+            alignItems: "center", 
+            gap: "6px",
+            marginBottom: "4px"
           }}>
             <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "2px"
-            }}>
-              <div style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                backgroundColor: "#22c55e",
-                border: "2px solid #fff",
-                boxShadow: "0 0 0 1px #22c55e"
-              }} />
-              <div style={{
-                width: "2px",
-                height: "20px",
-                backgroundColor: "#d1d5db"
-              }} />
-              <div style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                backgroundColor: "#ef4444",
-                border: "2px solid #fff",
-                boxShadow: "0 0 0 1px #ef4444"
-              }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "13px", color: "#111", fontWeight: 500, marginBottom: "16px" }}>
-                {journeyInfo.origin}
-              </div>
-              <div style={{ fontSize: "13px", color: "#111", fontWeight: 500 }}>
-                {journeyInfo.destination}
-              </div>
-            </div>
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              backgroundColor: "#22c55e",
+              flexShrink: 0
+            }} />
+            <span style={{ fontSize: "12px", color: "#333" }}>{journeyInfo.origin}</span>
+          </div>
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "6px"
+          }}>
+            <div style={{
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              backgroundColor: "#ef4444",
+              flexShrink: 0
+            }} />
+            <span style={{ fontSize: "12px", color: "#333" }}>{journeyInfo.destination}</span>
           </div>
         </div>
       ) : null}
       
       <div style={{ 
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
-        fontSize: "12px",
+        fontSize: "11px",
         color: "#666",
-        marginBottom: "12px"
+        marginBottom: "10px"
       }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12,6 12,12 16,14"/>
-        </svg>
         {Math.round(train.snelheid)} km/u
       </div>
       
@@ -229,29 +162,29 @@ function TrainPopupContent({
         data-testid={`button-view-train-${train.treinNummer}`}
         style={{
           width: "100%",
-          padding: "8px 12px",
+          padding: "6px 10px",
           backgroundColor: "#3b82f6",
           color: "#fff",
           border: "none",
-          borderRadius: "6px",
-          fontSize: "13px",
+          borderRadius: "5px",
+          fontSize: "12px",
           fontWeight: 500,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "4px"
+          cursor: "pointer"
         }}
       >
         Bekijk rit
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="9,18 15,12 9,6"/>
-        </svg>
       </button>
       
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        .leaflet-popup-close-button {
+          font-size: 20px !important;
+          width: 24px !important;
+          height: 24px !important;
+          padding: 4px !important;
+          color: #333 !important;
         }
       `}</style>
     </div>
