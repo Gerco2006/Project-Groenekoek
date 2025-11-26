@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { X, Clock, AlertCircle, Navigation, Loader2, Info, Train, Wifi, UtensilsCrossed, Accessibility, BatteryCharging, ChevronDown, ChevronUp, Droplet, Bike, Users } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import TrainComposition from "./TrainComposition";
+import TrainLocationMap from "./TrainLocationMap";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -257,6 +258,13 @@ export default function TripDetailPanel({
             <TrainComposition ritnummer={trainNumber} />
           </div>
 
+          {/* Train Location Map */}
+          {!isNonTrainTransport && (
+            <div className={`pt-2 ${isMobile ? '' : 'shrink-0'}`}>
+              <TrainLocationMap trainNumber={trainNumber} />
+            </div>
+          )}
+
           {!isNonTrainTransport && (
             <div className={`px-4 py-3 ${isMobile ? '' : 'shrink-0'}`}>
               <Button
@@ -484,6 +492,13 @@ export default function TripDetailPanel({
               <div className="pt-4 shrink-0">
                 <TrainComposition ritnummer={trainNumber} />
               </div>
+
+              {/* Train Location Map */}
+              {!isNonTrainTransport && (
+                <div className="pt-2 shrink-0">
+                  <TrainLocationMap trainNumber={trainNumber} />
+                </div>
+              )}
 
               {!isNonTrainTransport && (
                 <div className="px-4 py-3 shrink-0">
