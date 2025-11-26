@@ -363,16 +363,15 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
     if (collapsed) {
       setIsCollapsed(true);
       setSelectedTrain(null);
+      setMapInstance(null);
     }
   }, [collapsed]);
 
   useEffect(() => {
-    if (mapInstance && !isCollapsed) {
-      setTimeout(() => {
-        mapInstance.invalidateSize();
-      }, 350);
+    if (isCollapsed) {
+      setMapInstance(null);
     }
-  }, [isCollapsed, mapInstance]);
+  }, [isCollapsed]);
 
   const handleViewJourney = (train: TrainVehicle) => {
     setSelectedTrain(null);
@@ -433,78 +432,76 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
           </p>
         </div>
       )}
-      <div 
-        className={`relative transition-all duration-300 overflow-hidden ${
-          isCollapsed ? "h-0" : "h-[500px]"
-        }`}
-      >
-        <MapContainer
-          center={NETHERLANDS_CENTER}
-          zoom={DEFAULT_ZOOM}
-          className="h-full w-full"
-          ref={(map) => setMapInstance(map)}
-          zoomControl={true}
-        >
-          <TileLayer
-            key={isDark ? "dark" : "light"}
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url={isDark 
-              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            }
-          />
-          <MapController center={NETHERLANDS_CENTER} zoom={DEFAULT_ZOOM} />
-          
-          <MapClickHandler onMapClick={() => setSelectedTrain(null)} />
-          
-          {trains.map((train) => (
-            <Marker
-              key={train.ritId}
-              position={[train.lat, train.lng]}
-              icon={createTrainIcon(
-                train.materieel?.[0]?.type || train.type || "",
-                train.richting || 0,
-                isDark
-              )}
-              eventHandlers={{
-                click: (e) => {
-                  e.originalEvent.stopPropagation();
-                  handleTrainMarkerClick(train);
-                },
-              }}
+      {!isCollapsed && (
+        <div className="relative h-[500px]">
+          <MapContainer
+            center={NETHERLANDS_CENTER}
+            zoom={DEFAULT_ZOOM}
+            className="h-full w-full"
+            ref={(map) => setMapInstance(map)}
+            zoomControl={true}
+          >
+            <TileLayer
+              key={isDark ? "dark" : "light"}
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              url={isDark 
+                ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              }
             />
-          ))}
-        </MapContainer>
-        <RefreshButton onClick={() => refetch()} isLoading={isFetching} />
-        
-        {!selectedTrain && (
-          <div className="absolute bottom-3 left-3 z-[1000] bg-background/90 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-            <div className="flex items-center gap-3 text-xs">
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-[#FFC917] border border-white dark:border-gray-700" />
-                <span>IC</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-[#003082] border border-white dark:border-gray-700" />
-                <span>Sprinter</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-full bg-[#00A651] border border-white dark:border-gray-700" />
-                <span>Overig</span>
+            <MapController center={NETHERLANDS_CENTER} zoom={DEFAULT_ZOOM} />
+            
+            <MapClickHandler onMapClick={() => setSelectedTrain(null)} />
+            
+            {trains.map((train) => (
+              <Marker
+                key={train.ritId}
+                position={[train.lat, train.lng]}
+                icon={createTrainIcon(
+                  train.materieel?.[0]?.type || train.type || "",
+                  train.richting || 0,
+                  isDark
+                )}
+                eventHandlers={{
+                  click: (e) => {
+                    e.originalEvent.stopPropagation();
+                    handleTrainMarkerClick(train);
+                  },
+                }}
+              />
+            ))}
+          </MapContainer>
+          <RefreshButton onClick={() => refetch()} isLoading={isFetching} />
+          
+          {!selectedTrain && (
+            <div className="absolute bottom-3 left-3 z-[1000] bg-background/90 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+              <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-[#FFC917] border border-white dark:border-gray-700" />
+                  <span>IC</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-[#003082] border border-white dark:border-gray-700" />
+                  <span>Sprinter</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-[#00A651] border border-white dark:border-gray-700" />
+                  <span>Overig</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        
-        {selectedTrain && (
-          <TrainInfoPanel
-            train={selectedTrain}
-            map={mapInstance}
-            onClose={() => setSelectedTrain(null)}
-            onViewJourney={handleViewJourney}
-          />
-        )}
-      </div>
+          )}
+          
+          {selectedTrain && (
+            <TrainInfoPanel
+              train={selectedTrain}
+              map={mapInstance}
+              onClose={() => setSelectedTrain(null)}
+              onViewJourney={handleViewJourney}
+            />
+          )}
+        </div>
+      )}
     </Card>
   );
 }
