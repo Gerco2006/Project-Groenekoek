@@ -5,16 +5,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Github, Moon, Sun, Info, Heart, AlertTriangle, ChevronRight } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Github, Moon, Sun, Monitor, Info, Heart, AlertTriangle, ChevronRight } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import PageContainer from "@/components/PageContainer";
 
 export default function MorePage() {
-  const { theme, toggleTheme } = useTheme();
+  const { mode, theme, setMode } = useTheme();
 
   return (
     <PageContainer>
@@ -58,17 +58,33 @@ export default function MorePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="theme-toggle" className="cursor-pointer">
-                {theme === "dark" ? "Donkere modus" : "Lichte modus"}
-              </Label>
-              <Switch
-                id="theme-toggle"
-                checked={theme === "dark"}
-                onCheckedChange={toggleTheme}
-                data-testid="switch-theme"
-              />
-            </div>
+            <RadioGroup
+              value={mode}
+              onValueChange={(value) => setMode(value as "light" | "dark" | "system")}
+              className="space-y-3"
+            >
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="system" id="theme-system" data-testid="radio-theme-system" />
+                <Label htmlFor="theme-system" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <Monitor className="w-4 h-4 text-muted-foreground" />
+                  Volg systeem
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="light" id="theme-light" data-testid="radio-theme-light" />
+                <Label htmlFor="theme-light" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <Sun className="w-4 h-4 text-muted-foreground" />
+                  Altijd licht
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="dark" id="theme-dark" data-testid="radio-theme-dark" />
+                <Label htmlFor="theme-dark" className="flex items-center gap-2 cursor-pointer flex-1">
+                  <Moon className="w-4 h-4 text-muted-foreground" />
+                  Altijd donker
+                </Label>
+              </div>
+            </RadioGroup>
           </CardContent>
         </Card>
 
