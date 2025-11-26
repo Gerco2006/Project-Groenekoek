@@ -471,12 +471,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { 
         lat = "52.1", 
         lng = "5.1", 
+        radius = "200000",
+        limit = "1000",
         features = "materieel"
       } = req.query;
 
       const params: Record<string, string> = {
         lat: lat as string,
         lng: lng as string,
+        radius: radius as string,
+        limit: limit as string,
         features: features as string,
       };
 
