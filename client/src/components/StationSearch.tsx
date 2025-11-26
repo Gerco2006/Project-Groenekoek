@@ -53,6 +53,17 @@ export default function StationSearch({
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const [favoriteStations, setFavoriteStations] = useState<string[]>(() => getFavoriteStations());
 
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === FAVORITE_STATIONS_KEY) {
+        setFavoriteStations(getFavoriteStations());
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const { data: stationsData } = useQuery<any>({
     queryKey: ["/api/stations"],
     queryFn: async () => {
@@ -67,9 +78,10 @@ export default function StationSearch({
   const toggleFavorite = (stationCode: string, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    const newFavorites = favoriteStations.includes(stationCode)
-      ? favoriteStations.filter(code => code !== stationCode)
-      : [...favoriteStations, stationCode];
+    const currentFavorites = getFavoriteStations();
+    const newFavorites = currentFavorites.includes(stationCode)
+      ? currentFavorites.filter(code => code !== stationCode)
+      : [...currentFavorites, stationCode];
     setFavoriteStations(newFavorites);
     saveFavoriteStations(newFavorites);
   };
