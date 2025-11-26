@@ -199,7 +199,7 @@ function MapContent({
         <TileLayer
           attribution='&copy; <a href="https://www.openrailwaymap.org">OpenRailwayMap</a>'
           url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
-          opacity={isDark ? 0.8 : 0.7}
+          opacity={isDark ? 0.4 : 0.35}
         />
         <MapCenterer position={trainPosition} />
         
@@ -243,9 +243,11 @@ function MapContent({
       </MapContainer>
 
       <div 
-        className="absolute bottom-3 left-3 z-[1000] rounded-lg px-3 py-1.5 shadow-lg flex items-center gap-2 backdrop-blur-md"
+        className="absolute bottom-3 left-3 z-[1000] rounded-lg px-3 py-1.5 shadow-lg flex items-center gap-2"
         style={{
-          backgroundColor: isDark ? 'rgba(17, 24, 39, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+          backgroundColor: isDark ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
         }}
         data-testid="text-speed-kmh"
         aria-label={`Snelheid: ${Math.round(train.snelheid)} kilometer per uur`}

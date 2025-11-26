@@ -457,7 +457,7 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
           <TileLayer
             attribution='&copy; <a href="https://www.openrailwaymap.org">OpenRailwayMap</a>'
             url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
-            opacity={isDark ? 0.8 : 0.7}
+            opacity={isDark ? 0.4 : 0.35}
           />
           <MapController center={NETHERLANDS_CENTER} zoom={DEFAULT_ZOOM} />
           
