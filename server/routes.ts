@@ -5,6 +5,7 @@ import { storage } from "./storage";
 const NS_API_KEY = process.env.NS_API_KEY;
 const NS_BASE_URL = "https://gateway.apiportal.ns.nl/reisinformatie-api/api";
 const NS_DISRUPTIONS_BASE_URL = "https://gateway.apiportal.ns.nl/disruptions";
+const NS_VIRTUAL_TRAIN_URL = "https://gateway.apiportal.ns.nl/virtual-train-api";
 
 async function fetchNS(endpoint: string, params: Record<string, string | string[]> = {}) {
   const url = new URL(`${NS_BASE_URL}${endpoint}`);
@@ -53,6 +54,32 @@ async function fetchNSDisruptions(endpoint: string, params: Record<string, strin
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`NS Disruptions API error: ${response.status} - ${error}`);
+  }
+
+  return response.json();
+}
+
+async function fetchNSVirtualTrain(endpoint: string, params: Record<string, string | string[]> = {}) {
+  const url = new URL(`${NS_VIRTUAL_TRAIN_URL}${endpoint}`);
+  Object.entries(params).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach(v => {
+        if (v) url.searchParams.append(key, v);
+      });
+    } else if (value) {
+      url.searchParams.append(key, value);
+    }
+  });
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      "Ocp-Apim-Subscription-Key": NS_API_KEY || "",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`NS Virtual Train API error: ${response.status} - ${error}`);
   }
 
   return response.json();
@@ -436,6 +463,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching disruption details:", error);
       res.status(500).json({ error: "Failed to fetch disruption details" });
+    }
+  });
+
+  app.get("/api/trains-map", async (req, res) => {
+    try {
+      const { 
+        lat = "52.1", 
+        lng = "5.1", 
+        radius = "100000",
+        limit = "200",
+        features = "materieel"
+      } = req.query;
+
+      const params: Record<string, string> = {
+        lat: lat as string,
+        lng: lng as string,
+        radius: radius as string,
+        limit: limit as string,
+        features: features as string,
+      };
+
+      const data = await fetchNSVirtualTrain("/vehicle", params);
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching trains map data:", error);
+      res.status(500).json({ error: "Failed to fetch trains map data" });
     }
   });
 
