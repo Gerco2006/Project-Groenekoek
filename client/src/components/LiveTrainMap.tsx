@@ -148,22 +148,24 @@ function TrainInfoPanel({ train, map, onClose, onViewJourney }: TrainInfoPanelPr
       className="absolute z-[1001]"
       style={{
         left: `${left}px`,
-        bottom: `calc(100% - ${position.y - 20}px)`,
+        bottom: `calc(100% - ${position.y - 24}px)`,
         width: `${panelWidth}px`,
       }}
     >
       <div 
-        className="relative rounded-lg shadow-2xl border border-border/60 bg-white/80 dark:bg-gray-900/80"
+        className="relative rounded-lg shadow-2xl border border-border/40 bg-white/60 dark:bg-gray-900/60"
         style={{
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         }}
       >
         <div 
-          className="absolute w-2.5 h-2.5 rotate-45 border-r border-b border-border/60 bg-white/80 dark:bg-gray-900/80"
+          className="absolute w-4 h-4 rotate-45 border-r border-b border-border/40 bg-white/60 dark:bg-gray-900/60"
           style={{
-            left: `${position.x - left - 5}px`,
-            bottom: '-5px',
+            left: `${Math.max(12, Math.min(position.x - left - 8, panelWidth - 20))}px`,
+            bottom: '-8px',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           }}
         />
         
