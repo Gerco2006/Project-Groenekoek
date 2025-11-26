@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Train, Maximize2, Minimize2, Info, ChevronDown, ChevronUp, X, Loader2, MapPin } from "lucide-react";
+import { RefreshCw, Train, Info, ChevronDown, ChevronUp, X, Loader2, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTheme } from "@/components/ThemeProvider";
 import "leaflet/dist/leaflet.css";
@@ -337,19 +337,12 @@ function RefreshButton({ onClick, isLoading }: { onClick: () => void; isLoading:
 }
 
 export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTrainMapProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const [selectedTrain, setSelectedTrain] = useState<TrainVehicle | null>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const { theme } = useTheme();
   const isDark = theme === "dark";
-
-  const scrollToMap = useCallback(() => {
-    if (mapContainerRef.current) {
-      mapContainerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, []);
 
   const { data, isLoading, refetch, isFetching } = useQuery<TrainsMapResponse>({
     queryKey: ["/api/trains-map"],
@@ -369,7 +362,6 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
   useEffect(() => {
     if (collapsed) {
       setIsCollapsed(true);
-      setIsExpanded(false);
       setSelectedTrain(null);
     }
   }, [collapsed]);
@@ -378,10 +370,7 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
     if (mapInstance) {
       mapInstance.invalidateSize();
     }
-    if (isExpanded) {
-      setTimeout(scrollToMap, 100);
-    }
-  }, [isExpanded, isCollapsed, scrollToMap, mapInstance]);
+  }, [isCollapsed, mapInstance]);
 
   const handleViewJourney = (train: TrainVehicle) => {
     setSelectedTrain(null);
@@ -411,14 +400,8 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
 
   const handleToggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
-    if (isCollapsed) {
-      setIsExpanded(false);
-    }
   };
 
-  const handleToggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
 
   return (
     <Card className="overflow-hidden" data-testid="live-train-map" ref={mapContainerRef}>
@@ -436,22 +419,6 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
             <ChevronUp className="w-4 h-4 text-muted-foreground" />
           )}
         </button>
-        {!isCollapsed && (
-          <div className="flex items-center gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={handleToggleExpand}
-              data-testid="button-expand-map"
-            >
-              {isExpanded ? (
-                <Minimize2 className="w-4 h-4" />
-              ) : (
-                <Maximize2 className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
-        )}
       </div>
       {!isCollapsed && (
         <div className="px-3 py-2 bg-muted/50 border-b flex items-start gap-2">
@@ -463,7 +430,7 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
       )}
       <div 
         className={`relative transition-all duration-300 overflow-hidden ${
-          isCollapsed ? "h-0" : isExpanded ? "h-[500px]" : "h-[300px]"
+          isCollapsed ? "h-0" : "h-[500px]"
         }`}
       >
         <MapContainer
