@@ -103,8 +103,7 @@ export default function TripCard({
                     <TrainBadge type={leg.trainType} number={leg.trainNumber} />
                     {leg.platform && (
                       <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0.5 h-5 shrink-0">
-                        <span className="sm:hidden">Sp. {leg.platform}</span>
-                        <span className="hidden sm:inline">Spoor {leg.platform}</span>
+                        Spoor {leg.platform}
                       </Badge>
                     )}
                   </div>
