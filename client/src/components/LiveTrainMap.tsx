@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Train, Maximize2, Minimize2, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { RefreshCw, Train, Maximize2, Minimize2, Info, ChevronDown, ChevronUp, X, Loader2, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTheme } from "@/components/ThemeProvider";
 import "leaflet/dist/leaflet.css";
@@ -46,24 +46,23 @@ interface TrainJourneyInfo {
   destination: string;
   nextStop: string | null;
   materieelTypes: string[];
+  speed: number;
 }
 
-function TrainPopupContent({ 
-  train, 
-  onViewJourney,
-  isDark
-}: { 
-  train: TrainVehicle; 
+interface TrainInfoPanelProps {
+  train: TrainVehicle;
+  onClose: () => void;
   onViewJourney: (train: TrainVehicle) => void;
-  isDark: boolean;
-}) {
+}
+
+function TrainInfoPanel({ train, onClose, onViewJourney }: TrainInfoPanelProps) {
   const [journeyInfo, setJourneyInfo] = useState<TrainJourneyInfo | null>(null);
-  const [isLoadingJourney, setIsLoadingJourney] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchJourneyInfo = async () => {
       try {
-        setIsLoadingJourney(true);
+        setIsLoading(true);
         const response = await fetch(`/api/journey?train=${train.treinNummer}`);
         if (response.ok) {
           const data = await response.json();
@@ -99,211 +98,100 @@ function TrainPopupContent({
               destination: stoppingStops[stoppingStops.length - 1]?.stop?.name || "",
               nextStop,
               materieelTypes,
+              speed: train.snelheid,
             });
           }
         }
       } catch (error) {
         console.error("Failed to fetch journey info:", error);
       } finally {
-        setIsLoadingJourney(false);
+        setIsLoading(false);
       }
     };
     
     fetchJourneyInfo();
-  }, [train.treinNummer]);
+  }, [train.treinNummer, train.snelheid]);
 
-  const bgColor = isDark ? "#1f2937" : "#ffffff";
-  const textColor = isDark ? "#f3f4f6" : "#111827";
-  const mutedColor = isDark ? "#9ca3af" : "#6b7280";
-  const borderColor = isDark ? "#374151" : "#e5e7eb";
-  
-  const trainTypeLabel = train.type === "IC" ? "Intercity" : train.type === "SPR" ? "Sprinter" : train.type || "";
-  const trainTypeColor = train.type === "IC" ? "#FFC917" : train.type === "SPR" ? "#003082" : "#00A651";
+  const trainTypeLabel = train.type === "IC" ? "Intercity" : train.type === "SPR" ? "Sprinter" : train.type || "Trein";
+  const trainTypeColor = train.type === "IC" ? "bg-[#FFC917]" : train.type === "SPR" ? "bg-[#003082]" : "bg-[#00A651]";
+  const trainTypeTextColor = train.type === "IC" ? "text-black" : "text-white";
 
   return (
-    <div style={{ 
-      minWidth: "220px", 
-      maxWidth: "260px",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-      backgroundColor: bgColor,
-      color: textColor,
-      borderRadius: "12px",
-      overflow: "hidden"
-    }}>
-      <div style={{ 
-        padding: "12px",
-        borderBottom: `1px solid ${borderColor}`
-      }}>
-        <div style={{ 
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          marginBottom: "4px"
-        }}>
-          <div style={{
-            width: "28px",
-            height: "28px",
-            borderRadius: "6px",
-            backgroundColor: trainTypeColor,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: train.type === "IC" ? "#000" : "#fff",
-            fontWeight: 700,
-            fontSize: "10px",
-            flexShrink: 0
-          }}>
+    <div className="absolute bottom-14 left-3 right-3 z-[1001] bg-card border rounded-xl shadow-xl overflow-hidden">
+      <div className="p-3 border-b flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg ${trainTypeColor} ${trainTypeTextColor} flex items-center justify-center font-bold text-xs`}>
             {train.type || "?"}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 600, fontSize: "14px" }}>
-              {trainTypeLabel} {train.treinNummer}
-            </div>
-            {!isLoadingJourney && journeyInfo?.materieelTypes.length ? (
-              <div style={{ fontSize: "11px", color: mutedColor }}>
-                {journeyInfo.materieelTypes.join(" + ")}
-              </div>
+          <div>
+            <div className="font-semibold text-sm">{trainTypeLabel} {train.treinNummer}</div>
+            {isLoading ? (
+              <div className="text-xs text-muted-foreground">Laden...</div>
+            ) : journeyInfo?.materieelTypes.length ? (
+              <div className="text-xs text-muted-foreground">{journeyInfo.materieelTypes.join(" + ")}</div>
             ) : null}
           </div>
         </div>
+        <Button size="icon" variant="ghost" onClick={onClose} data-testid="button-close-train-info">
+          <X className="w-4 h-4" />
+        </Button>
       </div>
       
-      <div style={{ padding: "12px" }}>
-        {isLoadingJourney ? (
-          <div style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            gap: "8px",
-            color: mutedColor,
-            fontSize: "13px",
-            padding: "8px 0"
-          }}>
-            <div style={{
-              width: "14px",
-              height: "14px",
-              border: `2px solid ${borderColor}`,
-              borderTopColor: "#3b82f6",
-              borderRadius: "50%",
-              animation: "spin 0.8s linear infinite"
-            }} />
+      <div className="p-3">
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm py-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
             Ritinfo laden...
           </div>
         ) : journeyInfo ? (
-          <div style={{ marginBottom: "12px" }}>
-            <div style={{ 
-              display: "flex", 
-              alignItems: "flex-start",
-              gap: "10px"
-            }}>
-              <div style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                paddingTop: "2px"
-              }}>
-                <div style={{
-                  width: "10px",
-                  height: "10px",
-                  borderRadius: "50%",
-                  backgroundColor: "#22c55e",
-                  border: `2px solid ${bgColor}`,
-                  boxShadow: "0 0 0 1px #22c55e"
-                }} />
-                <div style={{
-                  width: "2px",
-                  height: "24px",
-                  backgroundColor: borderColor
-                }} />
-                <div style={{
-                  width: "10px",
-                  height: "10px",
-                  borderRadius: "50%",
-                  backgroundColor: "#ef4444",
-                  border: `2px solid ${bgColor}`,
-                  boxShadow: "0 0 0 1px #ef4444"
-                }} />
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="flex flex-col items-center pt-1">
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-background" />
+                <div className="w-0.5 h-5 bg-border" />
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-background" />
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "13px", fontWeight: 500, marginBottom: "18px" }}>
-                  {journeyInfo.origin}
-                </div>
-                <div style={{ fontSize: "13px", fontWeight: 500 }}>
-                  {journeyInfo.destination}
-                </div>
+              <div className="flex-1 space-y-4">
+                <div className="text-sm font-medium">{journeyInfo.origin}</div>
+                <div className="text-sm font-medium">{journeyInfo.destination}</div>
               </div>
             </div>
             
             {journeyInfo.nextStop && (
-              <div style={{ 
-                marginTop: "12px",
-                padding: "8px 10px",
-                backgroundColor: isDark ? "#374151" : "#f3f4f6",
-                borderRadius: "8px",
-                fontSize: "12px"
-              }}>
-                <span style={{ color: mutedColor }}>Volgende halte: </span>
-                <span style={{ fontWeight: 500 }}>{journeyInfo.nextStop}</span>
+              <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg text-sm">
+                <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground">Volgende:</span>
+                <span className="font-medium">{journeyInfo.nextStop}</span>
               </div>
             )}
+            
+            <div className="text-xs text-muted-foreground">
+              Snelheid: {Math.round(train.snelheid)} km/u
+            </div>
           </div>
-        ) : null}
+        ) : (
+          <div className="text-sm text-muted-foreground py-2">
+            Geen ritinfo beschikbaar
+          </div>
+        )}
         
-        <button
+        <Button
+          className="w-full mt-3"
           onClick={() => onViewJourney(train)}
           data-testid={`button-view-train-${train.treinNummer}`}
-          style={{
-            width: "100%",
-            padding: "10px 12px",
-            backgroundColor: "#3b82f6",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "13px",
-            fontWeight: 500,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "6px"
-          }}
         >
           Bekijk ritinfo
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="9,18 15,12 9,6"/>
-          </svg>
-        </button>
+        </Button>
       </div>
-      
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        .leaflet-popup-content-wrapper {
-          background: transparent !important;
-          box-shadow: none !important;
-          padding: 0 !important;
-        }
-        .leaflet-popup-content {
-          margin: 0 !important;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
-          border-radius: 12px !important;
-          overflow: hidden !important;
-        }
-        .leaflet-popup-tip {
-          background: ${bgColor} !important;
-        }
-        .leaflet-popup-close-button {
-          font-size: 18px !important;
-          width: 28px !important;
-          height: 28px !important;
-          padding: 6px !important;
-          color: ${textColor} !important;
-          right: 4px !important;
-          top: 4px !important;
-        }
-      `}</style>
     </div>
   );
+}
+
+function MapClickHandler({ onMapClick }: { onMapClick: () => void }) {
+  useMapEvents({
+    click: () => onMapClick(),
+  });
+  return null;
 }
 
 const NETHERLANDS_CENTER: [number, number] = [52.1326, 5.2913];
@@ -335,9 +223,11 @@ function getTrainTypeLabel(type: string): string {
   return type?.substring(0, 3).toUpperCase() || "TRN";
 }
 
-function createTrainIcon(type: string, heading: number): L.DivIcon {
+function createTrainIcon(type: string, heading: number, isDark: boolean): L.DivIcon {
   const color = getTrainColor(type);
   const label = getTrainTypeLabel(type);
+  const borderColor = isDark ? "#374151" : "#ffffff";
+  const shadowColor = isDark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.3)";
   
   return L.divIcon({
     className: "train-marker",
@@ -346,7 +236,7 @@ function createTrainIcon(type: string, heading: number): L.DivIcon {
         width: 32px;
         height: 32px;
         background: ${color};
-        border: 2px solid white;
+        border: 2px solid ${borderColor};
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -354,7 +244,7 @@ function createTrainIcon(type: string, heading: number): L.DivIcon {
         font-size: 9px;
         font-weight: bold;
         color: ${color === "#FFC917" ? "#000" : "#fff"};
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 6px ${shadowColor};
         cursor: pointer;
         transform: rotate(${heading}deg);
       ">
@@ -398,6 +288,7 @@ function RefreshButton({ onClick, isLoading }: { onClick: () => void; isLoading:
 export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTrainMapProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
+  const [selectedTrain, setSelectedTrain] = useState<TrainVehicle | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const { theme } = useTheme();
@@ -428,6 +319,7 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
     if (collapsed) {
       setIsCollapsed(true);
       setIsExpanded(false);
+      setSelectedTrain(null);
     }
   }, [collapsed]);
 
@@ -441,10 +333,15 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
   }, [isExpanded, isCollapsed, scrollToMap]);
 
   const handleViewJourney = (train: TrainVehicle) => {
+    setSelectedTrain(null);
     if (onTrainClick) {
       const trainType = train.materieel?.[0]?.type || train.type || "Trein";
       onTrainClick(train.ritId, train.treinNummer, trainType);
     }
+  };
+
+  const handleTrainMarkerClick = (train: TrainVehicle) => {
+    setSelectedTrain(train);
   };
 
   if (isLoading) {
@@ -535,39 +432,54 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
           />
           <MapController center={NETHERLANDS_CENTER} zoom={DEFAULT_ZOOM} />
           
+          <MapClickHandler onMapClick={() => setSelectedTrain(null)} />
+          
           {trains.map((train) => (
             <Marker
               key={train.ritId}
               position={[train.lat, train.lng]}
               icon={createTrainIcon(
                 train.materieel?.[0]?.type || train.type || "",
-                train.richting || 0
+                train.richting || 0,
+                isDark
               )}
-            >
-              <Popup>
-                <TrainPopupContent train={train} onViewJourney={handleViewJourney} isDark={isDark} />
-              </Popup>
-            </Marker>
+              eventHandlers={{
+                click: (e) => {
+                  e.originalEvent.stopPropagation();
+                  handleTrainMarkerClick(train);
+                },
+              }}
+            />
           ))}
         </MapContainer>
         <RefreshButton onClick={() => refetch()} isLoading={isFetching} />
         
-        <div className="absolute bottom-3 left-3 z-[1000] bg-background/90 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-          <div className="flex items-center gap-3 text-xs">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-[#FFC917] border border-white" />
-              <span>IC</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-[#003082] border border-white" />
-              <span>Sprinter</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-[#00A651] border border-white" />
-              <span>Overig</span>
+        {!selectedTrain && (
+          <div className="absolute bottom-3 left-3 z-[1000] bg-background/90 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+            <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-[#FFC917] border border-white dark:border-gray-700" />
+                <span>IC</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-[#003082] border border-white dark:border-gray-700" />
+                <span>Sprinter</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-[#00A651] border border-white dark:border-gray-700" />
+                <span>Overig</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+        
+        {selectedTrain && (
+          <TrainInfoPanel
+            train={selectedTrain}
+            onClose={() => setSelectedTrain(null)}
+            onViewJourney={handleViewJourney}
+          />
+        )}
       </div>
     </Card>
   );
