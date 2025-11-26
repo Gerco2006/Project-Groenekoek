@@ -2,15 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Wifi, Bike, BatteryCharging, Accessibility, BellOff, Bath, Train as TrainIcon, ChevronDown, ChevronUp, Star } from "lucide-react";
+import { Wifi, Bike, BatteryCharging, Accessibility, BellOff, Bath, Train as TrainIcon, ChevronDown, ChevronUp, Star, Layers } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useWidgetManager } from "@/hooks/use-widget-manager";
 import { useState } from "react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 
 interface TrainCompositionProps {
   ritnummer: string;
@@ -33,6 +28,7 @@ const facilityMap: Record<string, Facility> = {
 
 export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   const isMobile = useIsMobile();
+  const [compositionOpen, setCompositionOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const { addTrackedMaterial, removeTrackedMaterial, isMaterialTracked, config } = useWidgetManager();
 
@@ -132,83 +128,88 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   });
 
   return (
-    <div className="space-y-4" data-testid="train-composition">
-      {/* Trein visualizatie */}
+    <div className="space-y-2" data-testid="train-composition">
+      {/* Trein visualizatie - Collapsible */}
       <div className="px-4">
-        <Card className="bg-card/80 p-4 pb-2 space-y-2 overflow-hidden">
-          <h4 className="font-semibold text-sm">Treinsamenstelling</h4>
-          <div 
-            className="overflow-x-auto overflow-y-hidden rounded-lg w-full max-w-[100%]"
-            style={{ scrollbarWidth: 'thin' }}
-            data-testid="train-visualization"
+        <Card className="overflow-hidden">
+          <Button 
+            variant="ghost" 
+            className="w-full p-4 h-auto hover:bg-transparent no-default-hover-elevate justify-between" 
+            onClick={() => setCompositionOpen(!compositionOpen)}
+            data-testid="button-toggle-composition"
           >
-
-            <div className="flex px-4 w-max">
-              {materieeldelen.map((deel: any, deelIndex: number) => {
-                const bakkenCount = deel.bakken?.length || 4;
-                const baseWidth = deel.type?.toUpperCase().includes('SPR') ? 150 : 200;
-                const calculatedWidth = bakkenCount * baseWidth;
-                
-                return (
-                  <div 
-                    key={deelIndex} 
-                    className="shrink-0 first:border-l first:rounded-l-lg last:rounded-r-lg border-border/0"
-                    style={{ 
-                      width: 'auto', // isMobile ? `${calculatedWidth}px` : `${calculatedWidth}px`,
-                      height: '45px',
-                      display: 'flex',
-                      alignItems: 'flex-end',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                      padding: 0,
-                      // background: 'linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.6) 100%)'
-                    }}
-                    data-testid={`train-part-${deelIndex}`}
-                  >
-                    {deel.afbeelding && (
-                      <img 
-                        src={deel.afbeelding}
-                        alt={`${deel.type} - ${deel.materieelnummer}`}
-                        style={{
-                          height: '100%',
-                          width: 'auto',
-                          display: 'block',
-                          objectFit: 'contain',
-                          objectPosition: 'center bottom',
-                          // mixBlendMode: 'darken'
-                        }}
-                        // loading="lazy"
-                      />
-                    )}
-                  </div>
-
-                );
-              })}
+            <div className="flex items-center gap-2 font-semibold">
+              <Layers className="w-5 h-5" />
+              <span>Treinsamenstelling</span>
             </div>
-          </div>
-          <p className="text-xs text-muted-foreground text-center pb-2">
-            Scroll horizontaal om alle treindelen te bekijken
-          </p>
+            {compositionOpen ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
+          </Button>
+          
+          {compositionOpen && (
+            <div className="px-4 pb-4">
+              <div 
+                className="overflow-x-auto overflow-y-hidden rounded-lg w-full"
+                style={{ scrollbarWidth: 'thin' }}
+                data-testid="train-visualization"
+              >
+                <div className="flex px-2 w-max">
+                  {materieeldelen.map((deel: any, deelIndex: number) => (
+                    <div 
+                      key={deelIndex} 
+                      className="shrink-0"
+                      style={{ 
+                        width: 'auto',
+                        height: '45px',
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        padding: 0,
+                      }}
+                      data-testid={`train-part-${deelIndex}`}
+                    >
+                      {deel.afbeelding && (
+                        <img 
+                          src={deel.afbeelding}
+                          alt={`${deel.type} - ${deel.materieelnummer}`}
+                          style={{
+                            height: '100%',
+                            width: 'auto',
+                            display: 'block',
+                            objectFit: 'contain',
+                            objectPosition: 'center bottom',
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground text-center pt-2">
+                Scroll horizontaal om alle treindelen te bekijken
+              </p>
+            </div>
+          )}
         </Card>
       </div>
 
       {/* Material Details - Collapsible */}
       <div className="px-4">
-        <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
-          <Card className="overflow-hidden">
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full p-4 h-auto hover:bg-transparent no-default-hover-elevate justify-start" data-testid="button-toggle-material-info">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-2 font-semibold">
-                    <TrainIcon className="w-5 h-5" />
-                    <span>Materieelinfo</span>
-                  </div>
-                  {detailsOpen ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
-                </div>
-              </Button>
-            </CollapsibleTrigger>
-            
-            <CollapsibleContent>
+        <Card className="overflow-hidden">
+          <Button 
+            variant="ghost" 
+            className="w-full p-4 h-auto hover:bg-transparent no-default-hover-elevate justify-between" 
+            onClick={() => setDetailsOpen(!detailsOpen)}
+            data-testid="button-toggle-material-info"
+          >
+            <div className="flex items-center gap-2 font-semibold">
+              <TrainIcon className="w-5 h-5" />
+              <span>Materieelinfo</span>
+            </div>
+            {detailsOpen ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
+          </Button>
+          
+          {detailsOpen && (
               <div className={`px-4 pb-4 space-y-4 ${isMobile ? 'max-h-[50vh] overflow-y-auto' : ''}`}>
                 {/* Overview Card */}
                 <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
@@ -315,9 +316,8 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                   })}
                 </div>
               </div>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+          )}
+        </Card>
       </div>
     </div>
   );
