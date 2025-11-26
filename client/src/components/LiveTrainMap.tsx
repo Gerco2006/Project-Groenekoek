@@ -51,13 +51,31 @@ interface TrainJourneyInfo {
 
 interface TrainInfoPanelProps {
   train: TrainVehicle;
+  screenPosition: { x: number; y: number } | null;
+  containerRect: DOMRect | null;
   onClose: () => void;
   onViewJourney: (train: TrainVehicle) => void;
 }
 
-function TrainInfoPanel({ train, onClose, onViewJourney }: TrainInfoPanelProps) {
+function TrainInfoPanel({ train, screenPosition, containerRect, onClose, onViewJourney }: TrainInfoPanelProps) {
   const [journeyInfo, setJourneyInfo] = useState<TrainJourneyInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [panelPosition, setPanelPosition] = useState<{ left: number; showAbove: boolean }>({ left: 0, showAbove: true });
+
+  useEffect(() => {
+    if (screenPosition && containerRect && panelRef.current) {
+      const panelWidth = panelRef.current.offsetWidth;
+      const panelHeight = panelRef.current.offsetHeight;
+      
+      let left = screenPosition.x - panelWidth / 2;
+      left = Math.max(8, Math.min(left, containerRect.width - panelWidth - 8));
+      
+      const showAbove = screenPosition.y > panelHeight + 60;
+      
+      setPanelPosition({ left, showAbove });
+    }
+  }, [screenPosition, containerRect]);
 
   useEffect(() => {
     const fetchJourneyInfo = async () => {
@@ -116,72 +134,98 @@ function TrainInfoPanel({ train, onClose, onViewJourney }: TrainInfoPanelProps) 
   const trainTypeColor = train.type === "IC" ? "bg-[#FFC917]" : train.type === "SPR" ? "bg-[#003082]" : "bg-[#00A651]";
   const trainTypeTextColor = train.type === "IC" ? "text-black" : "text-white";
 
+  const arrowLeft = screenPosition ? screenPosition.x - panelPosition.left - 6 : 0;
+  const clampedArrowLeft = Math.max(16, Math.min(arrowLeft, 250));
+
   return (
-    <div className="absolute bottom-14 left-3 right-3 z-[1001] bg-card/95 backdrop-blur-md border rounded-xl shadow-xl overflow-hidden">
-      <div className="p-3 border-b flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className={`w-8 h-8 rounded-lg ${trainTypeColor} ${trainTypeTextColor} flex items-center justify-center font-bold text-xs`}>
-            {train.type || "?"}
-          </div>
-          <div>
-            <div className="font-semibold text-sm">{trainTypeLabel} {train.treinNummer}</div>
-            {isLoading ? (
-              <div className="text-xs text-muted-foreground">Laden...</div>
-            ) : journeyInfo?.materieelTypes.length ? (
-              <div className="text-xs text-muted-foreground">{journeyInfo.materieelTypes.join(" + ")}</div>
-            ) : null}
-          </div>
-        </div>
-        <Button size="icon" variant="ghost" onClick={onClose} data-testid="button-close-train-info">
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
-      
-      <div className="p-3">
-        {isLoading ? (
-          <div className="flex items-center gap-2 text-muted-foreground text-sm py-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Ritinfo laden...
-          </div>
-        ) : journeyInfo ? (
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="flex flex-col items-center pt-1">
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-background" />
-                <div className="w-0.5 h-5 bg-border" />
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-background" />
-              </div>
-              <div className="flex-1 space-y-4">
-                <div className="text-sm font-medium">{journeyInfo.origin}</div>
-                <div className="text-sm font-medium">{journeyInfo.destination}</div>
-              </div>
-            </div>
-            
-            {journeyInfo.nextStop && (
-              <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg text-sm">
-                <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">Volgende:</span>
-                <span className="font-medium">{journeyInfo.nextStop}</span>
-              </div>
-            )}
-            
-            <div className="text-xs text-muted-foreground">
-              Snelheid: {Math.round(train.snelheid)} km/u
-            </div>
-          </div>
-        ) : (
-          <div className="text-sm text-muted-foreground py-2">
-            Geen ritinfo beschikbaar
-          </div>
-        )}
+    <div 
+      ref={panelRef}
+      className="absolute z-[1001] w-[280px]"
+      style={{
+        left: `${panelPosition.left}px`,
+        ...(panelPosition.showAbove 
+          ? { bottom: screenPosition ? `${(containerRect?.height || 300) - screenPosition.y + 24}px` : '60px' }
+          : { top: screenPosition ? `${screenPosition.y + 24}px` : '60px' }
+        ),
+      }}
+    >
+      <div className="relative bg-card/90 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl overflow-hidden">
+        <div 
+          className="absolute w-3 h-3 bg-card/90 border-border/50 rotate-45"
+          style={{
+            left: `${clampedArrowLeft}px`,
+            ...(panelPosition.showAbove 
+              ? { bottom: '-6px', borderRight: '1px solid', borderBottom: '1px solid' }
+              : { top: '-6px', borderLeft: '1px solid', borderTop: '1px solid' }
+            ),
+          }}
+        />
         
-        <Button
-          className="w-full mt-3"
-          onClick={() => onViewJourney(train)}
-          data-testid={`button-view-train-${train.treinNummer}`}
-        >
-          Bekijk ritinfo
-        </Button>
+        <div className="p-3 border-b border-border/50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-lg ${trainTypeColor} ${trainTypeTextColor} flex items-center justify-center font-bold text-xs`}>
+              {train.type || "?"}
+            </div>
+            <div>
+              <div className="font-semibold text-sm">{trainTypeLabel} {train.treinNummer}</div>
+              {isLoading ? (
+                <div className="text-xs text-muted-foreground">Laden...</div>
+              ) : journeyInfo?.materieelTypes.length ? (
+                <div className="text-xs text-muted-foreground">{journeyInfo.materieelTypes.join(" + ")}</div>
+              ) : null}
+            </div>
+          </div>
+          <Button size="icon" variant="ghost" onClick={onClose} data-testid="button-close-train-info">
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        <div className="p-3">
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm py-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Ritinfo laden...
+            </div>
+          ) : journeyInfo ? (
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center pt-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-background" />
+                  <div className="w-0.5 h-5 bg-border" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-background" />
+                </div>
+                <div className="flex-1 space-y-4">
+                  <div className="text-sm font-medium">{journeyInfo.origin}</div>
+                  <div className="text-sm font-medium">{journeyInfo.destination}</div>
+                </div>
+              </div>
+              
+              {journeyInfo.nextStop && (
+                <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg text-sm">
+                  <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="text-muted-foreground">Volgende:</span>
+                  <span className="font-medium">{journeyInfo.nextStop}</span>
+                </div>
+              )}
+              
+              <div className="text-xs text-muted-foreground">
+                Snelheid: {Math.round(train.snelheid)} km/u
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground py-2">
+              Geen ritinfo beschikbaar
+            </div>
+          )}
+          
+          <Button
+            className="w-full mt-3"
+            onClick={() => onViewJourney(train)}
+            data-testid={`button-view-train-${train.treinNummer}`}
+          >
+            Bekijk ritinfo
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -289,8 +333,11 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
   const [isExpanded, setIsExpanded] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const [selectedTrain, setSelectedTrain] = useState<TrainVehicle | null>(null);
+  const [trainScreenPos, setTrainScreenPos] = useState<{ x: number; y: number } | null>(null);
+  const [containerRect, setContainerRect] = useState<DOMRect | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapWrapperRef = useRef<HTMLDivElement | null>(null);
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -320,6 +367,7 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
       setIsCollapsed(true);
       setIsExpanded(false);
       setSelectedTrain(null);
+      setTrainScreenPos(null);
     }
   }, [collapsed]);
 
@@ -334,14 +382,24 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
 
   const handleViewJourney = (train: TrainVehicle) => {
     setSelectedTrain(null);
+    setTrainScreenPos(null);
     if (onTrainClick) {
       const trainType = train.materieel?.[0]?.type || train.type || "Trein";
       onTrainClick(train.ritId, train.treinNummer, trainType);
     }
   };
 
-  const handleTrainMarkerClick = (train: TrainVehicle) => {
+  const handleTrainMarkerClick = (train: TrainVehicle, e: L.LeafletMouseEvent) => {
     setSelectedTrain(train);
+    
+    if (mapWrapperRef.current) {
+      const rect = mapWrapperRef.current.getBoundingClientRect();
+      setContainerRect(rect);
+      setTrainScreenPos({
+        x: e.containerPoint.x,
+        y: e.containerPoint.y,
+      });
+    }
   };
 
   if (isLoading) {
@@ -411,6 +469,7 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
         </div>
       )}
       <div 
+        ref={mapWrapperRef}
         className={`relative transition-all duration-300 overflow-hidden ${
           isCollapsed ? "h-0" : isExpanded ? "h-[500px]" : "h-[300px]"
         }`}
@@ -432,7 +491,10 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
           />
           <MapController center={NETHERLANDS_CENTER} zoom={DEFAULT_ZOOM} />
           
-          <MapClickHandler onMapClick={() => setSelectedTrain(null)} />
+          <MapClickHandler onMapClick={() => {
+            setSelectedTrain(null);
+            setTrainScreenPos(null);
+          }} />
           
           {trains.map((train) => (
             <Marker
@@ -446,7 +508,7 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
               eventHandlers={{
                 click: (e) => {
                   e.originalEvent.stopPropagation();
-                  handleTrainMarkerClick(train);
+                  handleTrainMarkerClick(train, e);
                 },
               }}
             />
@@ -476,7 +538,12 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
         {selectedTrain && (
           <TrainInfoPanel
             train={selectedTrain}
-            onClose={() => setSelectedTrain(null)}
+            screenPosition={trainScreenPos}
+            containerRect={containerRect}
+            onClose={() => {
+              setSelectedTrain(null);
+              setTrainScreenPos(null);
+            }}
             onViewJourney={handleViewJourney}
           />
         )}
