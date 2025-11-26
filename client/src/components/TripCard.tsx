@@ -99,17 +99,19 @@ export default function TripCard({
                 data-testid={`button-train-${idx}`}
               >
                 <div className="p-4">
-                  <div className="flex items-start gap-3 mb-3 flex-wrap">
-                    <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                  <div className="mb-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                      {leg.platform && (
+                        <Badge variant="outline" className="shrink-0">
+                          Spoor {leg.platform}
+                        </Badge>
+                      )}
+                    </div>
                     {leg.direction && (
-                      <span className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground">
                         Richting <span className="font-medium text-foreground">{leg.direction}</span>
-                      </span>
-                    )}
-                    {leg.platform && (
-                      <Badge variant="outline" className="ml-auto shrink-0">
-                        Spoor {leg.platform}
-                      </Badge>
+                      </div>
                     )}
                   </div>
                   

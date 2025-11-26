@@ -196,23 +196,29 @@ export default function TripAdviceDetailPanel({
                     data-testid={`card-leg-${idx}`}
                   >
                     <div className="p-4">
-                      <div className="flex items-start gap-3 mb-3 flex-wrap">
-                        <TrainBadge type={leg.trainType} number={leg.trainNumber} />
-                        {leg.direction && (
-                          <span className="text-sm text-muted-foreground">
-                            Richting <span className="font-medium text-foreground">{leg.direction}</span>
-                          </span>
-                        )}
-                        {legCrowding && (
-                          <Badge variant="outline" className={`gap-1 text-xs ${crowdingColors[legCrowding as keyof typeof crowdingColors]}`}>
-                            <Users className="w-3 h-3" />
-                            {crowdingLabels[legCrowding as keyof typeof crowdingLabels]}
-                          </Badge>
-                        )}
-                        {leg.cancelled && (
-                          <Badge variant="destructive" className="ml-auto">
-                            Geannuleerd
-                          </Badge>
+                      <div className="mb-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                          {leg.cancelled && (
+                            <Badge variant="destructive">
+                              Geannuleerd
+                            </Badge>
+                          )}
+                        </div>
+                        {(leg.direction || legCrowding) && (
+                          <div className="flex items-center gap-3 text-sm">
+                            {leg.direction && (
+                              <span className="text-muted-foreground">
+                                Richting <span className="font-medium text-foreground">{leg.direction}</span>
+                              </span>
+                            )}
+                            {legCrowding && (
+                              <Badge variant="outline" className={`gap-1 text-xs ${crowdingColors[legCrowding as keyof typeof crowdingColors]}`}>
+                                <Users className="w-3 h-3" />
+                                {crowdingLabels[legCrowding as keyof typeof crowdingLabels]}
+                              </Badge>
+                            )}
+                          </div>
                         )}
                       </div>
                       
