@@ -115,11 +115,14 @@ export default function TrainLocationMap({ trainNumber }: TrainLocationMapProps)
   return (
     <div className="px-4 py-2">
       <Button
+        id="button-toggle-location-map"
         variant="outline"
         size="sm"
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full justify-between gap-2"
         data-testid="button-toggle-location-map"
+        aria-expanded={isExpanded}
+        aria-controls="location-map-content"
       >
         <div className="flex items-center gap-2">
           <Map className="w-4 h-4" />
@@ -133,7 +136,12 @@ export default function TrainLocationMap({ trainNumber }: TrainLocationMapProps)
       </Button>
 
       {isExpanded && (
-        <div className="mt-3 rounded-lg overflow-hidden border relative">
+        <div 
+          id="location-map-content"
+          role="region"
+          aria-labelledby="button-toggle-location-map"
+          className="mt-3 rounded-lg overflow-hidden border relative"
+        >
           {isLoading ? (
             <div className="h-[200px] flex items-center justify-center bg-muted/50">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

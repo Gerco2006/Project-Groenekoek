@@ -130,194 +130,205 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   return (
     <div className="space-y-2" data-testid="train-composition">
       {/* Trein visualizatie - Collapsible */}
-      <div className="px-4">
-        <Card className="overflow-hidden">
-          <Button 
-            variant="ghost" 
-            className="w-full p-4 h-auto hover:bg-transparent no-default-hover-elevate justify-between" 
-            onClick={() => setCompositionOpen(!compositionOpen)}
-            data-testid="button-toggle-composition"
+      <div className="px-4 py-2">
+        <Button
+          id="button-toggle-composition"
+          variant="outline"
+          size="sm"
+          onClick={() => setCompositionOpen(!compositionOpen)}
+          className="w-full justify-between gap-2"
+          data-testid="button-toggle-composition"
+          aria-expanded={compositionOpen}
+          aria-controls="composition-content"
+        >
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4" />
+            <span>Treinsamenstelling</span>
+          </div>
+          {compositionOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </Button>
+
+        {compositionOpen && (
+          <div 
+            id="composition-content"
+            role="region"
+            aria-labelledby="button-toggle-composition"
+            className="mt-3 rounded-lg overflow-hidden border p-4"
           >
-            <div className="flex items-center gap-2 font-semibold">
-              <Layers className="w-5 h-5" />
-              <span>Treinsamenstelling</span>
-            </div>
-            {compositionOpen ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
-          </Button>
-          
-          {compositionOpen && (
-            <div className="px-4 pb-4">
-              <div 
-                className="overflow-x-auto overflow-y-hidden rounded-lg w-full"
-                style={{ scrollbarWidth: 'thin' }}
-                data-testid="train-visualization"
-              >
-                <div className="flex px-2 w-max">
-                  {materieeldelen.map((deel: any, deelIndex: number) => (
-                    <div 
-                      key={deelIndex} 
-                      className="shrink-0"
-                      style={{ 
-                        width: 'auto',
-                        height: '45px',
-                        display: 'flex',
-                        alignItems: 'flex-end',
-                        justifyContent: 'center',
-                        overflow: 'hidden',
-                        padding: 0,
-                      }}
-                      data-testid={`train-part-${deelIndex}`}
-                    >
-                      {deel.afbeelding && (
-                        <img 
-                          src={deel.afbeelding}
-                          alt={`${deel.type} - ${deel.materieelnummer}`}
-                          style={{
-                            height: '100%',
-                            width: 'auto',
-                            display: 'block',
-                            objectFit: 'contain',
-                            objectPosition: 'center bottom',
-                          }}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
+            <div 
+              className="overflow-x-auto overflow-y-hidden w-full"
+              style={{ scrollbarWidth: 'thin' }}
+              data-testid="train-visualization"
+            >
+              <div className="flex px-2 w-max">
+                {materieeldelen.map((deel: any, deelIndex: number) => (
+                  <div 
+                    key={deelIndex} 
+                    className="shrink-0"
+                    style={{ 
+                      width: 'auto',
+                      height: '45px',
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      padding: 0,
+                    }}
+                    data-testid={`train-part-${deelIndex}`}
+                  >
+                    {deel.afbeelding && (
+                      <img 
+                        src={deel.afbeelding}
+                        alt={`${deel.type} - ${deel.materieelnummer}`}
+                        style={{
+                          height: '100%',
+                          width: 'auto',
+                          display: 'block',
+                          objectFit: 'contain',
+                          objectPosition: 'center bottom',
+                        }}
+                      />
+                    )}
+                  </div>
+                ))}
               </div>
-              <p className="text-xs text-muted-foreground text-center pt-2">
-                Scroll horizontaal om alle treindelen te bekijken
-              </p>
             </div>
-          )}
-        </Card>
+            <p className="text-xs text-muted-foreground text-center pt-2">
+              Scroll horizontaal om alle treindelen te bekijken
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Material Details - Collapsible */}
-      <div className="px-4">
-        <Card className="overflow-hidden">
-          <Button 
-            variant="ghost" 
-            className="w-full p-4 h-auto hover:bg-transparent no-default-hover-elevate justify-between" 
-            onClick={() => setDetailsOpen(!detailsOpen)}
-            data-testid="button-toggle-material-info"
+      <div className="px-4 py-2">
+        <Button
+          id="button-toggle-material-info"
+          variant="outline"
+          size="sm"
+          onClick={() => setDetailsOpen(!detailsOpen)}
+          className="w-full justify-between gap-2"
+          data-testid="button-toggle-material-info"
+          aria-expanded={detailsOpen}
+          aria-controls="material-info-content"
+        >
+          <div className="flex items-center gap-2">
+            <TrainIcon className="w-4 h-4" />
+            <span>Materieelinfo</span>
+          </div>
+          {detailsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </Button>
+
+        {detailsOpen && (
+          <div 
+            id="material-info-content"
+            role="region"
+            aria-labelledby="button-toggle-material-info"
+            className={`mt-3 rounded-lg overflow-hidden border p-4 space-y-4 ${isMobile ? 'max-h-[50vh] overflow-y-auto' : ''}`}
           >
-            <div className="flex items-center gap-2 font-semibold">
-              <TrainIcon className="w-5 h-5" />
-              <span>Materieelinfo</span>
-            </div>
-            {detailsOpen ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
-          </Button>
-          
-          {detailsOpen && (
-              <div className={`px-4 pb-4 space-y-4 ${isMobile ? 'max-h-[50vh] overflow-y-auto' : ''}`}>
-                {/* Overview Card */}
-                <Card className="backdrop-blur-sm bg-card/80 p-4 space-y-3">
-                  {/* Capacity Overview */}
-                  <div>
-                    <p className="text-xs text-muted-foreground font-medium mb-3 text-center">Totale capaciteit materieel</p>
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                      <div className="space-y-1">
-                        <p className="text-2xl font-bold text-primary">{totalSeatsFirstClass || "—"}</p>
-                        <p className="text-xs text-muted-foreground">Zitplaatsen 1e klas</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-2xl font-bold text-primary">{totalSeatsSecondClass || "—"}</p>
-                        <p className="text-xs text-muted-foreground">Zitplaatsen 2e klas</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-2xl font-bold text-primary">{totalBikeSpots || "—"}</p>
-                        <p className="text-xs text-muted-foreground">Beschikbare Fietsplekken</p>
-                      </div>
-                    </div>
-                  </div>
+            {/* Capacity Overview */}
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground font-medium text-center">Totale capaciteit materieel</p>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-primary">{totalSeatsFirstClass || "—"}</p>
+                  <p className="text-xs text-muted-foreground">Zitplaatsen 1e klas</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-primary">{totalSeatsSecondClass || "—"}</p>
+                  <p className="text-xs text-muted-foreground">Zitplaatsen 2e klas</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-primary">{totalBikeSpots || "—"}</p>
+                  <p className="text-xs text-muted-foreground">Beschikbare Fietsplekken</p>
+                </div>
+              </div>
 
-                  {/* Facilities */}
-                  {allFacilities.size > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-2 border-t">
-                      {Array.from(allFacilities).map((fac) => {
-                        const facility = facilityMap[fac];
-                        if (!facility) return null;
-                        return (
-                          <Badge key={fac} variant="outline" className="gap-1" data-testid={`facility-${fac.toLowerCase()}`}>
-                            {facility.icon}
-                            <span className="text-xs">{facility.label}</span>
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  )}
-                </Card>
-
-                {/* Material Parts */}
-                <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                  {materieeldelen.map((deel: any, index: number) => {
-                    const isTracked = isMaterialTracked(String(deel.materieelnummer));
-                    const deelSeats = getSeatsFromDeel(deel);
+              {/* Facilities */}
+              {allFacilities.size > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2 border-t">
+                  {Array.from(allFacilities).map((fac) => {
+                    const facility = facilityMap[fac];
+                    if (!facility) return null;
                     return (
-                    <Card key={index} className="bg-card/80 p-4 space-y-3" data-testid={`material-part-${index}`}>
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-sm" data-testid={`material-number-${index}`}>
-                            {deel.materieelnummer}
-                          </p>
-                          <p className="text-xs text-muted-foreground" data-testid={`material-type-${index}`}>
-                            {deel.type}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleToggleTrack(deel.materieelnummer, deel.type)}
-                            className={isTracked ? "text-yellow-500 hover:text-yellow-600" : "text-muted-foreground hover:text-foreground"}
-                            data-testid={`button-track-material-${index}`}
-                          >
-                            <Star className={`w-4 h-4 ${isTracked ? "fill-current" : ""}`} />
-                          </Button>
-                          <Badge variant="outline" className="text-xs">
-                            {deel.bakken?.length || 0} bakken
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {/* Seats */}
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div>
-                          <p className="font-semibold">{deelSeats.firstClass || "—"}</p>
-                          <p className="text-muted-foreground">1e klas</p>
-                        </div>
-                        <div>
-                          <p className="font-semibold">{deelSeats.secondClass || "—"}</p>
-                          <p className="text-muted-foreground">2e klas</p>
-                        </div>
-                        <div>
-                          <p className="font-semibold">{deelSeats.bikes || "—"}</p>
-                          <p className="text-muted-foreground">Fietsplekken</p>
-                        </div>
-                      </div>
-
-                      {/* Facilities */}
-                      {deel.faciliteiten && deel.faciliteiten.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {deel.faciliteiten.map((fac: string) => {
-                            const facility = facilityMap[fac];
-                            if (!facility) return null;
-                            return (
-                              <div key={fac} className="p-1.5 rounded bg-muted" title={facility.label} data-testid={`part-${index}-facility-${fac.toLowerCase()}`}>
-                                {facility.icon}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </Card>
+                      <Badge key={fac} variant="outline" className="gap-1" data-testid={`facility-${fac.toLowerCase()}`}>
+                        {facility.icon}
+                        <span className="text-xs">{facility.label}</span>
+                      </Badge>
                     );
                   })}
                 </div>
-              </div>
-          )}
-        </Card>
+              )}
+            </div>
+
+            {/* Material Parts */}
+            <div className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+              {materieeldelen.map((deel: any, index: number) => {
+                const isTracked = isMaterialTracked(String(deel.materieelnummer));
+                const deelSeats = getSeatsFromDeel(deel);
+                return (
+                  <Card key={index} className="bg-card/80 p-4 space-y-3" data-testid={`material-part-${index}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm" data-testid={`material-number-${index}`}>
+                          {deel.materieelnummer}
+                        </p>
+                        <p className="text-xs text-muted-foreground" data-testid={`material-type-${index}`}>
+                          {deel.type}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleToggleTrack(deel.materieelnummer, deel.type)}
+                          className={isTracked ? "text-yellow-500 hover:text-yellow-600" : "text-muted-foreground hover:text-foreground"}
+                          data-testid={`button-track-material-${index}`}
+                        >
+                          <Star className={`w-4 h-4 ${isTracked ? "fill-current" : ""}`} />
+                        </Button>
+                        <Badge variant="outline" className="text-xs">
+                          {deel.bakken?.length || 0} bakken
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* Seats */}
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div>
+                        <p className="font-semibold">{deelSeats.firstClass || "—"}</p>
+                        <p className="text-muted-foreground">1e klas</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">{deelSeats.secondClass || "—"}</p>
+                        <p className="text-muted-foreground">2e klas</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">{deelSeats.bikes || "—"}</p>
+                        <p className="text-muted-foreground">Fietsplekken</p>
+                      </div>
+                    </div>
+
+                    {/* Facilities */}
+                    {deel.faciliteiten && deel.faciliteiten.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {deel.faciliteiten.map((fac: string) => {
+                          const facility = facilityMap[fac];
+                          if (!facility) return null;
+                          return (
+                            <div key={fac} className="p-1.5 rounded bg-muted" title={facility.label} data-testid={`part-${index}-facility-${fac.toLowerCase()}`}>
+                              {facility.icon}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
