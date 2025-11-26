@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import { useEffect, useState, useMemo } from "react";
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,24 @@ interface TrainVehicle {
 interface TrainsMapResponse {
   payload: {
     treinen: TrainVehicle[];
+  };
+}
+
+interface JourneyStop {
+  stop: {
+    name: string;
+    lat: number;
+    lng: number;
+    uicCode: string;
+  };
+  status: string;
+  arrivals?: Array<{ plannedTime: string; actualTime?: string }>;
+  departures?: Array<{ plannedTime: string; actualTime?: string }>;
+}
+
+interface JourneyResponse {
+  payload: {
+    stops: JourneyStop[];
   };
 }
 
@@ -71,6 +89,36 @@ function createTrainIcon(type: string, heading: number, isDark: boolean): L.DivI
   });
 }
 
+function createStationIcon(isPassed: boolean, isNext: boolean, isDark: boolean): L.DivIcon {
+  const bgColor = isNext 
+    ? "#3b82f6" 
+    : isPassed 
+      ? (isDark ? "#4b5563" : "#9ca3af")
+      : (isDark ? "#1f2937" : "#ffffff");
+  const borderColor = isNext 
+    ? "#1d4ed8" 
+    : isPassed 
+      ? (isDark ? "#374151" : "#6b7280")
+      : (isDark ? "#4b5563" : "#d1d5db");
+  const size = isNext ? 14 : 10;
+  
+  return L.divIcon({
+    className: "station-marker",
+    html: `
+      <div style="
+        width: ${size}px;
+        height: ${size}px;
+        background: ${bgColor};
+        border: 2px solid ${borderColor};
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      "></div>
+    `,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
 function MapCenterer({ position }: { position: [number, number] }) {
   const map = useMap();
   
@@ -81,13 +129,20 @@ function MapCenterer({ position }: { position: [number, number] }) {
   return null;
 }
 
+interface StopWithStatus {
+  stop: JourneyStop;
+  isPassed: boolean;
+  isNext: boolean;
+}
+
 function MapContent({ 
   train, 
   trainPosition, 
   isDark, 
   isLoading, 
   isFetching,
-  setMapInstance 
+  setMapInstance,
+  stops 
 }: {
   train: TrainVehicle | undefined;
   trainPosition: [number, number];
@@ -95,7 +150,14 @@ function MapContent({
   isLoading: boolean;
   isFetching: boolean;
   setMapInstance: (map: L.Map | null) => void;
+  stops: StopWithStatus[];
 }) {
+  const routePositions = useMemo(() => {
+    return stops
+      .filter(s => s.stop.stop?.lat && s.stop.stop?.lng)
+      .map(s => [s.stop.stop.lat, s.stop.stop.lng] as [number, number]);
+  }, [stops]);
+
   if (isLoading) {
     return (
       <div className="h-[200px] flex items-center justify-center bg-muted/50">
@@ -140,6 +202,35 @@ function MapContent({
           opacity={isDark ? 0.8 : 0.7}
         />
         <MapCenterer position={trainPosition} />
+        
+        {/* Route line connecting stops */}
+        {routePositions.length > 1 && (
+          <Polyline
+            positions={routePositions}
+            pathOptions={{
+              color: isDark ? "#6b7280" : "#9ca3af",
+              weight: 3,
+              opacity: 0.6,
+              dashArray: "5, 10",
+            }}
+          />
+        )}
+        
+        {/* Station markers */}
+        {stops.map((stopData, index) => {
+          const { stop, isPassed, isNext } = stopData;
+          if (!stop.stop?.lat || !stop.stop?.lng || stop.status === "PASSING") return null;
+          
+          return (
+            <Marker
+              key={`${stop.stop.uicCode}-${index}`}
+              position={[stop.stop.lat, stop.stop.lng]}
+              icon={createStationIcon(isPassed, isNext, isDark)}
+            />
+          );
+        })}
+        
+        {/* Train marker (on top) */}
         <Marker
           position={trainPosition}
           icon={createTrainIcon(
@@ -147,14 +238,14 @@ function MapContent({
             train.richting || 0,
             isDark
           )}
+          zIndexOffset={1000}
         />
       </MapContainer>
 
       <div 
-        className="absolute bottom-3 left-3 z-[1000] rounded-lg px-3 py-1.5 shadow-lg flex items-center gap-2"
+        className="absolute bottom-3 left-3 z-[1000] rounded-lg px-3 py-1.5 shadow-lg flex items-center gap-2 backdrop-blur-md"
         style={{
-          backgroundColor: isDark ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-          backdropFilter: 'blur(8px)',
+          backgroundColor: isDark ? 'rgba(17, 24, 39, 0.85)' : 'rgba(255, 255, 255, 0.85)',
         }}
         data-testid="text-speed-kmh"
         aria-label={`Snelheid: ${Math.round(train.snelheid)} kilometer per uur`}
@@ -204,9 +295,47 @@ export default function TrainLocationMap({
     enabled: isExpanded,
   });
 
+  const { data: journeyData } = useQuery<JourneyResponse>({
+    queryKey: ["/api/journey", trainNumber],
+    queryFn: async () => {
+      const response = await fetch(`/api/journey?train=${trainNumber}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch journey");
+      }
+      return response.json();
+    },
+    staleTime: 60000,
+    enabled: isExpanded && !!trainNumber,
+  });
+
   const train = data?.payload?.treinen?.find(
     (t) => t.treinNummer.toString() === trainNumber
   );
+
+  const stopsWithStatus = useMemo((): StopWithStatus[] => {
+    const stops = journeyData?.payload?.stops || [];
+    const stoppingStops = stops.filter((s: JourneyStop) => s.status !== "PASSING");
+    const now = new Date();
+    
+    let nextStopIndex = -1;
+    for (let i = 0; i < stoppingStops.length; i++) {
+      const stop = stoppingStops[i];
+      const departureTime = stop.departures?.[0]?.actualTime || stop.departures?.[0]?.plannedTime;
+      const arrivalTime = stop.arrivals?.[0]?.actualTime || stop.arrivals?.[0]?.plannedTime;
+      const relevantTime = departureTime || arrivalTime;
+      
+      if (relevantTime && new Date(relevantTime) > now) {
+        nextStopIndex = i;
+        break;
+      }
+    }
+    
+    return stoppingStops.map((stop: JourneyStop, index: number) => ({
+      stop,
+      isPassed: nextStopIndex === -1 ? true : index < nextStopIndex,
+      isNext: index === nextStopIndex,
+    }));
+  }, [journeyData]);
 
   useEffect(() => {
     if (mapInstance && isExpanded) {
@@ -236,6 +365,7 @@ export default function TrainLocationMap({
           isLoading={isLoading}
           isFetching={isFetching}
           setMapInstance={setMapInstance}
+          stops={stopsWithStatus}
         />
       </div>
     );
@@ -279,6 +409,7 @@ export default function TrainLocationMap({
             isLoading={isLoading}
             isFetching={isFetching}
             setMapInstance={setMapInstance}
+            stops={stopsWithStatus}
           />
         </div>
       )}
