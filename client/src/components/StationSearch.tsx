@@ -143,6 +143,49 @@ export default function StationSearch({
     : [];
 
   const displayStations = inputValue ? filteredStations : favoriteStationsList;
+  
+  const matchingFavorites = inputValue 
+    ? filteredStations.filter(s => isFavorite(s.code))
+    : [];
+  const nonFavorites = inputValue 
+    ? filteredStations.filter(s => !isFavorite(s.code))
+    : [];
+
+  const renderStationItem = (station: Station, idx: number) => (
+    <div
+      key={station.code}
+      className="flex items-center hover-elevate"
+    >
+      <button
+        type="button"
+        onClick={() => {
+          setInputValue(station.namen.lang);
+          onChange(station.namen.lang);
+          setFocused(false);
+        }}
+        className="flex-1 text-left px-4 py-2 flex items-center gap-2"
+        data-testid={`option-station-${idx}`}
+      >
+        {isFavorite(station.code) && (
+          <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 shrink-0" />
+        )}
+        <span className="flex-1">{station.namen.lang}</span>
+        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+          {station.code}
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => toggleFavorite(station.code, e)}
+        className="px-3 py-2 text-muted-foreground hover:text-yellow-500 transition-colors"
+        data-testid={`button-favorite-${station.code}`}
+      >
+        <Star 
+          className={`w-4 h-4 ${isFavorite(station.code) ? 'text-yellow-500 fill-yellow-500' : ''}`} 
+        />
+      </button>
+    </div>
+  );
 
   const dropdownContent = displayStations.length > 0 && focused && (
     <div 
@@ -160,41 +203,24 @@ export default function StationSearch({
             Favorieten
           </div>
         )}
-        {displayStations.map((station, idx) => (
-          <div
-            key={station.code}
-            className="flex items-center hover-elevate"
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setInputValue(station.namen.lang);
-                onChange(station.namen.lang);
-                setFocused(false);
-              }}
-              className="flex-1 text-left px-4 py-2 flex items-center gap-2"
-              data-testid={`option-station-${idx}`}
-            >
-              {isFavorite(station.code) && (
-                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 shrink-0" />
-              )}
-              <span className="flex-1">{station.namen.lang}</span>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {station.code}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={(e) => toggleFavorite(station.code, e)}
-              className="px-3 py-2 text-muted-foreground hover:text-yellow-500 transition-colors"
-              data-testid={`button-favorite-${station.code}`}
-            >
-              <Star 
-                className={`w-4 h-4 ${isFavorite(station.code) ? 'text-yellow-500 fill-yellow-500' : ''}`} 
-              />
-            </button>
-          </div>
-        ))}
+        {!inputValue ? (
+          displayStations.map((station, idx) => renderStationItem(station, idx))
+        ) : (
+          <>
+            {matchingFavorites.length > 0 && (
+              <>
+                <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground bg-muted/50">
+                  Favorieten
+                </div>
+                {matchingFavorites.map((station, idx) => renderStationItem(station, idx))}
+              </>
+            )}
+            {matchingFavorites.length > 0 && nonFavorites.length > 0 && (
+              <div className="border-t border-border/50 my-1" />
+            )}
+            {nonFavorites.map((station, idx) => renderStationItem(station, matchingFavorites.length + idx))}
+          </>
+        )}
       </div>
       {displayStations.length >= 10 && (
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card/40 via-card/20 to-transparent pointer-events-none rounded-b-lg" />
