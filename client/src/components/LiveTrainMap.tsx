@@ -164,7 +164,7 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
     }
   }, [isExpanded, scrollToMap]);
 
-  const handleTrainClick = (train: TrainVehicle) => {
+  const handleViewJourney = (train: TrainVehicle) => {
     if (onTrainClick) {
       const trainType = train.materieel?.[0]?.type || train.type || "Trein";
       onTrainClick(train.ritId, train.treinNummer, trainType);
@@ -242,9 +242,6 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
                 train.materieel?.[0]?.type || train.type || "",
                 train.richting || 0
               )}
-              eventHandlers={{
-                click: () => handleTrainClick(train),
-              }}
             >
               <Popup>
                 <div className="p-1 min-w-[180px]">
@@ -253,7 +250,7 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
                   </div>
                   {train.materieel && train.materieel.length > 0 && (
                     <div className="text-xs text-muted-foreground mb-2">
-                      {train.materieel.map(m => m.type).join(", ")}
+                      Type: {train.materieel.map(m => m.type).join(", ")}
                     </div>
                   )}
                   <div className="text-xs space-y-1">
@@ -263,7 +260,7 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
                     size="sm"
                     variant="default"
                     className="w-full mt-2"
-                    onClick={() => handleTrainClick(train)}
+                    onClick={() => handleViewJourney(train)}
                     data-testid={`button-view-train-${train.treinNummer}`}
                   >
                     Bekijk rit

@@ -142,6 +142,11 @@ export default function TripDetailPanel({
     ? allStops 
     : allStops.filter((stop: any) => stop.status !== "PASSING");
   
+  const firstStopName = allStops.find((stop: any) => stop.status !== "PASSING")?.stop?.name || "";
+  const lastStopName = [...allStops].reverse().find((stop: any) => stop.status !== "PASSING")?.stop?.name || "";
+  const displayFrom = from || firstStopName;
+  const displayTo = to || lastStopName;
+  
   const firstStopWithStock = allStops.find((stop: any) => stop.actualStock || stop.plannedStock);
   const actualStock = firstStopWithStock?.actualStock;
   const plannedStock = firstStopWithStock?.plannedStock;
@@ -205,7 +210,7 @@ export default function TripDetailPanel({
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <TrainBadge type={trainType} number={trainNumber} />
             <span className="text-lg font-semibold truncate">
-              {from} → {to}
+              {displayFrom} → {displayTo}
             </span>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -434,7 +439,7 @@ export default function TripDetailPanel({
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
                   minWidth: 0
-                }}>{from} → {to}</span>
+                }}>{displayFrom} → {displayTo}</span>
               </div>
               <div className="flex items-center shrink-0">
                 {onBack && (
