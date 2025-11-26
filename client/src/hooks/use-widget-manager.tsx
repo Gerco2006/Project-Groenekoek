@@ -123,7 +123,7 @@ export function useWidgetManager() {
         createdAt: new Date().toISOString(),
       };
       
-      const newActiveWidgets: ('savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker')[] = 
+      const newActiveWidgets: ('savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker' | 'favoriteStations')[] = 
         prev.activeWidgets.includes('materieelTracker')
           ? prev.activeWidgets
           : [...prev.activeWidgets, 'materieelTracker'];
@@ -158,7 +158,7 @@ export function useWidgetManager() {
     return config.trackedMaterials.some(m => m.materialNumber === materialNumber);
   };
 
-  const toggleWidget = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker') => {
+  const toggleWidget = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker' | 'favoriteStations') => {
     setConfig((prev) => ({
       ...prev,
       activeWidgets: prev.activeWidgets.includes(widgetId)
@@ -167,7 +167,7 @@ export function useWidgetManager() {
     }));
   };
 
-  const moveWidgetUp = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker') => {
+  const moveWidgetUp = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker' | 'favoriteStations') => {
     setConfig((prev) => {
       const currentIndex = prev.activeWidgets.indexOf(widgetId);
       if (currentIndex <= 0) return prev;
@@ -183,7 +183,7 @@ export function useWidgetManager() {
     });
   };
 
-  const moveWidgetDown = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker') => {
+  const moveWidgetDown = (widgetId: 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker' | 'favoriteStations') => {
     setConfig((prev) => {
       const currentIndex = prev.activeWidgets.indexOf(widgetId);
       if (currentIndex === -1 || currentIndex >= prev.activeWidgets.length - 1) return prev;
@@ -199,7 +199,7 @@ export function useWidgetManager() {
     });
   };
 
-  const reorderWidgets = (newOrder: ('savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker')[]) => {
+  const reorderWidgets = (newOrder: ('savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker' | 'favoriteStations')[]) => {
     setConfig((prev) => ({
       ...prev,
       activeWidgets: newOrder,

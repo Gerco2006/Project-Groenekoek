@@ -722,6 +722,14 @@ export default function JourneyPlanner() {
             onMaterialAdd={addTrackedMaterial}
             onMaterialRemove={removeTrackedMaterial}
             onMaterialNameUpdate={updateTrackedMaterialName}
+            onSetDeparture={(stationName) => {
+              setFrom(stationName);
+              setIsSearchFormOpen(true);
+            }}
+            onSetDestination={(stationName) => {
+              setTo(stationName);
+              setIsSearchFormOpen(true);
+            }}
             onToggleWidget={toggleWidget}
             onReorderWidgets={reorderWidgets}
           />

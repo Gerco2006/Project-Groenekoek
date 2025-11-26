@@ -20,7 +20,7 @@ import {
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 
-type WidgetId = 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker';
+type WidgetId = 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker' | 'favoriteStations';
 
 interface WidgetOption {
   id: WidgetId;
@@ -30,6 +30,12 @@ interface WidgetOption {
 }
 
 const AVAILABLE_WIDGETS: WidgetOption[] = [
+  {
+    id: 'favoriteStations',
+    name: 'Favoriete Stations',
+    description: 'Snel toegang tot je favoriete stations',
+    icon: <MapPin className="w-5 h-5" />,
+  },
   {
     id: 'savedRoutes',
     name: 'Favoriete Routes',

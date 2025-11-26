@@ -2,12 +2,13 @@ import SavedRoutesWidget from "./SavedRoutesWidget";
 import SavedTripsWidget from "./SavedTripsWidget";
 import DisruptionsWidget from "./DisruptionsWidget";
 import MaterieelTrackerWidget from "./MaterieelTrackerWidget";
+import FavoriteStationsWidget from "./FavoriteStationsWidget";
 import WidgetSelector from "./WidgetSelector";
 import { Card } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
 import type { SavedRoute, SavedTrip, DisruptionStation, TrackedMaterial } from "@shared/schema";
 
-type WidgetId = 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker';
+type WidgetId = 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker' | 'favoriteStations';
 
 interface WidgetContainerProps {
   activeWidgets: string[];
@@ -24,6 +25,8 @@ interface WidgetContainerProps {
   onMaterialAdd: (materialNumber: string, name?: string) => void;
   onMaterialRemove: (id: string) => void;
   onMaterialNameUpdate: (materialNumber: string, name: string) => void;
+  onSetDeparture: (stationName: string) => void;
+  onSetDestination: (stationName: string) => void;
   onToggleWidget: (widgetId: WidgetId) => void;
   onReorderWidgets: (newOrder: WidgetId[]) => void;
 }
@@ -43,6 +46,8 @@ export default function WidgetContainer({
   onMaterialAdd,
   onMaterialRemove,
   onMaterialNameUpdate,
+  onSetDeparture,
+  onSetDestination,
   onToggleWidget,
   onReorderWidgets,
 }: WidgetContainerProps) {
@@ -72,6 +77,15 @@ export default function WidgetContainer({
       )}
 
       {activeWidgets.map((widgetId) => {
+        if (widgetId === 'favoriteStations') {
+          return (
+            <FavoriteStationsWidget
+              key={widgetId}
+              onSetDeparture={onSetDeparture}
+              onSetDestination={onSetDestination}
+            />
+          );
+        }
         if (widgetId === 'savedRoutes') {
           return (
             <SavedRoutesWidget

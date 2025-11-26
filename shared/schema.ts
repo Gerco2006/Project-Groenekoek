@@ -86,7 +86,7 @@ export const trackedMaterialSchema = z.object({
 export type TrackedMaterial = z.infer<typeof trackedMaterialSchema>;
 
 export const widgetConfigSchema = z.object({
-  activeWidgets: z.array(z.enum(['savedRoutes', 'savedTrips', 'disruptions', 'materieelTracker'])).default([]),
+  activeWidgets: z.array(z.enum(['savedRoutes', 'savedTrips', 'disruptions', 'materieelTracker', 'favoriteStations'])).default([]),
   savedRoutes: z.array(savedRouteSchema).default([]),
   savedTrips: z.array(savedTripSchema).default([]),
   disruptionStations: z.array(disruptionStationSchema).default([]),
