@@ -28,7 +28,6 @@ const facilityMap: Record<string, Facility> = {
 
 export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   const isMobile = useIsMobile();
-  const [compositionOpen, setCompositionOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const { addTrackedMaterial, removeTrackedMaterial, isMaterialTracked, config } = useWidgetManager();
 
@@ -128,84 +127,64 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   });
 
   return (
-    <div className="space-y-2" data-testid="train-composition">
-      {/* Trein visualizatie - Collapsible */}
-      <div className="px-4 py-2">
-        <Button
-          id="button-toggle-composition"
-          variant="outline"
-          size="sm"
-          onClick={() => setCompositionOpen(!compositionOpen)}
-          className="w-full justify-between gap-2"
-          data-testid="button-toggle-composition"
-          aria-expanded={compositionOpen}
-          aria-controls="composition-content"
-        >
-          <div className="flex items-center gap-2">
+    <div className="space-y-1" data-testid="train-composition">
+      {/* Trein visualizatie - Always visible */}
+      <div className="px-4 pt-2">
+        <div className="rounded-lg overflow-hidden border p-4">
+          <div className="flex items-center gap-2 mb-3">
             <Layers className="w-4 h-4" />
-            <span>Treinsamenstelling</span>
+            <span className="font-medium text-sm">Treinsamenstelling</span>
           </div>
-          {compositionOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </Button>
-
-        {compositionOpen && (
           <div 
-            id="composition-content"
-            role="region"
-            aria-labelledby="button-toggle-composition"
-            className="mt-3 rounded-lg overflow-hidden border p-4"
+            className="overflow-x-auto overflow-y-hidden w-full"
+            style={{ scrollbarWidth: 'thin' }}
+            data-testid="train-visualization"
           >
-            <div 
-              className="overflow-x-auto overflow-y-hidden w-full"
-              style={{ scrollbarWidth: 'thin' }}
-              data-testid="train-visualization"
-            >
-              <div className="flex px-2 w-max">
-                {materieeldelen.map((deel: any, deelIndex: number) => (
-                  <div 
-                    key={deelIndex} 
-                    className="shrink-0"
-                    style={{ 
-                      width: 'auto',
-                      height: '45px',
-                      display: 'flex',
-                      alignItems: 'flex-end',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                      padding: 0,
-                    }}
-                    data-testid={`train-part-${deelIndex}`}
-                  >
-                    {deel.afbeelding && (
-                      <img 
-                        src={deel.afbeelding}
-                        alt={`${deel.type} - ${deel.materieelnummer}`}
-                        style={{
-                          height: '100%',
-                          width: 'auto',
-                          display: 'block',
-                          objectFit: 'contain',
-                          objectPosition: 'center bottom',
-                        }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+            <div className="flex px-2 w-max">
+              {materieeldelen.map((deel: any, deelIndex: number) => (
+                <div 
+                  key={deelIndex} 
+                  className="shrink-0"
+                  style={{ 
+                    width: 'auto',
+                    height: '45px',
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    padding: 0,
+                  }}
+                  data-testid={`train-part-${deelIndex}`}
+                >
+                  {deel.afbeelding && (
+                    <img 
+                      src={deel.afbeelding}
+                      alt={`${deel.type} - ${deel.materieelnummer}`}
+                      style={{
+                        height: '100%',
+                        width: 'auto',
+                        display: 'block',
+                        objectFit: 'contain',
+                        objectPosition: 'center bottom',
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center pt-2">
-              Scroll horizontaal om alle treindelen te bekijken
-            </p>
           </div>
-        )}
+          <p className="text-xs text-muted-foreground text-center pt-2">
+            Scroll horizontaal om alle treindelen te bekijken
+          </p>
+        </div>
       </div>
 
       {/* Material Details - Collapsible */}
-      <div className="px-4 py-2">
+      <div className="px-4 py-1">
         <Button
           id="button-toggle-material-info"
           variant="outline"
-          size="sm"
+          size={isMobile ? "sm" : "default"}
           onClick={() => setDetailsOpen(!detailsOpen)}
           className="w-full justify-between gap-2"
           data-testid="button-toggle-material-info"

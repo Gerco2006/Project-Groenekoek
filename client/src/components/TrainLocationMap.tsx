@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Map, ChevronDown, ChevronUp, Loader2, Gauge } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import "leaflet/dist/leaflet.css";
 
 interface TrainVehicle {
@@ -82,6 +83,7 @@ export default function TrainLocationMap({ trainNumber }: TrainLocationMapProps)
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const isMobile = useIsMobile();
 
   const { data, isLoading, isFetching } = useQuery<TrainsMapResponse>({
     queryKey: ["/api/trains-map"],
@@ -113,11 +115,11 @@ export default function TrainLocationMap({ trainNumber }: TrainLocationMapProps)
   const trainPosition: [number, number] = train ? [train.lat, train.lng] : defaultCenter;
 
   return (
-    <div className="px-4 py-2">
+    <div className="px-4 py-1">
       <Button
         id="button-toggle-location-map"
         variant="outline"
-        size="sm"
+        size={isMobile ? "sm" : "default"}
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full justify-between gap-2"
         data-testid="button-toggle-location-map"
