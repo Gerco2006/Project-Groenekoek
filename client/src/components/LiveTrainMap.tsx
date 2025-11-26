@@ -116,6 +116,9 @@ function TrainPopupContent({
   const textColor = isDark ? "#f3f4f6" : "#111827";
   const mutedColor = isDark ? "#9ca3af" : "#6b7280";
   const borderColor = isDark ? "#374151" : "#e5e7eb";
+  
+  const trainTypeLabel = train.type === "IC" ? "Intercity" : train.type === "SPR" ? "Sprinter" : train.type || "";
+  const trainTypeColor = train.type === "IC" ? "#FFC917" : train.type === "SPR" ? "#003082" : "#00A651";
 
   return (
     <div style={{ 
@@ -134,23 +137,34 @@ function TrainPopupContent({
         <div style={{ 
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          gap: "8px",
           marginBottom: "4px"
         }}>
-          <span style={{ fontWeight: 600, fontSize: "15px" }}>
-            Trein {train.treinNummer}
-          </span>
-          {!isLoadingJourney && journeyInfo?.materieelTypes.length ? (
-            <span style={{ 
-              fontSize: "11px", 
-              color: mutedColor,
-              backgroundColor: isDark ? "#374151" : "#f3f4f6",
-              padding: "2px 8px",
-              borderRadius: "10px"
-            }}>
-              {journeyInfo.materieelTypes.join(" + ")}
-            </span>
-          ) : null}
+          <div style={{
+            width: "28px",
+            height: "28px",
+            borderRadius: "6px",
+            backgroundColor: trainTypeColor,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: train.type === "IC" ? "#000" : "#fff",
+            fontWeight: 700,
+            fontSize: "10px",
+            flexShrink: 0
+          }}>
+            {train.type || "?"}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 600, fontSize: "14px" }}>
+              {trainTypeLabel} {train.treinNummer}
+            </div>
+            {!isLoadingJourney && journeyInfo?.materieelTypes.length ? (
+              <div style={{ fontSize: "11px", color: mutedColor }}>
+                {journeyInfo.materieelTypes.join(" + ")}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
       
@@ -512,9 +526,10 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
           zoomControl={true}
         >
           <TileLayer
+            key={isDark ? "dark" : "light"}
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             url={isDark 
-              ? "https://{s}.basemaps.cartocdn.com/rastertiles/dark_matter/{z}/{x}/{y}{r}.png"
+              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             }
           />
