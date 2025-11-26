@@ -1,11 +1,11 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Train, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
+import { RefreshCw, Train, ChevronRight, Maximize2, Minimize2, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import "leaflet/dist/leaflet.css";
 
@@ -132,6 +132,13 @@ function RefreshButton({ onClick, isLoading }: { onClick: () => void; isLoading:
 export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToMap = useCallback(() => {
+    if (mapContainerRef.current) {
+      mapContainerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
 
   const { data, isLoading, refetch, isFetching } = useQuery<TrainsMapResponse>({
     queryKey: ["/api/trains-map"],
@@ -152,7 +159,10 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
     if (mapRef.current) {
       mapRef.current.invalidateSize();
     }
-  }, [isExpanded]);
+    if (isExpanded) {
+      setTimeout(scrollToMap, 100);
+    }
+  }, [isExpanded, scrollToMap]);
 
   const handleTrainClick = (train: TrainVehicle) => {
     if (onTrainClick) {
@@ -176,7 +186,7 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
   }
 
   return (
-    <Card className="overflow-hidden" data-testid="live-train-map">
+    <Card className="overflow-hidden" data-testid="live-train-map" ref={mapContainerRef}>
       <div className="p-3 border-b flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Train className="w-5 h-5 text-primary" />
@@ -199,6 +209,12 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
             )}
           </Button>
         </div>
+      </div>
+      <div className="px-3 py-2 bg-muted/50 border-b flex items-start gap-2">
+        <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+        <p className="text-xs text-muted-foreground">
+          Alleen treinen met GPS-apparatuur zijn zichtbaar. Oudere materieeltypes kunnen ontbreken.
+        </p>
       </div>
       <div 
         className={`relative transition-all duration-300 ${
