@@ -166,9 +166,6 @@ export default function StationSearch({
         className="flex-1 text-left px-4 py-2 flex items-center gap-2"
         data-testid={`option-station-${idx}`}
       >
-        {isFavorite(station.code) && (
-          <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 shrink-0" />
-        )}
         <span className="flex-1">{station.namen.lang}</span>
         <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
           {station.code}
