@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import { Link, useSearch, useLocation } from "wouter";
 import StationSearch from "@/components/StationSearch";
 import DepartureRow from "@/components/DepartureRow";
 import TripDetailPanel from "@/components/TripDetailPanel";
@@ -69,12 +69,29 @@ interface Arrival {
 export default function DepartureBoard() {
   const isMobile = useIsMobile();
   const hasAutoSelectedRef = useRef(false);
+  const lastProcessedStationRef = useRef<string | null>(null);
   const [station, setStation] = useState("");
   const [searchedStation, setSearchedStation] = useState("");
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
   const [activeTab, setActiveTab] = useState<"departures" | "arrivals">("departures");
   const [searchOpen, setSearchOpen] = useState(true);
   const { toast } = useToast();
+  const searchString = useSearch();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const stationParam = params.get("station");
+    
+    if (stationParam && stationParam !== lastProcessedStationRef.current) {
+      lastProcessedStationRef.current = stationParam;
+      setStation(stationParam);
+      setSearchedStation(stationParam);
+      setSearchOpen(false);
+      hasAutoSelectedRef.current = false;
+      setLocation("/vertrektijden", { replace: true });
+    }
+  }, [searchString, setLocation]);
 
   const { data: departuresData, isLoading: isDeparturesLoading, refetch: refetchDepartures, error: departuresError } = useQuery<any>({
     queryKey: ["/api/departures", searchedStation],
