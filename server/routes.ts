@@ -471,8 +471,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { 
         lat = "52.1", 
         lng = "5.1", 
-        radius = "200000",
-        limit = "1000",
+        radius = "150000",
+        limit = "500",
         features = "materieel"
       } = req.query;
 
