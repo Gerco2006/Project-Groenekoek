@@ -268,7 +268,7 @@ export default function FavoriteStationsWidget({
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
-            Favoriete Stations
+            Favoriete Plekken
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -286,7 +286,7 @@ export default function FavoriteStationsWidget({
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
-            Favoriete Stations
+            Favoriete Plekken
             <div className="ml-auto flex items-center gap-2">
               {allFavoriteStations.length > MAX_WIDGET_STATIONS && (
                 <Button

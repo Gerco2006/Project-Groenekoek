@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, X, ArrowRight } from "lucide-react";
+import { Route, X, ArrowRight } from "lucide-react";
 import type { SavedRoute } from "@shared/schema";
 
 interface SavedRoutesWidgetProps {
@@ -19,7 +19,7 @@ export default function SavedRoutesWidget({
     return (
       <Card className="p-4">
         <div className="flex items-center gap-3 mb-3">
-          <MapPin className="w-5 h-5 text-primary" />
+          <Route className="w-5 h-5 text-primary" />
           <h3 className="font-semibold text-lg">Favoriete Routes</h3>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -33,7 +33,7 @@ export default function SavedRoutesWidget({
   return (
     <Card className="p-4">
       <div className="flex items-center gap-3 mb-3">
-        <MapPin className="w-5 h-5 text-primary" />
+        <Route className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-lg">Favoriete Routes</h3>
         <Badge variant="secondary" className="ml-auto">
           {routes.length}

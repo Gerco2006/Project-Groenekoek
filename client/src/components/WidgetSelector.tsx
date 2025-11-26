@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, MapPin, X, Star, AlertTriangle, Train, GripVertical } from "lucide-react";
+import { Plus, MapPin, X, Star, AlertTriangle, Train, GripVertical, Route } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,15 +32,15 @@ interface WidgetOption {
 const AVAILABLE_WIDGETS: WidgetOption[] = [
   {
     id: 'favoriteStations',
-    name: 'Favoriete Stations',
-    description: 'Snel toegang tot je favoriete stations',
+    name: 'Favoriete Plekken',
+    description: 'Snel toegang tot je favoriete plekken',
     icon: <MapPin className="w-5 h-5" />,
   },
   {
     id: 'savedRoutes',
     name: 'Favoriete Routes',
     description: 'Snel toegang tot je meest gebruikte routes',
-    icon: <MapPin className="w-5 h-5" />,
+    icon: <Route className="w-5 h-5" />,
   },
   {
     id: 'savedTrips',
