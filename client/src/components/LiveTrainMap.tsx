@@ -4,7 +4,7 @@ import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Train, ChevronRight, Maximize2, Minimize2, Info, MapPin, Loader2 } from "lucide-react";
+import { RefreshCw, Train, Maximize2, Minimize2, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import "leaflet/dist/leaflet.css";
 
@@ -43,6 +43,7 @@ interface TrainJourneyInfo {
   origin: string;
   destination: string;
   trainNumber: number;
+  materieelTypes: string[];
 }
 
 function TrainPopupContent({ 
@@ -64,11 +65,26 @@ function TrainPopupContent({
           const data = await response.json();
           const stops = data?.payload?.stops || [];
           const stoppingStops = stops.filter((s: any) => s.status !== "PASSING");
+          
+          const materieelTypes: string[] = [];
+          if (data?.payload?.productNumbers) {
+            data.payload.productNumbers.forEach((pn: any) => {
+              if (pn.materieeldelen) {
+                pn.materieeldelen.forEach((md: any) => {
+                  if (md.type && !materieelTypes.includes(md.type)) {
+                    materieelTypes.push(md.type);
+                  }
+                });
+              }
+            });
+          }
+          
           if (stoppingStops.length > 0) {
             setJourneyInfo({
               origin: stoppingStops[0]?.stop?.name || "",
               destination: stoppingStops[stoppingStops.length - 1]?.stop?.name || "",
               trainNumber: train.treinNummer,
+              materieelTypes,
             });
           }
         }
@@ -82,50 +98,162 @@ function TrainPopupContent({
     fetchJourneyInfo();
   }, [train.treinNummer]);
 
-  const materieelTypes = train.materieel?.map(m => m.type).join(" + ") || train.type || "Onbekend";
+  const trainTypeLabel = train.type === "IC" ? "Intercity" : train.type === "SPR" ? "Sprinter" : train.type || "Trein";
+  const trainTypeColor = train.type === "IC" ? "#FFC917" : train.type === "SPR" ? "#003082" : "#00A651";
 
   return (
-    <div style={{ padding: "4px", minWidth: "200px", fontFamily: "inherit" }}>
-      <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "8px", color: "#000" }}>
-        Trein {train.treinNummer}
-      </div>
-      
-      <div style={{ fontSize: "12px", marginBottom: "6px", color: "#666" }}>
-        <strong style={{ color: "#000" }}>Type:</strong> {materieelTypes}
+    <div style={{ 
+      minWidth: "220px", 
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      padding: "2px"
+    }}>
+      <div style={{ 
+        display: "flex", 
+        alignItems: "center", 
+        gap: "8px",
+        marginBottom: "12px",
+        paddingBottom: "10px",
+        borderBottom: "1px solid #e5e5e5"
+      }}>
+        <div style={{
+          width: "36px",
+          height: "36px",
+          borderRadius: "8px",
+          backgroundColor: trainTypeColor,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: train.type === "IC" ? "#000" : "#fff",
+          fontWeight: 700,
+          fontSize: "12px"
+        }}>
+          {train.type || "?"}
+        </div>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: "15px", color: "#111" }}>
+            {trainTypeLabel} {train.treinNummer}
+          </div>
+          {!isLoadingJourney && journeyInfo?.materieelTypes.length ? (
+            <div style={{ fontSize: "12px", color: "#666" }}>
+              {journeyInfo.materieelTypes.join(" + ")}
+            </div>
+          ) : null}
+        </div>
       </div>
       
       {isLoadingJourney ? (
-        <div style={{ fontSize: "12px", color: "#666", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
-          <Loader2 style={{ width: "12px", height: "12px", animation: "spin 1s linear infinite" }} />
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: "8px",
+          padding: "8px 0",
+          color: "#666",
+          fontSize: "13px"
+        }}>
+          <div style={{
+            width: "14px",
+            height: "14px",
+            border: "2px solid #ddd",
+            borderTopColor: "#3b82f6",
+            borderRadius: "50%",
+            animation: "spin 0.8s linear infinite"
+          }} />
           Route laden...
         </div>
       ) : journeyInfo ? (
-        <div style={{ fontSize: "12px", marginBottom: "6px", color: "#666" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "2px" }}>
-            <MapPin style={{ width: "12px", height: "12px", color: "#16a34a" }} />
-            <span>{journeyInfo.origin}</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <MapPin style={{ width: "12px", height: "12px", color: "#dc2626" }} />
-            <span>{journeyInfo.destination}</span>
+        <div style={{ marginBottom: "12px" }}>
+          <div style={{ 
+            display: "flex", 
+            alignItems: "flex-start", 
+            gap: "10px",
+            position: "relative",
+            paddingLeft: "4px"
+          }}>
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "2px"
+            }}>
+              <div style={{
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                backgroundColor: "#22c55e",
+                border: "2px solid #fff",
+                boxShadow: "0 0 0 1px #22c55e"
+              }} />
+              <div style={{
+                width: "2px",
+                height: "20px",
+                backgroundColor: "#d1d5db"
+              }} />
+              <div style={{
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                backgroundColor: "#ef4444",
+                border: "2px solid #fff",
+                boxShadow: "0 0 0 1px #ef4444"
+              }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "13px", color: "#111", fontWeight: 500, marginBottom: "16px" }}>
+                {journeyInfo.origin}
+              </div>
+              <div style={{ fontSize: "13px", color: "#111", fontWeight: 500 }}>
+                {journeyInfo.destination}
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
       
-      <div style={{ fontSize: "12px", marginBottom: "8px", color: "#666" }}>
-        <strong style={{ color: "#000" }}>Snelheid:</strong> {Math.round(train.snelheid)} km/u
+      <div style={{ 
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        fontSize: "12px",
+        color: "#666",
+        marginBottom: "12px"
+      }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12,6 12,12 16,14"/>
+        </svg>
+        {Math.round(train.snelheid)} km/u
       </div>
       
-      <Button
-        size="sm"
-        variant="default"
-        className="w-full"
+      <button
         onClick={() => onViewJourney(train)}
         data-testid={`button-view-train-${train.treinNummer}`}
+        style={{
+          width: "100%",
+          padding: "8px 12px",
+          backgroundColor: "#3b82f6",
+          color: "#fff",
+          border: "none",
+          borderRadius: "6px",
+          fontSize: "13px",
+          fontWeight: 500,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "4px"
+        }}
       >
         Bekijk rit
-        <ChevronRight className="w-4 h-4 ml-1" />
-      </Button>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="9,18 15,12 9,6"/>
+        </svg>
+      </button>
+      
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
