@@ -101,32 +101,55 @@ function createTrainIcon(type: string, heading: number, isDark: boolean): L.DivI
 }
 
 function createStationIcon(isPassed: boolean, isNext: boolean, isDark: boolean): L.DivIcon {
-  const bgColor = isNext 
-    ? "#3b82f6" 
-    : isPassed 
-      ? (isDark ? "#4b5563" : "#9ca3af")
-      : (isDark ? "#1f2937" : "#ffffff");
-  const borderColor = isNext 
-    ? "#1d4ed8" 
-    : isPassed 
-      ? (isDark ? "#374151" : "#6b7280")
-      : (isDark ? "#4b5563" : "#d1d5db");
-  const size = isNext ? 14 : 10;
+  if (isNext) {
+    return L.divIcon({
+      className: "station-marker",
+      html: `
+        <div style="
+          width: 16px;
+          height: 16px;
+          background: #3b82f6;
+          border: 3px solid #1d4ed8;
+          border-radius: 50%;
+          box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+        "></div>
+      `,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+    });
+  }
+  
+  if (isPassed) {
+    return L.divIcon({
+      className: "station-marker",
+      html: `
+        <div style="
+          width: 8px;
+          height: 8px;
+          background: ${isDark ? "rgba(107, 114, 128, 0.5)" : "rgba(156, 163, 175, 0.5)"};
+          border: 1px solid ${isDark ? "rgba(75, 85, 99, 0.5)" : "rgba(107, 114, 128, 0.5)"};
+          border-radius: 50%;
+        "></div>
+      `,
+      iconSize: [8, 8],
+      iconAnchor: [4, 4],
+    });
+  }
   
   return L.divIcon({
     className: "station-marker",
     html: `
       <div style="
-        width: ${size}px;
-        height: ${size}px;
-        background: ${bgColor};
-        border: 2px solid ${borderColor};
+        width: 12px;
+        height: 12px;
+        background: ${isDark ? "#1f2937" : "#ffffff"};
+        border: 2px solid #3b82f6;
         border-radius: 50%;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.3);
       "></div>
     `,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
   });
 }
 
