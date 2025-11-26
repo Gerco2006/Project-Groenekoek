@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin } from "lucide-react";
+import { MapPin, Star } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
@@ -25,6 +25,21 @@ interface Station {
   land: string;
 }
 
+const FAVORITE_STATIONS_KEY = "travnl-favorite-stations";
+
+function getFavoriteStations(): string[] {
+  try {
+    const stored = localStorage.getItem(FAVORITE_STATIONS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFavoriteStations(favorites: string[]) {
+  localStorage.setItem(FAVORITE_STATIONS_KEY, JSON.stringify(favorites));
+}
+
 export default function StationSearch({ 
   label, 
   value, 
@@ -36,6 +51,7 @@ export default function StationSearch({
   const [inputValue, setInputValue] = useState(value);
   const inputRef = useRef<HTMLDivElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [favoriteStations, setFavoriteStations] = useState<string[]>(() => getFavoriteStations());
 
   const { data: stationsData } = useQuery<any>({
     queryKey: ["/api/stations"],
@@ -47,6 +63,18 @@ export default function StationSearch({
   });
 
   const stations: Station[] = stationsData?.payload || [];
+
+  const toggleFavorite = (stationCode: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const newFavorites = favoriteStations.includes(stationCode)
+      ? favoriteStations.filter(code => code !== stationCode)
+      : [...favoriteStations, stationCode];
+    setFavoriteStations(newFavorites);
+    saveFavoriteStations(newFavorites);
+  };
+
+  const isFavorite = (stationCode: string) => favoriteStations.includes(stationCode);
 
   useEffect(() => {
     setInputValue(value);
@@ -78,6 +106,10 @@ export default function StationSearch({
     }
   }, [inputValue, focused, stations, onChange]);
 
+  const favoriteStationsList = focused && !inputValue
+    ? stations.filter(station => favoriteStations.includes(station.code))
+    : [];
+
   const filteredStations = inputValue && focused
     ? stations
         .filter(station => 
@@ -86,6 +118,12 @@ export default function StationSearch({
           station.code.toLowerCase().includes(inputValue.toLowerCase())
         )
         .sort((a, b) => {
+          const aIsFavorite = favoriteStations.includes(a.code);
+          const bIsFavorite = favoriteStations.includes(b.code);
+          
+          if (aIsFavorite && !bIsFavorite) return -1;
+          if (!aIsFavorite && bIsFavorite) return 1;
+          
           const searchLower = inputValue.toLowerCase();
           const aCodeMatch = a.code.toLowerCase().startsWith(searchLower);
           const bCodeMatch = b.code.toLowerCase().startsWith(searchLower);
@@ -104,7 +142,9 @@ export default function StationSearch({
         .slice(0, 10)
     : [];
 
-  const dropdownContent = filteredStations.length > 0 && focused && (
+  const displayStations = inputValue ? filteredStations : favoriteStationsList;
+
+  const dropdownContent = displayStations.length > 0 && focused && (
     <div 
       style={{
         position: 'fixed',
@@ -115,26 +155,48 @@ export default function StationSearch({
       }}
     >
       <div className="relative bg-card/70 backdrop-blur-lg border rounded-lg shadow-lg max-h-60 overflow-auto">
-        {filteredStations.map((station, idx) => (
-          <button
-            key={idx}
-            type="button"
-            onClick={() => {
-              setInputValue(station.namen.lang);
-              onChange(station.namen.lang);
-              setFocused(false);
-            }}
-            className="w-full text-left px-4 py-2 hover-elevate flex items-center justify-between"
-            data-testid={`option-station-${idx}`}
+        {!inputValue && favoriteStationsList.length > 0 && (
+          <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground border-b bg-muted/50">
+            Favorieten
+          </div>
+        )}
+        {displayStations.map((station, idx) => (
+          <div
+            key={station.code}
+            className="flex items-center hover-elevate"
           >
-            <span>{station.namen.lang}</span>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-              {station.code}
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setInputValue(station.namen.lang);
+                onChange(station.namen.lang);
+                setFocused(false);
+              }}
+              className="flex-1 text-left px-4 py-2 flex items-center gap-2"
+              data-testid={`option-station-${idx}`}
+            >
+              {isFavorite(station.code) && (
+                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 shrink-0" />
+              )}
+              <span className="flex-1">{station.namen.lang}</span>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                {station.code}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => toggleFavorite(station.code, e)}
+              className="px-3 py-2 text-muted-foreground hover:text-yellow-500 transition-colors"
+              data-testid={`button-favorite-${station.code}`}
+            >
+              <Star 
+                className={`w-4 h-4 ${isFavorite(station.code) ? 'text-yellow-500 fill-yellow-500' : ''}`} 
+              />
+            </button>
+          </div>
         ))}
       </div>
-      {filteredStations.length >= 10 && (
+      {displayStations.length >= 10 && (
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card/40 via-card/20 to-transparent pointer-events-none rounded-b-lg" />
       )}
     </div>
