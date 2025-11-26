@@ -1,9 +1,10 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Star } from "lucide-react";
+import { MapPin, Star, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface StationSearchProps {
   label: string;
@@ -52,6 +53,12 @@ export default function StationSearch({
   const inputRef = useRef<HTMLDivElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const [favoriteStations, setFavoriteStations] = useState<string[]>(() => getFavoriteStations());
+  const isMobile = useIsMobile();
+
+  const handleClear = () => {
+    setInputValue("");
+    onChange("");
+  };
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -257,8 +264,18 @@ export default function StationSearch({
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 200)}
             placeholder={placeholder}
-            className="pl-9"
+            className={`pl-9 ${isMobile && inputValue ? 'pr-9' : ''}`}
           />
+          {isMobile && inputValue && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground z-10"
+              data-testid={`${testId}-clear`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
       {typeof document !== 'undefined' && dropdownContent && createPortal(dropdownContent, document.body)}
