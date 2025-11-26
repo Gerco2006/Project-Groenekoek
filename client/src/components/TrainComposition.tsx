@@ -2,10 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Wifi, Bike, BatteryCharging, Accessibility, BellOff, Bath, Train as TrainIcon, ChevronDown, ChevronUp, Star, Layers } from "lucide-react";
+import { Wifi, Bike, BatteryCharging, Accessibility, BellOff, Bath, Train as TrainIcon, ChevronDown, ChevronUp, Star, Layers, Map } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useWidgetManager } from "@/hooks/use-widget-manager";
 import { useState } from "react";
+import TrainLocationMap from "./TrainLocationMap";
 
 interface TrainCompositionProps {
   ritnummer: string;
@@ -26,10 +27,16 @@ const facilityMap: Record<string, Facility> = {
   STILTE: { type: "STILTE", icon: <BellOff className="w-4 h-4" />, label: "Stilte" }
 };
 
+type OpenSection = 'details' | 'location' | null;
+
 export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   const isMobile = useIsMobile();
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [openSection, setOpenSection] = useState<OpenSection>(null);
   const { addTrackedMaterial, removeTrackedMaterial, isMaterialTracked, config } = useWidgetManager();
+
+  const handleToggleSection = (section: OpenSection) => {
+    setOpenSection(prev => prev === section ? null : section);
+  };
 
   const handleToggleTrack = (materialNumber: string | number, materialType: string) => {
     const matNumStr = String(materialNumber);
@@ -127,7 +134,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   });
 
   return (
-    <div className="space-y-1" data-testid="train-composition">
+    <div className="space-y-2" data-testid="train-composition">
       {/* Trein visualizatie - Always visible */}
       <div className="px-4 pt-2">
         <div className="rounded-lg overflow-hidden border p-4">
@@ -179,31 +186,51 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
         </div>
       </div>
 
-      {/* Material Details - Collapsible */}
-      <div className="px-4 py-1">
+      {/* Toggle buttons row */}
+      <div className="px-4 flex gap-2">
         <Button
           id="button-toggle-material-info"
           variant="outline"
           size={isMobile ? "sm" : "default"}
-          onClick={() => setDetailsOpen(!detailsOpen)}
-          className="w-full justify-between gap-2"
+          onClick={() => handleToggleSection('details')}
+          className="flex-1 justify-between gap-2"
           data-testid="button-toggle-material-info"
-          aria-expanded={detailsOpen}
+          aria-expanded={openSection === 'details'}
           aria-controls="material-info-content"
         >
           <div className="flex items-center gap-2">
             <TrainIcon className="w-4 h-4" />
             <span>Materieelinfo</span>
           </div>
-          {detailsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {openSection === 'details' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </Button>
 
-        {detailsOpen && (
+        <Button
+          id="button-toggle-location-map"
+          variant="outline"
+          size={isMobile ? "sm" : "default"}
+          onClick={() => handleToggleSection('location')}
+          className="flex-1 justify-between gap-2"
+          data-testid="button-toggle-location-map"
+          aria-expanded={openSection === 'location'}
+          aria-controls="location-map-content"
+        >
+          <div className="flex items-center gap-2">
+            <Map className="w-4 h-4" />
+            <span>Locatie</span>
+          </div>
+          {openSection === 'location' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </Button>
+      </div>
+
+      {/* Material Details Content */}
+      {openSection === 'details' && (
+        <div className="px-4">
           <div 
             id="material-info-content"
             role="region"
             aria-labelledby="button-toggle-material-info"
-            className={`mt-3 rounded-lg overflow-hidden border p-4 space-y-4 ${isMobile ? 'max-h-[50vh] overflow-y-auto' : ''}`}
+            className={`rounded-lg overflow-hidden border p-4 space-y-4 ${isMobile ? 'max-h-[50vh] overflow-y-auto' : ''}`}
           >
             {/* Capacity Overview */}
             <div className="space-y-3">
@@ -307,8 +334,19 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
               })}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Location Map Content */}
+      {openSection === 'location' && (
+        <div className="px-4">
+          <TrainLocationMap 
+            trainNumber={ritnummer} 
+            isExpanded={true}
+            showButton={false}
+          />
+        </div>
+      )}
     </div>
   );
 }
