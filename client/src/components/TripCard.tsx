@@ -115,11 +115,11 @@ export default function TripCard({
                     </div>
                   )}
                   
-                  <div className="grid grid-cols-[12px,1fr] gap-x-3">
+                  <div className="grid grid-cols-[16px,1fr] gap-x-3">
                     <div className="relative flex flex-col items-center">
-                      <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                      <div className="flex-1 w-px bg-border my-1" />
-                      <div className="w-2 h-2 rounded-full bg-muted-foreground/40 shrink-0" />
+                      <div className="w-3 h-3 rounded-full bg-primary shrink-0" />
+                      <div className="flex-1 w-px bg-border" />
+                      <div className="w-3 h-3 rounded-full bg-muted-foreground/40 shrink-0" />
                     </div>
                     
                     <div className="space-y-2">
