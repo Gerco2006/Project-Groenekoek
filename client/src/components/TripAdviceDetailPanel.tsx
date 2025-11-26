@@ -207,7 +207,7 @@ export default function TripAdviceDetailPanel({
                           {legCrowding && (
                             <Badge variant="outline" className={`gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 h-5 ${crowdingColors[legCrowding as keyof typeof crowdingColors]}`}>
                               <Users className="w-3 h-3" />
-                              <span className="hidden sm:inline">{crowdingLabels[legCrowding as keyof typeof crowdingLabels]}</span>
+                              {crowdingLabels[legCrowding as keyof typeof crowdingLabels]}
                             </Badge>
                           )}
                         </div>
@@ -215,9 +215,7 @@ export default function TripAdviceDetailPanel({
                       
                       {leg.direction && (
                         <div className="text-xs sm:text-sm text-muted-foreground truncate mb-3 min-w-0">
-                          <span className="sm:hidden">→ </span>
-                          <span className="hidden sm:inline">Richting </span>
-                          <span className="font-medium text-foreground">{leg.direction}</span>
+                          Richting <span className="font-medium text-foreground">{leg.direction}</span>
                         </div>
                       )}
                       

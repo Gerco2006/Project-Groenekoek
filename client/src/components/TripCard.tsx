@@ -111,9 +111,7 @@ export default function TripCard({
                   
                   {leg.direction && (
                     <div className="text-xs sm:text-sm text-muted-foreground truncate mb-3 min-w-0">
-                      <span className="sm:hidden">→ </span>
-                      <span className="hidden sm:inline">Richting </span>
-                      <span className="font-medium text-foreground">{leg.direction}</span>
+                      Richting <span className="font-medium text-foreground">{leg.direction}</span>
                     </div>
                   )}
                   
