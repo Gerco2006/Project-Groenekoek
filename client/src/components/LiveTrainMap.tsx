@@ -4,8 +4,7 @@ import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Train, ChevronRight, Maximize2, Minimize2, Info } from "lucide-react";
+import { RefreshCw, Train, ChevronRight, Maximize2, Minimize2, Info, MapPin, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import "leaflet/dist/leaflet.css";
 
@@ -38,6 +37,97 @@ interface TrainsMapResponse {
 
 interface LiveTrainMapProps {
   onTrainClick?: (ritId: string, trainNumber: number, trainType: string) => void;
+}
+
+interface TrainJourneyInfo {
+  origin: string;
+  destination: string;
+  trainNumber: number;
+}
+
+function TrainPopupContent({ 
+  train, 
+  onViewJourney 
+}: { 
+  train: TrainVehicle; 
+  onViewJourney: (train: TrainVehicle) => void;
+}) {
+  const [journeyInfo, setJourneyInfo] = useState<TrainJourneyInfo | null>(null);
+  const [isLoadingJourney, setIsLoadingJourney] = useState(true);
+
+  useEffect(() => {
+    const fetchJourneyInfo = async () => {
+      try {
+        setIsLoadingJourney(true);
+        const response = await fetch(`/api/journey?train=${train.treinNummer}`);
+        if (response.ok) {
+          const data = await response.json();
+          const stops = data?.payload?.stops || [];
+          const stoppingStops = stops.filter((s: any) => s.status !== "PASSING");
+          if (stoppingStops.length > 0) {
+            setJourneyInfo({
+              origin: stoppingStops[0]?.stop?.name || "",
+              destination: stoppingStops[stoppingStops.length - 1]?.stop?.name || "",
+              trainNumber: train.treinNummer,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch journey info:", error);
+      } finally {
+        setIsLoadingJourney(false);
+      }
+    };
+    
+    fetchJourneyInfo();
+  }, [train.treinNummer]);
+
+  const materieelTypes = train.materieel?.map(m => m.type).join(" + ") || train.type || "Onbekend";
+
+  return (
+    <div style={{ padding: "4px", minWidth: "200px", fontFamily: "inherit" }}>
+      <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "8px", color: "#000" }}>
+        Trein {train.treinNummer}
+      </div>
+      
+      <div style={{ fontSize: "12px", marginBottom: "6px", color: "#666" }}>
+        <strong style={{ color: "#000" }}>Type:</strong> {materieelTypes}
+      </div>
+      
+      {isLoadingJourney ? (
+        <div style={{ fontSize: "12px", color: "#666", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+          <Loader2 style={{ width: "12px", height: "12px", animation: "spin 1s linear infinite" }} />
+          Route laden...
+        </div>
+      ) : journeyInfo ? (
+        <div style={{ fontSize: "12px", marginBottom: "6px", color: "#666" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "2px" }}>
+            <MapPin style={{ width: "12px", height: "12px", color: "#16a34a" }} />
+            <span>{journeyInfo.origin}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <MapPin style={{ width: "12px", height: "12px", color: "#dc2626" }} />
+            <span>{journeyInfo.destination}</span>
+          </div>
+        </div>
+      ) : null}
+      
+      <div style={{ fontSize: "12px", marginBottom: "8px", color: "#666" }}>
+        <strong style={{ color: "#000" }}>Snelheid:</strong> {Math.round(train.snelheid)} km/u
+      </div>
+      
+      <Button
+        size="sm"
+        variant="default"
+        className="w-full"
+        onClick={() => onViewJourney(train)}
+        data-testid={`button-view-train-${train.treinNummer}`}
+      >
+        Bekijk rit
+        <ChevronRight className="w-4 h-4 ml-1" />
+      </Button>
+    </div>
+  );
 }
 
 const NETHERLANDS_CENTER: [number, number] = [52.1326, 5.2913];
@@ -191,9 +281,6 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
         <div className="flex items-center gap-2">
           <Train className="w-5 h-5 text-primary" />
           <span className="font-semibold">Live Treinen Kaart</span>
-          <Badge variant="secondary" className="ml-2">
-            {trains.length} treinen
-          </Badge>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -244,29 +331,7 @@ export default function LiveTrainMap({ onTrainClick }: LiveTrainMapProps) {
               )}
             >
               <Popup>
-                <div className="p-1 min-w-[180px]">
-                  <div className="font-semibold text-sm mb-1">
-                    Trein {train.treinNummer}
-                  </div>
-                  {train.materieel && train.materieel.length > 0 && (
-                    <div className="text-xs text-muted-foreground mb-2">
-                      Type: {train.materieel.map(m => m.type).join(", ")}
-                    </div>
-                  )}
-                  <div className="text-xs space-y-1">
-                    <div>Snelheid: {Math.round(train.snelheid)} km/u</div>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="default"
-                    className="w-full mt-2"
-                    onClick={() => handleViewJourney(train)}
-                    data-testid={`button-view-train-${train.treinNummer}`}
-                  >
-                    Bekijk rit
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
+                <TrainPopupContent train={train} onViewJourney={handleViewJourney} />
               </Popup>
             </Marker>
           ))}
