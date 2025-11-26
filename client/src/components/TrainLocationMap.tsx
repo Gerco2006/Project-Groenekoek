@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
@@ -9,19 +9,9 @@ import { useIsMobile } from "@/hooks/use-is-mobile";
 import "leaflet/dist/leaflet.css";
 
 function MapTouchHandler({ children }: { children: React.ReactNode }) {
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.stopPropagation();
-  }, []);
-  
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    e.stopPropagation();
-  }, []);
-
   return (
     <div 
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      style={{ touchAction: 'none' }}
+      data-vaul-no-drag
       className="h-full w-full"
     >
       {children}
