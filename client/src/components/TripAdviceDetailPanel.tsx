@@ -1,5 +1,5 @@
-import { useState, Suspense, lazy } from "react";
-import { X, Clock, ArrowRight, Train, MapPin, AlertCircle, Star, Users, Map, ChevronDown, ChevronUp } from "lucide-react";
+import { Suspense, lazy } from "react";
+import { X, Clock, ArrowRight, Train, MapPin, AlertCircle, Star, Users } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,6 @@ export default function TripAdviceDetailPanel({
   isTripSaved = false,
 }: TripAdviceDetailPanelProps) {
   const isMobile = useIsMobile();
-  const [showRouteMap, setShowRouteMap] = useState(false);
 
   // Calculate average crowding level from embedded crowdForecast data
   const getAverageCrowding = () => {
@@ -184,26 +183,10 @@ export default function TripAdviceDetailPanel({
             </div>
           </Card>
 
-          {/* Route Map Toggle */}
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start gap-2"
-              onClick={() => setShowRouteMap(!showRouteMap)}
-              data-testid="button-toggle-route-map"
-            >
-              <Map className="w-4 h-4" />
-              <span>{showRouteMap ? "Verberg route" : "Toon route op kaart"}</span>
-              {showRouteMap ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
-            </Button>
-            
-            {showRouteMap && (
-              <Suspense fallback={<div className="h-[250px] rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm">Kaart laden...</div>}>
-                <TripRouteMap legs={legs} />
-              </Suspense>
-            )}
-          </div>
+          {/* Route Map */}
+          <Suspense fallback={<div className="h-[150px] sm:h-[200px] rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm">Kaart laden...</div>}>
+            <TripRouteMap legs={legs} compact={isMobile} />
+          </Suspense>
 
           {/* Journey Timeline */}
           <div className="space-y-3">

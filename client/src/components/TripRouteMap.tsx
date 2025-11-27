@@ -8,6 +8,7 @@ import "leaflet/dist/leaflet.css";
 
 interface TripRouteMapProps {
   legs: TripLeg[];
+  compact?: boolean;
 }
 
 interface Station {
@@ -284,9 +285,10 @@ function FitBounds({ stations }: { stations: Station[] }) {
   return null;
 }
 
-export default function TripRouteMap({ legs }: TripRouteMapProps) {
+export default function TripRouteMap({ legs, compact = false }: TripRouteMapProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const mapHeight = compact ? "h-[150px]" : "h-[200px]";
 
   const { data: stationsData, isLoading: stationsLoading } = useQuery<{ payload: any[] }>({
     queryKey: ["/api/stations"],
@@ -375,7 +377,7 @@ export default function TripRouteMap({ legs }: TripRouteMapProps) {
 
   if (stationsLoading) {
     return (
-      <div className="h-[250px] rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm">
+      <div className={`${mapHeight} rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm`}>
         Kaart laden...
       </div>
     );
@@ -383,7 +385,7 @@ export default function TripRouteMap({ legs }: TripRouteMapProps) {
 
   if (stations.length < 2) {
     return (
-      <div className="h-[250px] rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm">
+      <div className={`${mapHeight} rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm`}>
         Geen routegegevens beschikbaar
       </div>
     );
@@ -395,7 +397,7 @@ export default function TripRouteMap({ legs }: TripRouteMapProps) {
 
   return (
     <div 
-      className="h-[250px] rounded-lg overflow-hidden border relative" 
+      className={`${mapHeight} rounded-lg overflow-hidden border relative`}
       style={{ zIndex: 0, isolation: 'isolate' }}
       data-testid="map-trip-route"
     >
@@ -405,7 +407,7 @@ export default function TripRouteMap({ legs }: TripRouteMapProps) {
         className="h-full w-full"
         style={{ 
           background: isDark ? '#1a1a2e' : '#e8e8e8',
-          minHeight: '250px'
+          minHeight: compact ? '150px' : '200px'
         }}
         zoomControl={true}
         attributionControl={false}
