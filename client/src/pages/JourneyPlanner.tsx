@@ -786,7 +786,7 @@ export default function JourneyPlanner() {
           <div className="space-y-3 pb-6">
             <h2 className="text-xl font-semibold">Reismogelijkheden</h2>
             
-            {scrollContextBackward && (
+            {scrollContextBackward && new Date(`${format(date, 'yyyy-MM-dd')}T${time}:00`) >= new Date() && (
               <Button
                 variant="outline"
                 className="w-full gap-2"
