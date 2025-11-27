@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, X, Clock, ArrowRight, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { Star, X, Clock, ArrowRight, AlertTriangle, Loader2 } from "lucide-react";
 import type { SavedTrip, TripLeg } from "@shared/schema";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -114,9 +114,7 @@ function SavedTripCard({
   const departureTime = firstLeg?.origin?.plannedDateTime || trip.plannedDepartureTime || trip.departureTime || '';
   const arrivalTime = lastLeg?.destination?.plannedDateTime || trip.plannedArrivalTime || trip.arrivalTime || '';
   
-  const hasDelay = departureDelay > 0 || arrivalDelay > 0;
   const tripNotAvailable = data && !data.success;
-  const hasLiveData = data?.success && liveTrip;
 
   return (
     <button
@@ -188,18 +186,6 @@ function SavedTripCard({
                 <AlertTriangle className="w-3 h-3" />
                 Geannuleerd
               </Badge>
-            ) : hasLiveData ? (
-              hasDelay ? (
-                <Badge variant="outline" className="text-xs gap-1 ml-1 border-red-500/50 text-red-500">
-                  <AlertTriangle className="w-3 h-3" />
-                  Vertraagd
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-xs gap-1 ml-1 border-green-500/50 text-green-600 dark:text-green-400">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Op tijd
-                </Badge>
-              )
             ) : null}
           </div>
         </div>
