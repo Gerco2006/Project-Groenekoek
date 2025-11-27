@@ -527,6 +527,15 @@ export default function TripRouteMap({ legs, compact = false, embedded = false }
   const [hasMoved, setHasMoved] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
 
+  // Early return if legs is empty or undefined
+  if (!legs || legs.length === 0) {
+    return (
+      <div className={`${mapHeight} rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm`}>
+        Geen routegegevens beschikbaar
+      </div>
+    );
+  }
+
   const handleRecenter = () => {
     setRecenterTrigger(prev => prev + 1);
     setHasMoved(false);
