@@ -163,6 +163,27 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0,
         markerRef.current.setLatLng(currentPosRef.current);
       }
       onPositionUpdate?.(currentPosRef.current);
+    } else {
+      const distanceFromGPS = distanceBetweenPoints(currentPosRef.current, position);
+      const maxDriftDistance = 0.005;
+      
+      if (distanceFromGPS > maxDriftDistance) {
+        let newPosition: [number, number];
+        if (route.length >= 2) {
+          const { segmentIndex, projectedPoint, progressOnSegment } = findNearestSegmentOnRoute(position, route);
+          currentSegmentRef.current = segmentIndex;
+          currentProgressRef.current = progressOnSegment;
+          newPosition = projectedPoint;
+        } else {
+          newPosition = position;
+        }
+        
+        currentPosRef.current = newPosition;
+        if (markerRef.current) {
+          markerRef.current.setLatLng(newPosition);
+        }
+        onPositionUpdate?.(newPosition);
+      }
     }
   }, [position, speed, route, onPositionUpdate]);
 
