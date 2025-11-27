@@ -89,6 +89,29 @@ let stationsCache: any = null;
 let stationsCacheTime: number = 0;
 const STATIONS_CACHE_TTL = 3600000;
 
+let spoorkaartCache: any = null;
+let spoorkaartCacheTime: number = 0;
+const SPOORKAART_CACHE_TTL = 86400000; // 24 hours - track data rarely changes
+
+const NS_SPOORKAART_URL = "https://gateway.apiportal.ns.nl/spoorkaart-api/api/v1";
+
+async function fetchNSSpoorkaart(endpoint: string) {
+  const url = `${NS_SPOORKAART_URL}${endpoint}`;
+  
+  const response = await fetch(url, {
+    headers: {
+      "Ocp-Apim-Subscription-Key": NS_API_KEY || "",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`NS Spoorkaart API error: ${response.status} - ${error}`);
+  }
+
+  return response.json();
+}
+
 async function getStationCode(stationInput: string): Promise<string | null> {
   if (!stationInput) return stationInput;
 
@@ -489,6 +512,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching trains map data:", error);
       res.status(500).json({ error: "Failed to fetch trains map data" });
+    }
+  });
+
+  app.get("/api/spoorkaart", async (req, res) => {
+    try {
+      const now = Date.now();
+      
+      if (spoorkaartCache && now - spoorkaartCacheTime < SPOORKAART_CACHE_TTL) {
+        return res.json(spoorkaartCache);
+      }
+
+      const data = await fetchNSSpoorkaart("/spoorkaart");
+      spoorkaartCache = data;
+      spoorkaartCacheTime = now;
+      
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching spoorkaart data:", error);
+      res.status(500).json({ error: "Failed to fetch railway track data" });
     }
   });
 

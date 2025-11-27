@@ -438,6 +438,72 @@ interface StopWithStatus {
   isNext: boolean;
 }
 
+interface GeoJSONFeature {
+  type: string;
+  geometry: {
+    type: string;
+    coordinates: number[][] | number[][][];
+  };
+  properties: Record<string, any>;
+}
+
+interface SpoorkaartResponse {
+  type: string;
+  features: GeoJSONFeature[];
+}
+
+function findNearestTrackSegment(
+  position: [number, number],
+  features: GeoJSONFeature[],
+  maxDistance: number = 0.01
+): [number, number][] {
+  let nearestTrack: [number, number][] = [];
+  let nearestDistance = Infinity;
+
+  for (const feature of features) {
+    if (feature.geometry.type !== "LineString" && feature.geometry.type !== "MultiLineString") {
+      continue;
+    }
+
+    const lineStrings: number[][][] = feature.geometry.type === "MultiLineString"
+      ? feature.geometry.coordinates as number[][][]
+      : [feature.geometry.coordinates as number[][]];
+
+    for (const coords of lineStrings) {
+      for (let i = 0; i < coords.length - 1; i++) {
+        const a: [number, number] = [coords[i][1], coords[i][0]];
+        const b: [number, number] = [coords[i + 1][1], coords[i + 1][0]];
+        
+        const abLat = b[0] - a[0];
+        const abLng = b[1] - a[1];
+        const apLat = position[0] - a[0];
+        const apLng = position[1] - a[1];
+        
+        const abLenSq = abLat * abLat + abLng * abLng;
+        let t = 0;
+        
+        if (abLenSq > 0) {
+          t = Math.max(0, Math.min(1, (apLat * abLat + apLng * abLng) / abLenSq));
+        }
+        
+        const projLat = a[0] + t * abLat;
+        const projLng = a[1] + t * abLng;
+        
+        const dist = Math.sqrt(
+          Math.pow(position[0] - projLat, 2) + Math.pow(position[1] - projLng, 2)
+        );
+        
+        if (dist < nearestDistance && dist < maxDistance) {
+          nearestDistance = dist;
+          nearestTrack = coords.map(c => [c[1], c[0]] as [number, number]);
+        }
+      }
+    }
+  }
+
+  return nearestTrack;
+}
+
 function MapContent({ 
   train, 
   trainPosition, 
@@ -457,6 +523,26 @@ function MapContent({
 }) {
   const [isFollowing, setIsFollowing] = useState(true);
   const [animatedPosition, setAnimatedPosition] = useState<[number, number]>(trainPosition);
+
+  const { data: spoorkaartData } = useQuery<{ payload: SpoorkaartResponse }>({
+    queryKey: ["/api/spoorkaart"],
+    queryFn: async () => {
+      const response = await fetch("/api/spoorkaart");
+      if (!response.ok) {
+        throw new Error("Failed to fetch railway tracks");
+      }
+      return response.json();
+    },
+    staleTime: 86400000,
+    gcTime: 86400000,
+  });
+
+  const trackRoute = useMemo(() => {
+    if (!spoorkaartData?.payload?.features || !trainPosition[0] || !trainPosition[1]) {
+      return [];
+    }
+    return findNearestTrackSegment(trainPosition, spoorkaartData.payload.features);
+  }, [spoorkaartData, trainPosition]);
 
   const routePositions = useMemo(() => {
     return stops
@@ -559,7 +645,7 @@ function MapContent({
             )}
             zIndexOffset={1000}
             onPositionUpdate={handlePositionUpdate}
-            route={routePositions}
+            route={trackRoute.length > 0 ? trackRoute : routePositions}
           />
         </MapContainer>
       </MapTouchHandler>
