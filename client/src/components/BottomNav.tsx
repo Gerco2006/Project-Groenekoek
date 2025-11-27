@@ -22,7 +22,7 @@ export default function BottomNav() {
           return (
             <Link key={item.path} href={item.path}>
               <button
-                className={`flex flex-col items-center gap-1 py-3 px-6 transition-colors ${
+                className={`flex flex-col items-center gap-1 py-3 px-3 transition-colors ${
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground hover-elevate"
