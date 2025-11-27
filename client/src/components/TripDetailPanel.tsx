@@ -190,10 +190,25 @@ export default function TripDetailPanel({
       const stopElement = document.querySelector(`[data-testid="row-stop-${targetIndex}"]`) as HTMLElement;
       
       if (stopElement) {
-        stopElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center'
-        });
+        if (isMobile) {
+          stopElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center'
+          });
+        } else {
+          const scrollContainer = scrollAreaRef.current;
+          if (scrollContainer) {
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const elementRect = stopElement.getBoundingClientRect();
+            const scrollTop = scrollContainer.scrollTop;
+            const targetScroll = scrollTop + (elementRect.top - containerRect.top) - (containerRect.height / 2) + (elementRect.height / 2);
+            
+            scrollContainer.scrollTo({
+              top: targetScroll,
+              behavior: 'smooth'
+            });
+          }
+        }
       }
     };
 
@@ -251,7 +266,7 @@ export default function TripDetailPanel({
           </div>
         </div>
       ) : (
-        <div className={`${isMobile ? '' : 'flex-1 flex flex-col'}`}>
+        <div className={`${isMobile ? '' : 'flex-1 flex flex-col min-h-0'}`}>
           {/* Material Info Section (includes location map button) */}
           <div className={`pt-4 ${isMobile ? '' : 'shrink-0'}`}>
             <TrainComposition ritnummer={trainNumber} />
@@ -272,7 +287,7 @@ export default function TripDetailPanel({
             </div>
           )}
 
-          <div ref={scrollAreaRef} className={`px-4 pb-4 ${isMobile ? '' : 'flex-1 overflow-y-auto'}`}>
+          <div ref={scrollAreaRef} className={`px-4 pb-4 ${isMobile ? '' : 'flex-1 overflow-y-auto min-h-0'}`}>
             <div className="space-y-2">
               {displayedStops.map((stop: any, displayIdx: number) => {
                 const isPassing = stop.status === "PASSING";
