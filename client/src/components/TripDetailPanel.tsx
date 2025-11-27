@@ -74,6 +74,8 @@ export default function TripDetailPanel({
       return response.json();
     },
     retry: 1,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
   });
 
   const { data: crowdingData } = useQuery({
