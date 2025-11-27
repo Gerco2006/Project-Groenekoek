@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Polyline, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useTheme } from "@/components/ThemeProvider";
@@ -77,67 +77,43 @@ function buildTrackGraph(features: GeoJSONFeature[]): TrackGraph {
   return { neighbors, nodeCoords };
 }
 
-function findBestStartNode(
-  start: [number, number],
-  end: [number, number],
+function findNearestGraphNode(
+  point: [number, number],
   graph: TrackGraph,
   maxDistance: number
 ): string | null {
-  const candidates: { key: string; score: number }[] = [];
-  const dirToEnd = Math.atan2(end[1] - start[1], end[0] - start[0]);
+  let nearestKey: string | null = null;
+  let nearestDist = Infinity;
   
   const keys = Object.keys(graph.neighbors);
   for (const key of keys) {
     const coords = graph.nodeCoords[key];
     if (!coords) continue;
-    const dist = distanceBetweenPoints(start, coords);
-    if (dist < maxDistance) {
-      const neighbors = graph.neighbors[key];
-      if (!neighbors || neighbors.length === 0) continue;
-      
-      let bestNeighborScore = -Infinity;
-      for (const neighborKey of neighbors) {
-        const neighborCoord = graph.nodeCoords[neighborKey];
-        if (!neighborCoord) continue;
-        
-        const dirToNeighbor = Math.atan2(neighborCoord[1] - coords[1], neighborCoord[0] - coords[0]);
-        let angleDiff = Math.abs(dirToEnd - dirToNeighbor);
-        if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
-        
-        const directionScore = Math.cos(angleDiff);
-        if (directionScore > bestNeighborScore) {
-          bestNeighborScore = directionScore;
-        }
-      }
-      
-      const distanceScore = 1 - (dist / maxDistance);
-      const totalScore = distanceScore * 0.3 + bestNeighborScore * 0.7;
-      
-      candidates.push({ key, score: totalScore });
+    const dist = distanceBetweenPoints(point, coords);
+    if (dist < nearestDist && dist < maxDistance) {
+      nearestDist = dist;
+      nearestKey = key;
     }
   }
   
-  if (candidates.length === 0) return null;
-  
-  candidates.sort((a, b) => b.score - a.score);
-  return candidates[0].key;
+  return nearestKey;
 }
 
 function findPathAStar(
   graph: TrackGraph,
   startKey: string,
   endKey: string,
+  endCoord: [number, number],
   maxNodes: number = 5000
 ): [number, number][] {
   if (startKey === endKey) return [];
   
-  const endCoord = graph.nodeCoords[endKey];
-  if (!endCoord) return [];
+  const startCoord = graph.nodeCoords[startKey];
+  if (!startCoord) return [];
   
   const gScore: Record<string, number> = { [startKey]: 0 };
   const fScore: Record<string, number> = {};
-  const startCoord = graph.nodeCoords[startKey];
-  fScore[startKey] = startCoord ? distanceBetweenPoints(startCoord, endCoord) : Infinity;
+  fScore[startKey] = distanceBetweenPoints(startCoord, endCoord);
   
   const cameFrom: Record<string, string> = {};
   const openSet: string[] = [startKey];
@@ -202,17 +178,17 @@ function findRouteBetweenStops(
   
   const graph = buildTrackGraph(features);
   const route: [number, number][] = [];
-  const maxSearchDistance = 0.05;
+  const maxSearchDistance = 0.02;
   
   for (let i = 0; i < stops.length - 1; i++) {
     const start: [number, number] = [stops[i].lat, stops[i].lng];
     const end: [number, number] = [stops[i + 1].lat, stops[i + 1].lng];
     
-    const startNode = findBestStartNode(start, end, graph, maxSearchDistance);
-    const endNode = findBestStartNode(end, start, graph, maxSearchDistance);
+    const startNode = findNearestGraphNode(start, graph, maxSearchDistance);
+    const endNode = findNearestGraphNode(end, graph, maxSearchDistance);
     
-    if (startNode && endNode) {
-      const pathSegment = findPathAStar(graph, startNode, endNode, 5000);
+    if (startNode && endNode && startNode !== endNode) {
+      const pathSegment = findPathAStar(graph, startNode, endNode, end, 5000);
       
       if (pathSegment.length > 0) {
         if (route.length === 0) {
@@ -249,38 +225,40 @@ function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
     size = 14;
   }
   
-  const textColor = isDark ? '#f3f4f6' : '#1f2937';
-  const labelBg = isDark ? 'rgba(17, 24, 39, 0.85)' : 'rgba(255, 255, 255, 0.85)';
-  const borderColor = isDark ? '#374151' : '#e5e7eb';
+  const textColor = isDark ? '#f3f4f6' : '#111827';
+  const labelBg = isDark ? 'rgba(17, 24, 39, 0.85)' : 'rgba(255, 255, 255, 0.88)';
+  const borderColor = isDark ? 'rgba(55, 65, 81, 0.8)' : 'rgba(209, 213, 219, 0.9)';
+  const shadow = isDark 
+    ? '0 2px 8px rgba(0, 0, 0, 0.5)' 
+    : '0 2px 8px rgba(0, 0, 0, 0.12)';
   
   return L.divIcon({
-    className: 'custom-station-marker',
+    className: 'trip-route-station-marker',
     html: `
       <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
         <div style="
           width: ${size}px;
           height: ${size}px;
           background-color: ${bgColor};
-          border: 2px solid ${isDark ? '#1f2937' : '#ffffff'};
+          border: 2.5px solid ${isDark ? '#1f2937' : '#ffffff'};
           border-radius: 50%;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.4);
         "></div>
-        <div style="
+        <div class="trip-route-station-label" style="
           position: absolute;
-          top: ${size + 4}px;
+          top: ${size + 6}px;
           left: 50%;
           transform: translateX(-50%);
           white-space: nowrap;
-          padding: 3px 8px;
+          padding: 4px 10px;
           background: ${labelBg};
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
           border: 1px solid ${borderColor};
-          border-radius: 4px;
+          border-radius: 6px;
           font-size: 11px;
-          font-weight: 500;
+          font-weight: 600;
           color: ${textColor};
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          box-shadow: ${shadow};
+          z-index: 1000;
         ">${station.name}</div>
       </div>
     `,
@@ -291,11 +269,13 @@ function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
 
 function FitBounds({ stations }: { stations: Station[] }) {
   const map = useMap();
+  const fittedRef = useRef(false);
   
-  useMemo(() => {
-    if (stations.length > 0) {
-      const bounds = stations.map(s => [s.lat, s.lng] as [number, number]);
-      map.fitBounds(bounds, { padding: [50, 50] });
+  useEffect(() => {
+    if (stations.length > 0 && !fittedRef.current) {
+      const bounds = L.latLngBounds(stations.map(s => [s.lat, s.lng] as [number, number]));
+      map.fitBounds(bounds, { padding: [60, 60] });
+      fittedRef.current = true;
     }
   }, [stations, map]);
   
@@ -412,22 +392,30 @@ export default function TripRouteMap({ legs }: TripRouteMapProps) {
     : "https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png";
 
   return (
-    <div className="h-[250px] rounded-lg overflow-hidden border" data-testid="map-trip-route">
+    <div 
+      className="h-[250px] rounded-lg overflow-hidden border relative" 
+      style={{ zIndex: 0 }}
+      data-testid="map-trip-route"
+    >
       <MapContainer
         center={[stations[0].lat, stations[0].lng]}
         zoom={10}
         className="h-full w-full"
+        style={{ background: isDark ? '#1a1a2e' : '#f5f5f5' }}
         zoomControl={true}
         attributionControl={false}
       >
-        <TileLayer url={tileUrl} />
+        <TileLayer 
+          url={tileUrl} 
+          className={isDark ? '' : 'leaflet-tile-light'}
+        />
         <FitBounds stations={stations} />
         
         {routePositions.length > 1 && (
           <Polyline
             positions={routePositions}
             pathOptions={{
-              color: isDark ? '#60a5fa' : '#3b82f6',
+              color: isDark ? '#60a5fa' : '#2563eb',
               weight: 4,
               opacity: 0.9,
             }}
@@ -436,9 +424,10 @@ export default function TripRouteMap({ legs }: TripRouteMapProps) {
         
         {stations.map((station, idx) => (
           <Marker
-            key={idx}
+            key={`${station.name}-${idx}`}
             position={[station.lat, station.lng]}
             icon={createStationIcon(station, isDark)}
+            zIndexOffset={station.type === "start" ? 100 : station.type === "end" ? 90 : 80}
           />
         ))}
       </MapContainer>

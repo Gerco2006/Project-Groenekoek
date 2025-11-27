@@ -294,3 +294,23 @@
     inset: -1px;
   }
 }
+
+/* Trip Route Map Station Markers */
+.trip-route-station-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.trip-route-station-label {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Leaflet map light mode fixes */
+.leaflet-container {
+  font-family: inherit;
+}
+
+.leaflet-tile-pane {
+  opacity: 1 !important;
+}
