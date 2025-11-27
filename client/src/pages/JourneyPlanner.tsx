@@ -762,7 +762,7 @@ export default function JourneyPlanner() {
         )}
       </div>
 
-      /* Storingen en werkzaamheden op traject uitgeschakeld vanwege onduidelijkheid naar de gebruiker */
+      {/* Storingen en werkzaamheden op traject uitgeschakeld vanwege onduidelijkheid naar de gebruiker */}
       {/*searchedFrom && searchedTo && routeDisruptions.length > 0 && (
         <div className="shrink-0 md:px-4 pb-4">
           <Alert className="border-yellow-500/50 bg-yellow-500/10" data-testid="alert-route-disruptions">
