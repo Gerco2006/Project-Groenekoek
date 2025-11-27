@@ -9,6 +9,7 @@ import "leaflet/dist/leaflet.css";
 interface TripRouteMapProps {
   legs: TripLeg[];
   compact?: boolean;
+  embedded?: boolean;
 }
 
 interface Station {
@@ -216,52 +217,82 @@ function findRouteBetweenStops(
 
 type LabelPlacement = 'top' | 'bottom' | 'left' | 'right';
 
-function calculateLabelPlacement(
-  station: Station,
-  stationIndex: number,
+function calculateAllLabelPlacements(
   stations: Station[],
   routePositions: [number, number][]
-): LabelPlacement {
-  if (stations.length < 2) return 'bottom';
+): LabelPlacement[] {
+  if (stations.length < 2) {
+    return stations.map(() => 'bottom');
+  }
   
-  const stationPos: [number, number] = [station.lat, station.lng];
+  const placements: LabelPlacement[] = [];
   
-  let nearestSegmentIdx = -1;
-  let minDist = Infinity;
-  
-  for (let i = 0; i < routePositions.length - 1; i++) {
-    const p1 = routePositions[i];
-    const p2 = routePositions[i + 1];
-    const midLat = (p1[0] + p2[0]) / 2;
-    const midLng = (p1[1] + p2[1]) / 2;
-    const dist = Math.sqrt(
-      Math.pow(stationPos[0] - midLat, 2) + 
-      Math.pow(stationPos[1] - midLng, 2)
-    );
-    if (dist < minDist) {
-      minDist = dist;
-      nearestSegmentIdx = i;
+  for (let stationIndex = 0; stationIndex < stations.length; stationIndex++) {
+    const station = stations[stationIndex];
+    const stationPos: [number, number] = [station.lat, station.lng];
+    
+    let nearestSegmentIdx = -1;
+    let minDist = Infinity;
+    
+    for (let i = 0; i < routePositions.length - 1; i++) {
+      const p1 = routePositions[i];
+      const p2 = routePositions[i + 1];
+      const midLat = (p1[0] + p2[0]) / 2;
+      const midLng = (p1[1] + p2[1]) / 2;
+      const dist = Math.sqrt(
+        Math.pow(stationPos[0] - midLat, 2) + 
+        Math.pow(stationPos[1] - midLng, 2)
+      );
+      if (dist < minDist) {
+        minDist = dist;
+        nearestSegmentIdx = i;
+      }
     }
+    
+    let preferredPlacement: LabelPlacement = 'bottom';
+    
+    if (nearestSegmentIdx !== -1 && routePositions.length >= 2) {
+      const p1 = routePositions[nearestSegmentIdx];
+      const p2 = routePositions[Math.min(nearestSegmentIdx + 1, routePositions.length - 1)];
+      
+      const dx = p2[1] - p1[1];
+      const dy = p2[0] - p1[0];
+      
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      
+      if (absDx > absDy) {
+        preferredPlacement = dy > 0 ? 'bottom' : 'top';
+      } else {
+        preferredPlacement = dx > 0 ? 'left' : 'right';
+      }
+    }
+    
+    let finalPlacement = preferredPlacement;
+    
+    if (stationIndex > 0) {
+      const prevStation = stations[stationIndex - 1];
+      const prevPlacement = placements[stationIndex - 1];
+      
+      const latDiff = Math.abs(station.lat - prevStation.lat);
+      const lngDiff = Math.abs(station.lng - prevStation.lng);
+      const stationsClose = latDiff < 0.05 && lngDiff < 0.05;
+      
+      if (stationsClose && prevPlacement === preferredPlacement) {
+        const opposites: Record<LabelPlacement, LabelPlacement> = {
+          'top': 'bottom',
+          'bottom': 'top',
+          'left': 'right',
+          'right': 'left'
+        };
+        finalPlacement = opposites[preferredPlacement];
+      }
+    }
+    
+    placements.push(finalPlacement);
   }
   
-  if (nearestSegmentIdx === -1 || routePositions.length < 2) {
-    return 'bottom';
-  }
-  
-  const p1 = routePositions[nearestSegmentIdx];
-  const p2 = routePositions[Math.min(nearestSegmentIdx + 1, routePositions.length - 1)];
-  
-  const dx = p2[1] - p1[1];
-  const dy = p2[0] - p1[0];
-  
-  const absDx = Math.abs(dx);
-  const absDy = Math.abs(dy);
-  
-  if (absDx > absDy) {
-    return dy > 0 ? 'bottom' : 'top';
-  } else {
-    return dx > 0 ? 'left' : 'right';
-  }
+  return placements;
 }
 
 function createStationIcon(station: Station, isDark: boolean, placement: LabelPlacement = 'bottom'): L.DivIcon {
@@ -450,7 +481,7 @@ function FitBounds({ stations }: { stations: Station[] }) {
   return null;
 }
 
-export default function TripRouteMap({ legs, compact = false }: TripRouteMapProps) {
+export default function TripRouteMap({ legs, compact = false, embedded = false }: TripRouteMapProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const mapHeight = compact ? "h-[150px]" : "h-[200px]";
@@ -560,9 +591,13 @@ export default function TripRouteMap({ legs, compact = false }: TripRouteMapProp
     ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
+  const containerClasses = embedded 
+    ? `${mapHeight} overflow-hidden relative`
+    : `${mapHeight} rounded-lg overflow-hidden border relative`;
+
   return (
     <div 
-      className={`${mapHeight} rounded-lg overflow-hidden border relative`}
+      className={containerClasses}
       style={{ zIndex: 0, isolation: 'isolate' }}
       data-testid="map-trip-route"
       data-vaul-no-drag
@@ -600,17 +635,17 @@ export default function TripRouteMap({ legs, compact = false }: TripRouteMapProp
           />
         )}
         
-        {stations.map((station, idx) => {
-          const placement = calculateLabelPlacement(station, idx, stations, routePositions);
-          return (
+        {(() => {
+          const placements = calculateAllLabelPlacements(stations, routePositions);
+          return stations.map((station, idx) => (
             <Marker
               key={`${station.name}-${idx}`}
               position={[station.lat, station.lng]}
-              icon={createStationIcon(station, isDark, placement)}
+              icon={createStationIcon(station, isDark, placements[idx] || 'bottom')}
               zIndexOffset={station.type === "start" ? 100 : station.type === "end" ? 90 : 80}
             />
-          );
-        })}
+          ));
+        })()}
       </MapContainer>
     </div>
   );

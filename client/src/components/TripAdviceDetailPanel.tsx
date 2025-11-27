@@ -140,53 +140,55 @@ export default function TripAdviceDetailPanel({
 
       <div className={`${isMobile ? 'p-4 space-y-6' : 'flex-1 overflow-y-auto'}`}>
         <div className={`${isMobile ? '' : 'p-4 space-y-6'}`}>
-          {/* Trip Summary Card */}
-          <Card className="p-4">
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <div className="text-center min-w-0">
-                <div className="text-2xl sm:text-3xl font-bold" data-testid="text-summary-departure">{departureTime}</div>
-                <div className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">{legs[0]?.from}</div>
-              </div>
-              
-              <div className="flex-1 flex flex-col items-center gap-1 min-w-[60px] max-w-[100px]">
-                <div className="w-full h-px bg-border" />
-                <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
-                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="font-medium whitespace-nowrap">{duration}</span>
+          {/* Trip Summary + Route Map unified */}
+          <Card className="overflow-hidden">
+            <div className="p-4 pb-3">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="text-center min-w-0">
+                  <div className="text-2xl sm:text-3xl font-bold" data-testid="text-summary-departure">{departureTime}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">{legs[0]?.from}</div>
                 </div>
-                <div className="w-full h-px bg-border" />
+                
+                <div className="flex-1 flex flex-col items-center gap-1 min-w-[60px] max-w-[100px]">
+                  <div className="w-full h-px bg-border" />
+                  <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="font-medium whitespace-nowrap">{duration}</span>
+                  </div>
+                  <div className="w-full h-px bg-border" />
+                </div>
+                
+                <div className="text-center min-w-0">
+                  <div className="text-2xl sm:text-3xl font-bold" data-testid="text-summary-arrival">{arrivalTime}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">{legs[legs.length - 1]?.to}</div>
+                </div>
               </div>
-              
-              <div className="text-center min-w-0">
-                <div className="text-2xl sm:text-3xl font-bold" data-testid="text-summary-arrival">{arrivalTime}</div>
-                <div className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">{legs[legs.length - 1]?.to}</div>
+
+              <div className="flex items-center justify-center gap-2 text-sm flex-wrap">
+                <Badge variant="outline" className="gap-1.5">
+                  <Train className="w-3.5 h-3.5" />
+                  {transfers === 0 ? "Direct" : `${transfers} overstap${transfers > 1 ? 'pen' : ''}`}
+                </Badge>
+                {delayMinutes && delayMinutes > 0 && (
+                  <Badge variant="destructive" className="gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    +{delayMinutes}
+                  </Badge>
+                )}
+                {averageCrowding && (
+                  <Badge variant="outline" className={`gap-1.5 ${crowdingColors[averageCrowding as keyof typeof crowdingColors]}`}>
+                    <Users className="w-3.5 h-3.5" />
+                    {crowdingLabels[averageCrowding as keyof typeof crowdingLabels]}
+                  </Badge>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-2 text-sm flex-wrap">
-              <Badge variant="outline" className="gap-1.5">
-                <Train className="w-3.5 h-3.5" />
-                {transfers === 0 ? "Direct" : `${transfers} overstap${transfers > 1 ? 'pen' : ''}`}
-              </Badge>
-              {delayMinutes && delayMinutes > 0 && (
-                <Badge variant="destructive" className="gap-1.5">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  +{delayMinutes}
-                </Badge>
-              )}
-              {averageCrowding && (
-                <Badge variant="outline" className={`gap-1.5 ${crowdingColors[averageCrowding as keyof typeof crowdingColors]}`}>
-                  <Users className="w-3.5 h-3.5" />
-                  {crowdingLabels[averageCrowding as keyof typeof crowdingLabels]}
-                </Badge>
-              )}
-            </div>
+            {/* Route Map integrated */}
+            <Suspense fallback={<div className="h-[150px] sm:h-[200px] bg-muted/50 flex items-center justify-center text-muted-foreground text-sm">Kaart laden...</div>}>
+              <TripRouteMap legs={legs} compact={isMobile} embedded />
+            </Suspense>
           </Card>
-
-          {/* Route Map */}
-          <Suspense fallback={<div className="h-[150px] sm:h-[200px] rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm">Kaart laden...</div>}>
-            <TripRouteMap legs={legs} compact={isMobile} />
-          </Suspense>
 
           {/* Journey Timeline */}
           <div className="space-y-3">
