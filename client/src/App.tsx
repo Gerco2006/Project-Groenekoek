@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import TopNav from "@/components/TopNav";
 import BottomNav from "@/components/BottomNav";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import JourneyPlanner from "@/pages/JourneyPlanner";
 import DepartureBoard from "@/pages/DepartureBoard";
 import TrainLookup from "@/pages/TrainLookup";
@@ -38,6 +39,7 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <Toaster />
+          <PWAInstallPrompt />
           <Router />
         </TooltipProvider>
       </ThemeProvider>
