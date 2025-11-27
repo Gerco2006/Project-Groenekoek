@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle, Star } from "lucide-react";
+import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle, Star, ChevronUp, ChevronDown } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -69,6 +69,12 @@ export default function JourneyPlanner() {
   });
   const [addChangeTime, setAddChangeTime] = useState<number>(0);
   const [accessible, setAccessible] = useState<boolean>(false);
+  const [scrollContextForward, setScrollContextForward] = useState<string | null>(null);
+  const [scrollContextBackward, setScrollContextBackward] = useState<string | null>(null);
+  const [earlierTrips, setEarlierTrips] = useState<any[]>([]);
+  const [laterTrips, setLaterTrips] = useState<any[]>([]);
+  const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
+  const [isLoadingLater, setIsLoadingLater] = useState(false);
   const { toast } = useToast();
   const { 
     config, 
@@ -156,6 +162,93 @@ export default function JourneyPlanner() {
     },
     retry: 1,
   });
+
+  useEffect(() => {
+    if (tripsData) {
+      setScrollContextForward(tripsData.scrollRequestForwardContext || null);
+      setScrollContextBackward(tripsData.scrollRequestBackwardContext || null);
+      setEarlierTrips([]);
+      setLaterTrips([]);
+    }
+  }, [tripsData]);
+
+  const loadEarlierTrips = useCallback(async () => {
+    if (!scrollContextBackward || isLoadingEarlier || !searchedFrom || !searchedTo) return;
+    
+    setIsLoadingEarlier(true);
+    try {
+      const params = new URLSearchParams({
+        fromStation: searchedFrom,
+        toStation: searchedTo,
+        scrollRequestBackwardContext: scrollContextBackward,
+      });
+
+      searchedViaStations.forEach((via) => {
+        if (via.trim()) {
+          params.append("viaStation", via);
+        }
+      });
+
+      const response = await fetch(`/api/trips?${params.toString()}`);
+      if (!response.ok) throw new Error("Failed to fetch earlier trips");
+      
+      const data = await response.json();
+      if (data.trips && data.trips.length > 0) {
+        const newTripsCount = data.trips.length;
+        setEarlierTrips(prev => [...data.trips, ...prev]);
+        setScrollContextBackward(data.scrollRequestBackwardContext || null);
+        if (selectedTripIndex !== null) {
+          setSelectedTripIndex(prev => prev !== null ? prev + newTripsCount : null);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading earlier trips:", error);
+      toast({
+        title: "Fout bij laden",
+        description: "Kon eerdere reismogelijkheden niet ophalen",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingEarlier(false);
+    }
+  }, [scrollContextBackward, isLoadingEarlier, searchedFrom, searchedTo, searchedViaStations, selectedTripIndex, toast]);
+
+  const loadLaterTrips = useCallback(async () => {
+    if (!scrollContextForward || isLoadingLater || !searchedFrom || !searchedTo) return;
+    
+    setIsLoadingLater(true);
+    try {
+      const params = new URLSearchParams({
+        fromStation: searchedFrom,
+        toStation: searchedTo,
+        scrollRequestForwardContext: scrollContextForward,
+      });
+
+      searchedViaStations.forEach((via) => {
+        if (via.trim()) {
+          params.append("viaStation", via);
+        }
+      });
+
+      const response = await fetch(`/api/trips?${params.toString()}`);
+      if (!response.ok) throw new Error("Failed to fetch later trips");
+      
+      const data = await response.json();
+      if (data.trips && data.trips.length > 0) {
+        setLaterTrips(prev => [...prev, ...data.trips]);
+        setScrollContextForward(data.scrollRequestForwardContext || null);
+      }
+    } catch (error) {
+      console.error("Error loading later trips:", error);
+      toast({
+        title: "Fout bij laden",
+        description: "Kon latere reismogelijkheden niet ophalen",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingLater(false);
+    }
+  }, [scrollContextForward, isLoadingLater, searchedFrom, searchedTo, searchedViaStations, toast]);
 
   const { data: disruptionsData } = useQuery<any>({
     queryKey: ["/api/disruptions"],
@@ -330,7 +423,7 @@ export default function JourneyPlanner() {
     return diffMins > 0 ? diffMins : undefined;
   };
 
-  const trips: SelectedTrip[] = (tripsData?.trips?.map((trip: any) => {
+  const transformTrip = useCallback((trip: any): SelectedTrip => {
     const legs: TripLeg[] = trip.legs
       ?.filter((leg: any) => leg.product?.categoryCode)
       ?.map((leg: any) => {
@@ -387,7 +480,14 @@ export default function JourneyPlanner() {
       rawDepartureTime,
       rawArrivalTime,
     };
-  }) ?? []) as SelectedTrip[];
+  }, []);
+
+  const currentTrips: SelectedTrip[] = (tripsData?.trips?.map(transformTrip) ?? []) as SelectedTrip[];
+  const earlierTransformed: SelectedTrip[] = earlierTrips.map(transformTrip);
+  const laterTransformed: SelectedTrip[] = laterTrips.map(transformTrip);
+  
+  const trips: SelectedTrip[] = [...earlierTransformed, ...currentTrips, ...laterTransformed];
+  const earlierCount = earlierTransformed.length;
 
   useEffect(() => {
     hasAutoSelectedRef.current = false;
@@ -685,6 +785,24 @@ export default function JourneyPlanner() {
         <ScrollArea className="flex-1 md:px-4">
           <div className="space-y-3 pb-6">
             <h2 className="text-xl font-semibold">Reismogelijkheden</h2>
+            
+            {scrollContextBackward && (
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={loadEarlierTrips}
+                disabled={isLoadingEarlier}
+                data-testid="button-load-earlier-trips"
+              >
+                {isLoadingEarlier ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ChevronUp className="w-4 h-4" />
+                )}
+                Eerdere reismogelijkheden
+              </Button>
+            )}
+
             {trips.map((trip, idx) => (
               <TripListItemButton
                 key={idx}
@@ -697,6 +815,23 @@ export default function JourneyPlanner() {
                 isSelected={selectedTripIndex === idx}
               />
             ))}
+
+            {scrollContextForward && (
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={loadLaterTrips}
+                disabled={isLoadingLater}
+                data-testid="button-load-later-trips"
+              >
+                {isLoadingLater ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+                Latere reismogelijkheden
+              </Button>
+            )}
           </div>
         </ScrollArea>
       )}

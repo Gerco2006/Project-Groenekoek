@@ -214,7 +214,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         viaStation,
         lang = "nl",
         addChangeTime,
-        wheelChairAccessible
+        wheelChairAccessible,
+        scrollRequestForwardContext,
+        scrollRequestBackwardContext
       } = req.query;
       
       if (!fromStation || !toStation) {
@@ -267,6 +269,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (wheelChairAccessible) {
         params.wheelChairAccessible = wheelChairAccessible as string;
+      }
+
+      if (scrollRequestForwardContext) {
+        params.scrollRequestForwardContext = scrollRequestForwardContext as string;
+      }
+
+      if (scrollRequestBackwardContext) {
+        params.scrollRequestBackwardContext = scrollRequestBackwardContext as string;
       }
 
       const data = await fetchNS("/v3/trips", params);

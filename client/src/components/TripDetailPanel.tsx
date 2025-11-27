@@ -266,9 +266,9 @@ export default function TripDetailPanel({
           </div>
         </div>
       ) : (
-        <div className={`${isMobile ? '' : 'flex-1 flex flex-col min-h-0'}`}>
+        <div className={`${isMobile ? '' : 'flex-1 flex flex-col min-h-0 overflow-hidden'}`}>
           {/* Material Info Section (includes location map button) */}
-          <div className={`pt-4 ${isMobile ? '' : 'shrink-0'}`}>
+          <div className={`pt-4 ${isMobile ? '' : 'shrink-0 max-h-[40%] overflow-y-auto'}`}>
             <TrainComposition ritnummer={trainNumber} />
           </div>
 
@@ -287,7 +287,7 @@ export default function TripDetailPanel({
             </div>
           )}
 
-          <div ref={scrollAreaRef} className={`px-4 pb-4 ${isMobile ? '' : 'flex-1 overflow-y-auto min-h-0'}`}>
+          <div ref={scrollAreaRef} className={`px-4 pb-4 ${isMobile ? '' : 'flex-1 overflow-y-auto min-h-0 basis-0'}`}>
             <div className="space-y-2">
               {displayedStops.map((stop: any, displayIdx: number) => {
                 const isPassing = stop.status === "PASSING";
