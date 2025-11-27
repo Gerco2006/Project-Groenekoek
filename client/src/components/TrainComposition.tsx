@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Wifi, Bike, BatteryCharging, Accessibility, BellOff, Bath, Train as TrainIcon, ChevronDown, ChevronUp, Star, Layers, Map } from "lucide-react";
+import { Wifi, Bike, BatteryCharging, Accessibility, BellOff, Bath, Train as TrainIcon, ChevronDown, ChevronUp, Star, Layers, Map, Link, Unlink } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useWidgetManager } from "@/hooks/use-widget-manager";
 import { useState } from "react";
@@ -10,6 +10,7 @@ import TrainLocationMap from "./TrainLocationMap";
 
 interface TrainCompositionProps {
   ritnummer: string;
+  journeyStops?: Array<{ stop?: { name?: string; uicCode?: string } }>;
 }
 
 interface Facility {
@@ -29,10 +30,21 @@ const facilityMap: Record<string, Facility> = {
 
 type OpenSection = 'details' | 'location' | null;
 
-export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
+export default function TrainComposition({ ritnummer, journeyStops }: TrainCompositionProps) {
   const isMobile = useIsMobile();
   const [openSection, setOpenSection] = useState<OpenSection>(null);
   const { addTrackedMaterial, removeTrackedMaterial, isMaterialTracked, config } = useWidgetManager();
+
+  // Normalize station name for comparison
+  const normalizeStationName = (name: string | undefined | null): string => {
+    if (!name) return "";
+    return name.toLowerCase().trim();
+  };
+
+  // Derive first and last stop of the journey
+  const stoppingStops = journeyStops?.filter((s: any) => s.status !== "PASSING") || [];
+  const journeyFirstStop = normalizeStationName(stoppingStops[0]?.stop?.name);
+  const journeyLastStop = normalizeStationName(stoppingStops[stoppingStops.length - 1]?.stop?.name);
 
   const handleToggleSection = (section: OpenSection) => {
     setOpenSection(prev => prev === section ? null : section);
@@ -77,6 +89,24 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
   }
 
   const materieeldelen = compositionData.materieeldelen || [];
+
+  // Helper function to check if a train unit has different start/end than the main journey
+  const getCompositionChange = (deel: any) => {
+    const deelStart = deel.vertrekStationNaam || deel.vertrekStation?.naam;
+    const deelEnd = deel.eindStationNaam || deel.eindStation?.naam;
+    const normalizedDeelStart = normalizeStationName(deelStart);
+    const normalizedDeelEnd = normalizeStationName(deelEnd);
+    
+    const joinsLater = normalizedDeelStart && journeyFirstStop && 
+      normalizedDeelStart !== journeyFirstStop;
+    const leavesEarly = normalizedDeelEnd && journeyLastStop && 
+      normalizedDeelEnd !== journeyLastStop;
+    
+    return {
+      joinsAt: joinsLater ? deelStart : null,
+      leavesAt: leavesEarly ? deelEnd : null
+    };
+  };
 
   // Helper function to get seat counts from various possible data structures
   const getSeatsFromDeel = (deel: any) => {
@@ -148,36 +178,53 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
             data-testid="train-visualization"
           >
             <div className="flex px-2 w-max">
-              {materieeldelen.map((deel: any, deelIndex: number) => (
-                <div 
-                  key={deelIndex} 
-                  className="shrink-0"
-                  style={{ 
-                    width: 'auto',
-                    height: '45px',
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    padding: 0,
-                  }}
-                  data-testid={`train-part-${deelIndex}`}
-                >
-                  {deel.afbeelding && (
-                    <img 
-                      src={deel.afbeelding}
-                      alt={`${deel.type} - ${deel.materieelnummer}`}
-                      style={{
-                        height: '100%',
-                        width: 'auto',
-                        display: 'block',
-                        objectFit: 'contain',
-                        objectPosition: 'center bottom',
-                      }}
-                    />
-                  )}
-                </div>
-              ))}
+              {materieeldelen.map((deel: any, deelIndex: number) => {
+                const change = getCompositionChange(deel);
+                return (
+                  <div 
+                    key={deelIndex} 
+                    className="shrink-0 relative"
+                    style={{ 
+                      width: 'auto',
+                      height: '45px',
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      justifyContent: 'center',
+                      overflow: 'visible',
+                      padding: 0,
+                    }}
+                    data-testid={`train-part-${deelIndex}`}
+                  >
+                    {(change.joinsAt || change.leavesAt) && (
+                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 flex gap-0.5 z-10">
+                        {change.joinsAt && (
+                          <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center" title={`Komt erbij in ${change.joinsAt}`}>
+                            <Link className="w-2 h-2 text-white" />
+                          </div>
+                        )}
+                        {change.leavesAt && (
+                          <div className="w-3 h-3 rounded-full bg-orange-500 flex items-center justify-center" title={`Gaat eraf in ${change.leavesAt}`}>
+                            <Unlink className="w-2 h-2 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {deel.afbeelding && (
+                      <img 
+                        src={deel.afbeelding}
+                        alt={`${deel.type} - ${deel.materieelnummer}`}
+                        style={{
+                          height: '100%',
+                          width: 'auto',
+                          display: 'block',
+                          objectFit: 'contain',
+                          objectPosition: 'center bottom',
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
           <p className="text-xs text-muted-foreground text-center pt-2">
@@ -272,6 +319,7 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
               {materieeldelen.map((deel: any, index: number) => {
                 const isTracked = isMaterialTracked(String(deel.materieelnummer));
                 const deelSeats = getSeatsFromDeel(deel);
+                const change = getCompositionChange(deel);
                 return (
                   <Card key={index} className="bg-card/80 p-4 space-y-3" data-testid={`material-part-${index}`}>
                     <div className="flex items-center justify-between gap-2">
@@ -298,6 +346,24 @@ export default function TrainComposition({ ritnummer }: TrainCompositionProps) {
                         </Badge>
                       </div>
                     </div>
+
+                    {/* Composition changes */}
+                    {(change.joinsAt || change.leavesAt) && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {change.joinsAt && (
+                          <Badge variant="outline" className="text-xs bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400" data-testid={`badge-joins-${index}`}>
+                            <Link className="w-3 h-3 mr-1" />
+                            Komt erbij in {change.joinsAt}
+                          </Badge>
+                        )}
+                        {change.leavesAt && (
+                          <Badge variant="outline" className="text-xs bg-orange-500/10 border-orange-500/30 text-orange-700 dark:text-orange-400" data-testid={`badge-leaves-${index}`}>
+                            <Unlink className="w-3 h-3 mr-1" />
+                            Gaat eraf in {change.leavesAt}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
 
                     {/* Seats */}
                     <div className="grid grid-cols-3 gap-2 text-xs">

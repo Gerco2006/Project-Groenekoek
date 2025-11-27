@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { X, Clock, AlertCircle, Navigation, Loader2, Info, Train, Wifi, UtensilsCrossed, Accessibility, BatteryCharging, ChevronDown, ChevronUp, Droplet, Bike, Users } from "lucide-react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { X, Clock, AlertCircle, Navigation, Loader2, Info, Train, Wifi, UtensilsCrossed, Accessibility, BatteryCharging, ChevronDown, ChevronUp, Droplet, Bike, Users, Link, Unlink } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import TrainComposition from "./TrainComposition";
 import { useQuery } from "@tanstack/react-query";
@@ -89,6 +89,72 @@ export default function TripDetailPanel({
     },
     retry: 1,
   });
+
+  const { data: compositionData } = useQuery({
+    queryKey: ["/api/train-composition", trainNumber],
+    enabled: open && !!trainNumber,
+    queryFn: async () => {
+      const response = await fetch(`/api/train-composition/${trainNumber}?features=zitplaats`);
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error("Failed to fetch composition data");
+      }
+      return response.json();
+    },
+    retry: 1,
+  });
+
+  // Normalize station name for comparison
+  const normalizeStationName = (name: string | undefined | null): string => {
+    if (!name) return "";
+    return name.toLowerCase().trim();
+  };
+
+  // Calculate composition changes per stop
+  const compositionChangesPerStop = useMemo(() => {
+    if (!compositionData?.materieeldelen || !journeyData?.payload?.stops) return {};
+    
+    const stoppingStops = journeyData.payload.stops.filter((s: any) => s.status !== "PASSING");
+    const journeyFirstStop = normalizeStationName(stoppingStops[0]?.stop?.name);
+    const journeyLastStop = normalizeStationName(stoppingStops[stoppingStops.length - 1]?.stop?.name);
+    
+    // Map normalized stop names to original names for display
+    const stopNameMap: Record<string, string> = {};
+    for (const stop of stoppingStops) {
+      const normalized = normalizeStationName(stop.stop?.name);
+      if (normalized && stop.stop?.name) {
+        stopNameMap[normalized] = stop.stop.name;
+      }
+    }
+    
+    const changes: Record<string, { joining: string[]; leaving: string[] }> = {};
+    
+    for (const deel of compositionData.materieeldelen) {
+      const deelStart = deel.vertrekStationNaam || deel.vertrekStation?.naam;
+      const deelEnd = deel.eindStationNaam || deel.eindStation?.naam;
+      const normalizedDeelStart = normalizeStationName(deelStart);
+      const normalizedDeelEnd = normalizeStationName(deelEnd);
+      const materialInfo = `${deel.type} ${deel.materieelnummer}`;
+      
+      // Check if this unit joins later (different start than journey first stop)
+      if (normalizedDeelStart && journeyFirstStop && normalizedDeelStart !== journeyFirstStop) {
+        // Find the matching stop name from the journey
+        const matchingStopName = stopNameMap[normalizedDeelStart] || deelStart;
+        if (!changes[matchingStopName]) changes[matchingStopName] = { joining: [], leaving: [] };
+        changes[matchingStopName].joining.push(materialInfo);
+      }
+      
+      // Check if this unit leaves early (different end than journey last stop)
+      if (normalizedDeelEnd && journeyLastStop && normalizedDeelEnd !== journeyLastStop) {
+        // Find the matching stop name from the journey
+        const matchingStopName = stopNameMap[normalizedDeelEnd] || deelEnd;
+        if (!changes[matchingStopName]) changes[matchingStopName] = { joining: [], leaving: [] };
+        changes[matchingStopName].leaving.push(materialInfo);
+      }
+    }
+    
+    return changes;
+  }, [compositionData, journeyData]);
 
   const formatTime = (dateTime: string) => {
     if (!dateTime) return null;
@@ -269,7 +335,7 @@ export default function TripDetailPanel({
         <div className={`${isMobile ? '' : 'flex-1 flex flex-col min-h-0 overflow-hidden'}`}>
           {/* Material Info Section (includes location map button) */}
           <div className={`pt-4 ${isMobile ? '' : 'shrink-0 max-h-[40%] overflow-y-auto'}`}>
-            <TrainComposition ritnummer={trainNumber} />
+            <TrainComposition ritnummer={trainNumber} journeyStops={allStops} />
           </div>
 
           {!isNonTrainTransport && (
@@ -368,6 +434,24 @@ export default function TripDetailPanel({
                             )}
                           </div>
                           
+                          {/* Composition changes at this stop */}
+                          {compositionChangesPerStop[stop.stop?.name] && (
+                            <div className="flex flex-wrap gap-1.5 mb-2">
+                              {compositionChangesPerStop[stop.stop?.name].joining.length > 0 && (
+                                <Badge variant="outline" className="text-xs bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400" data-testid={`stop-joining-${originalIdx}`}>
+                                  <Link className="w-3 h-3 mr-1" />
+                                  +{compositionChangesPerStop[stop.stop?.name].joining.length} stel(len) erbij
+                                </Badge>
+                              )}
+                              {compositionChangesPerStop[stop.stop?.name].leaving.length > 0 && (
+                                <Badge variant="outline" className="text-xs bg-orange-500/10 border-orange-500/30 text-orange-700 dark:text-orange-400" data-testid={`stop-leaving-${originalIdx}`}>
+                                  <Unlink className="w-3 h-3 mr-1" />
+                                  -{compositionChangesPerStop[stop.stop?.name].leaving.length} stel(len) eraf
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+
                           {isPassing ? (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <AlertCircle className="w-3 h-3" />
@@ -497,7 +581,7 @@ export default function TripDetailPanel({
             <>
               {/* Fixed Train Composition Section (includes location map button) */}
               <div className="pt-4 shrink-0">
-                <TrainComposition ritnummer={trainNumber} />
+                <TrainComposition ritnummer={trainNumber} journeyStops={allStops} />
               </div>
 
               {!isNonTrainTransport && (
@@ -587,6 +671,24 @@ export default function TripDetailPanel({
                                 )}
                               </div>
                               
+                              {/* Composition changes at this stop (mobile) */}
+                              {compositionChangesPerStop[stop.stop?.name] && (
+                                <div className="flex flex-wrap gap-1.5 mb-2">
+                                  {compositionChangesPerStop[stop.stop?.name].joining.length > 0 && (
+                                    <Badge variant="outline" className="text-xs bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400" data-testid={`mobile-stop-joining-${originalIdx}`}>
+                                      <Link className="w-3 h-3 mr-1" />
+                                      +{compositionChangesPerStop[stop.stop?.name].joining.length} stel(len) erbij
+                                    </Badge>
+                                  )}
+                                  {compositionChangesPerStop[stop.stop?.name].leaving.length > 0 && (
+                                    <Badge variant="outline" className="text-xs bg-orange-500/10 border-orange-500/30 text-orange-700 dark:text-orange-400" data-testid={`mobile-stop-leaving-${originalIdx}`}>
+                                      <Unlink className="w-3 h-3 mr-1" />
+                                      -{compositionChangesPerStop[stop.stop?.name].leaving.length} stel(len) eraf
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+
                               {isPassing ? (
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <AlertCircle className="w-3 h-3" />
