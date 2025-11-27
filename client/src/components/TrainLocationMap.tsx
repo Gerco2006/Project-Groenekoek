@@ -132,32 +132,37 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0,
   const routeRef = useRef<[number, number][]>(route);
   const currentSegmentRef = useRef<number>(0);
   const currentProgressRef = useRef<number>(0);
+  const lastRouteRef = useRef<[number, number][]>([]);
 
   useEffect(() => {
     gpsPositionRef.current = position;
     speedRef.current = speed;
-    routeRef.current = route;
-
-    if (route.length >= 2) {
-      const { segmentIndex, projectedPoint, progressOnSegment } = findNearestSegmentOnRoute(position, route);
+    
+    const routeChanged = route.length !== lastRouteRef.current.length || 
+      (route.length > 0 && lastRouteRef.current.length > 0 && 
+       (route[0][0] !== lastRouteRef.current[0][0] || route[0][1] !== lastRouteRef.current[0][1]));
+    
+    if (routeChanged && route.length >= 2) {
+      const { segmentIndex, projectedPoint, progressOnSegment } = findNearestSegmentOnRoute(currentPosRef.current, route);
       currentSegmentRef.current = segmentIndex;
       currentProgressRef.current = progressOnSegment;
-      
-      if (!isInitializedRef.current) {
+    }
+    
+    routeRef.current = route;
+    lastRouteRef.current = route;
+
+    if (!isInitializedRef.current) {
+      if (route.length >= 2) {
+        const { projectedPoint } = findNearestSegmentOnRoute(position, route);
         currentPosRef.current = projectedPoint;
-        isInitializedRef.current = true;
-        if (markerRef.current) {
-          markerRef.current.setLatLng(projectedPoint);
-        }
-        onPositionUpdate?.(projectedPoint);
+      } else {
+        currentPosRef.current = position;
       }
-    } else if (!isInitializedRef.current) {
-      currentPosRef.current = position;
       isInitializedRef.current = true;
       if (markerRef.current) {
-        markerRef.current.setLatLng(position);
+        markerRef.current.setLatLng(currentPosRef.current);
       }
-      onPositionUpdate?.(position);
+      onPositionUpdate?.(currentPosRef.current);
     }
   }, [position, speed, route, onPositionUpdate]);
 
@@ -724,8 +729,8 @@ export default function TrainLocationMap({
       }
       return response.json();
     },
-    refetchInterval: isExpanded ? 20000 : false,
-    staleTime: 15000,
+    refetchInterval: isExpanded ? 15000 : false,
+    staleTime: 10000,
     enabled: isExpanded,
   });
 
