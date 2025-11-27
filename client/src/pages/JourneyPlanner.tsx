@@ -279,7 +279,7 @@ export default function JourneyPlanner() {
             ?.flatMap((ps: any) => ps.section?.stations || [])
             .map((s: any) => s.name.toLowerCase()) || [];
           return routeStations.some(rs => 
-            affectedStations.some((as: string) => as.includes(rs.toLowerCase()) || rs.toLowerCase().includes(as))
+            affectedStations.some((as: string) => as === rs.toLowerCase())
           );
         })
         .filter((d: any, index: number, self: any[]) => 
