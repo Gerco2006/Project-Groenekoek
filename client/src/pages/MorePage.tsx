@@ -26,23 +26,6 @@ export default function MorePage() {
           </p>
         </div>
 
-        <Link href="/storingen">
-          <Card className="hover-elevate cursor-pointer" data-testid="card-disruptions-link">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="w-5 h-5 text-primary" />
-                  <div>
-                    <CardTitle>Storingen & Werkzaamheden</CardTitle>
-                    <CardDescription>Bekijk actuele storingen en geplande werkzaamheden</CardDescription>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
-              </div>
-            </CardHeader>
-          </Card>
-        </Link>
-
         <Card data-testid="card-theme">
           <CardHeader>
             <div className="flex items-center gap-3">
