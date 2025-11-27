@@ -369,6 +369,18 @@ export default function JourneyPlanner() {
       return;
     }
     
+    // Debug: log what's being saved
+    console.log('[TravNL Debug] Saving trip:', {
+      delayMinutes: selectedTrip.delayMinutes,
+      status: selectedTrip.status,
+      legsWithDelay: selectedTrip.legs.map(leg => ({
+        from: leg.from,
+        to: leg.to,
+        departureDelayMinutes: leg.departureDelayMinutes,
+        arrivalDelayMinutes: leg.arrivalDelayMinutes,
+      }))
+    });
+    
     addSavedTrip({
       name: `${from} → ${to}`,
       from,
@@ -435,6 +447,24 @@ export default function JourneyPlanner() {
         const actualDeparture = leg.origin.actualDateTime;
         const plannedArrival = leg.destination.plannedDateTime;
         const actualArrival = leg.destination.actualDateTime;
+        
+        // Debug logging
+        if (actualDeparture && plannedDeparture && actualDeparture !== plannedDeparture) {
+          console.log('[TravNL Debug] Departure delay detected:', {
+            from: leg.origin.name,
+            planned: plannedDeparture,
+            actual: actualDeparture,
+            delayMinutes: Math.round((new Date(actualDeparture).getTime() - new Date(plannedDeparture).getTime()) / 60000)
+          });
+        }
+        if (actualArrival && plannedArrival && actualArrival !== plannedArrival) {
+          console.log('[TravNL Debug] Arrival delay detected:', {
+            to: leg.destination.name,
+            planned: plannedArrival,
+            actual: actualArrival,
+            delayMinutes: Math.round((new Date(actualArrival).getTime() - new Date(plannedArrival).getTime()) / 60000)
+          });
+        }
         
         return {
           trainType: leg.product.categoryCode === "SPR" ? "Sprinter" : 

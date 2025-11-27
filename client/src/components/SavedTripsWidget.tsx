@@ -13,6 +13,21 @@ interface SavedTripsWidgetProps {
 }
 
 export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: SavedTripsWidgetProps) {
+  // Debug: log all saved trips and their delay data
+  console.log('[TravNL Debug] SavedTripsWidget trips:', trips.map(t => ({
+    id: t.id,
+    from: t.from,
+    to: t.to,
+    delayMinutes: t.delayMinutes,
+    status: t.status,
+    legs: t.legs?.map(l => ({
+      from: l.from,
+      to: l.to,
+      departureDelayMinutes: l.departureDelayMinutes,
+      arrivalDelayMinutes: l.arrivalDelayMinutes,
+    }))
+  })));
+
   const formatTime = (dateTime: string) => {
     if (!dateTime) return "";
     const date = new Date(dateTime);
