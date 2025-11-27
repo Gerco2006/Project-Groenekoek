@@ -214,7 +214,51 @@ function findRouteBetweenStops(
   return route;
 }
 
-function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
+type LabelPlacement = 'top' | 'bottom' | 'left' | 'right';
+
+function calculateLabelPlacement(
+  station: Station,
+  stationIndex: number,
+  stations: Station[],
+  routePositions: [number, number][]
+): LabelPlacement {
+  if (stations.length < 2) return 'bottom';
+  
+  let prevStation: Station | null = null;
+  let nextStation: Station | null = null;
+  
+  if (stationIndex > 0) {
+    prevStation = stations[stationIndex - 1];
+  }
+  if (stationIndex < stations.length - 1) {
+    nextStation = stations[stationIndex + 1];
+  }
+  
+  let dx = 0;
+  let dy = 0;
+  
+  if (prevStation) {
+    dx += station.lng - prevStation.lng;
+    dy += station.lat - prevStation.lat;
+  }
+  if (nextStation) {
+    dx += nextStation.lng - station.lng;
+    dy += nextStation.lat - station.lat;
+  }
+  
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+  
+  if (absDx > absDy * 1.5) {
+    return dy >= 0 ? 'bottom' : 'top';
+  } else if (absDy > absDx * 1.5) {
+    return dx >= 0 ? 'left' : 'right';
+  } else {
+    return 'bottom';
+  }
+}
+
+function createStationIcon(station: Station, isDark: boolean, placement: LabelPlacement = 'bottom'): L.DivIcon {
   let bgColor = '#f97316';
   let size = 10;
   
@@ -227,11 +271,91 @@ function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
   }
   
   const textColor = isDark ? '#f3f4f6' : '#1f2937';
-  const labelBg = isDark ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)';
+  const labelBg = isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.9)';
   const borderColor = isDark ? 'rgba(71, 85, 105, 0.5)' : 'rgba(203, 213, 225, 0.8)';
   const shadow = isDark 
     ? '0 2px 8px rgba(0, 0, 0, 0.3)' 
-    : '0 2px 8px rgba(0, 0, 0, 0.08)';
+    : '0 2px 8px rgba(0, 0, 0, 0.1)';
+  const arrowColor = isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.9)';
+  
+  let labelStyle = '';
+  let arrowStyle = '';
+  
+  switch (placement) {
+    case 'top':
+      labelStyle = `
+        bottom: ${size + 8}px;
+        left: 50%;
+        transform: translateX(-50%);
+      `;
+      arrowStyle = `
+        position: absolute;
+        bottom: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 5px solid ${arrowColor};
+      `;
+      break;
+    case 'left':
+      labelStyle = `
+        right: ${size + 8}px;
+        top: 50%;
+        transform: translateY(-50%);
+      `;
+      arrowStyle = `
+        position: absolute;
+        right: -5px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+        border-left: 5px solid ${arrowColor};
+      `;
+      break;
+    case 'right':
+      labelStyle = `
+        left: ${size + 8}px;
+        top: 50%;
+        transform: translateY(-50%);
+      `;
+      arrowStyle = `
+        position: absolute;
+        left: -5px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+        border-right: 5px solid ${arrowColor};
+      `;
+      break;
+    case 'bottom':
+    default:
+      labelStyle = `
+        top: ${size + 8}px;
+        left: 50%;
+        transform: translateX(-50%);
+      `;
+      arrowStyle = `
+        position: absolute;
+        top: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 5px solid ${arrowColor};
+      `;
+      break;
+  }
   
   return L.divIcon({
     className: '',
@@ -247,9 +371,7 @@ function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
         "></div>
         <div style="
           position: absolute;
-          top: ${size + 4}px;
-          left: 50%;
-          transform: translateX(-50%);
+          ${labelStyle}
           white-space: nowrap;
           padding: 3px 8px;
           background: ${labelBg};
@@ -262,12 +384,45 @@ function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
           color: ${textColor};
           box-shadow: ${shadow};
           z-index: 1000;
-        ">${station.name}</div>
+        ">
+          <div style="${arrowStyle}"></div>
+          ${station.name}
+        </div>
       </div>
     `,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
+}
+
+function MapResizeHandler() {
+  const map = useMap();
+  const containerRef = useRef<HTMLElement | null>(null);
+  
+  useEffect(() => {
+    const container = map.getContainer();
+    containerRef.current = container;
+    
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    
+    setTimeout(handleResize, 100);
+    setTimeout(handleResize, 300);
+    setTimeout(handleResize, 500);
+    
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    
+    resizeObserver.observe(container);
+    
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [map]);
+  
+  return null;
 }
 
 function FitBounds({ stations }: { stations: Station[] }) {
@@ -277,8 +432,12 @@ function FitBounds({ stations }: { stations: Station[] }) {
   useEffect(() => {
     if (stations.length > 0 && !fittedRef.current) {
       const bounds = L.latLngBounds(stations.map(s => [s.lat, s.lng] as [number, number]));
-      map.fitBounds(bounds, { padding: [60, 60] });
+      map.fitBounds(bounds, { padding: [50, 50] });
       fittedRef.current = true;
+      
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
     }
   }, [stations, map]);
   
@@ -423,6 +582,7 @@ export default function TripRouteMap({ legs, compact = false }: TripRouteMapProp
           url={tileUrl}
           maxZoom={19}
         />
+        <MapResizeHandler />
         <FitBounds stations={stations} />
         
         {routePositions.length > 1 && (
@@ -436,14 +596,17 @@ export default function TripRouteMap({ legs, compact = false }: TripRouteMapProp
           />
         )}
         
-        {stations.map((station, idx) => (
-          <Marker
-            key={`${station.name}-${idx}`}
-            position={[station.lat, station.lng]}
-            icon={createStationIcon(station, isDark)}
-            zIndexOffset={station.type === "start" ? 100 : station.type === "end" ? 90 : 80}
-          />
-        ))}
+        {stations.map((station, idx) => {
+          const placement = calculateLabelPlacement(station, idx, stations, routePositions);
+          return (
+            <Marker
+              key={`${station.name}-${idx}`}
+              position={[station.lat, station.lng]}
+              icon={createStationIcon(station, isDark, placement)}
+              zIndexOffset={station.type === "start" ? 100 : station.type === "end" ? 90 : 80}
+            />
+          );
+        })}
       </MapContainer>
     </div>
   );
