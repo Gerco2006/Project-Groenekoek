@@ -643,18 +643,18 @@ function findTracksBetweenPoints(
   return bestTrack;
 }
 
-function RailwayOverlay({ isDark }: { isDark: boolean }) {
+function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; isDark: boolean }) {
   const map = useMap();
-  const [opacity, setOpacity] = useState(isDark ? 0.8 : 0.7);
+  const [opacity, setOpacity] = useState(isDark ? 0.6 : 0.5);
   
   useEffect(() => {
     const handleZoom = () => {
       const zoom = map.getZoom();
       if (zoom > 15) {
         const fadeAmount = Math.min(1, (zoom - 15) / 2);
-        setOpacity((isDark ? 0.8 : 0.7) * (1 - fadeAmount));
+        setOpacity((isDark ? 0.6 : 0.5) * (1 - fadeAmount));
       } else {
-        setOpacity(isDark ? 0.8 : 0.7);
+        setOpacity(isDark ? 0.6 : 0.5);
       }
     };
     
@@ -665,14 +665,39 @@ function RailwayOverlay({ isDark }: { isDark: boolean }) {
       map.off('zoomend', handleZoom);
     };
   }, [map, isDark]);
+
+  const trackPositions = useMemo(() => {
+    const positions: [number, number][][] = [];
+    
+    for (const feature of features) {
+      if (feature.geometry.type === "LineString") {
+        const coords = feature.geometry.coordinates as number[][];
+        positions.push(coords.map(c => [c[1], c[0]] as [number, number]));
+      } else if (feature.geometry.type === "MultiLineString") {
+        const multiCoords = feature.geometry.coordinates as number[][][];
+        for (const coords of multiCoords) {
+          positions.push(coords.map(c => [c[1], c[0]] as [number, number]));
+        }
+      }
+    }
+    
+    return positions;
+  }, [features]);
   
   return (
-    <TileLayer
-      url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
-      attribution='&copy; <a href="https://www.openrailwaymap.org">OpenRailwayMap</a>'
-      opacity={opacity}
-      className="transition-opacity duration-300"
-    />
+    <>
+      {trackPositions.map((positions, index) => (
+        <Polyline
+          key={index}
+          positions={positions}
+          pathOptions={{
+            color: isDark ? '#4b5563' : '#9ca3af',
+            weight: 2,
+            opacity: opacity,
+          }}
+        />
+      ))}
+    </>
   );
 }
 
@@ -778,7 +803,9 @@ function MapContent({
               : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             }
           />
-          <RailwayOverlay isDark={isDark} />
+          {spoorkaartData?.payload?.features && (
+            <RailwayTracksLayer features={spoorkaartData.payload.features} isDark={isDark} />
+          )}
           <MapFollower 
             trainPosition={animatedPosition} 
             isFollowing={isFollowing} 

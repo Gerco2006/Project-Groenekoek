@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -9,18 +9,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTheme } from "@/components/ThemeProvider";
 import "leaflet/dist/leaflet.css";
 
-function RailwayOverlay({ isDark }: { isDark: boolean }) {
+interface GeoJSONFeature {
+  type: string;
+  geometry: {
+    type: string;
+    coordinates: number[][] | number[][][];
+  };
+  properties: Record<string, any>;
+}
+
+interface SpoorkaartResponse {
+  type: string;
+  features: GeoJSONFeature[];
+}
+
+function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; isDark: boolean }) {
   const map = useMap();
-  const [opacity, setOpacity] = useState(isDark ? 0.8 : 0.7);
+  const [opacity, setOpacity] = useState(isDark ? 0.6 : 0.5);
   
   useEffect(() => {
     const handleZoom = () => {
       const zoom = map.getZoom();
       if (zoom > 15) {
         const fadeAmount = Math.min(1, (zoom - 15) / 2);
-        setOpacity((isDark ? 0.8 : 0.7) * (1 - fadeAmount));
+        setOpacity((isDark ? 0.6 : 0.5) * (1 - fadeAmount));
       } else {
-        setOpacity(isDark ? 0.8 : 0.7);
+        setOpacity(isDark ? 0.6 : 0.5);
       }
     };
     
@@ -31,14 +45,39 @@ function RailwayOverlay({ isDark }: { isDark: boolean }) {
       map.off('zoomend', handleZoom);
     };
   }, [map, isDark]);
+
+  const trackPositions = useMemo(() => {
+    const positions: [number, number][][] = [];
+    
+    for (const feature of features) {
+      if (feature.geometry.type === "LineString") {
+        const coords = feature.geometry.coordinates as number[][];
+        positions.push(coords.map(c => [c[1], c[0]] as [number, number]));
+      } else if (feature.geometry.type === "MultiLineString") {
+        const multiCoords = feature.geometry.coordinates as number[][][];
+        for (const coords of multiCoords) {
+          positions.push(coords.map(c => [c[1], c[0]] as [number, number]));
+        }
+      }
+    }
+    
+    return positions;
+  }, [features]);
   
   return (
-    <TileLayer
-      url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
-      attribution='&copy; <a href="https://www.openrailwaymap.org">OpenRailwayMap</a>'
-      opacity={opacity}
-      className="transition-opacity duration-300"
-    />
+    <>
+      {trackPositions.map((positions, index) => (
+        <Polyline
+          key={index}
+          positions={positions}
+          pathOptions={{
+            color: isDark ? '#4b5563' : '#9ca3af',
+            weight: 2,
+            opacity: opacity,
+          }}
+        />
+      ))}
+    </>
   );
 }
 
@@ -390,6 +429,19 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
     staleTime: 15000,
   });
 
+  const { data: spoorkaartData } = useQuery<{ payload: SpoorkaartResponse }>({
+    queryKey: ["/api/spoorkaart"],
+    queryFn: async () => {
+      const response = await fetch("/api/spoorkaart");
+      if (!response.ok) {
+        throw new Error("Failed to fetch railway tracks");
+      }
+      return response.json();
+    },
+    staleTime: 86400000,
+    gcTime: 86400000,
+  });
+
   const trains = data?.payload?.treinen || [];
 
   useEffect(() => {
@@ -482,7 +534,9 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
                 : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               }
             />
-            <RailwayOverlay isDark={isDark} />
+            {spoorkaartData?.payload?.features && (
+              <RailwayTracksLayer features={spoorkaartData.payload.features} isDark={isDark} />
+            )}
             <MapController center={NETHERLANDS_CENTER} zoom={DEFAULT_ZOOM} />
             
             <MapClickHandler onMapClick={() => setSelectedTrain(null)} />
