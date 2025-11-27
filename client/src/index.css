@@ -302,8 +302,14 @@
 }
 
 .trip-route-station-label {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  border-radius: 10px !important;
+}
+
+.dark .trip-route-station-label {
+  background: rgba(17, 24, 39, 0.75) !important;
 }
 
 /* Leaflet map light mode fixes */

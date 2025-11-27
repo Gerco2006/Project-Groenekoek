@@ -226,11 +226,10 @@ function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
   }
   
   const textColor = isDark ? '#f3f4f6' : '#111827';
-  const labelBg = isDark ? 'rgba(17, 24, 39, 0.85)' : 'rgba(255, 255, 255, 0.88)';
-  const borderColor = isDark ? 'rgba(55, 65, 81, 0.8)' : 'rgba(209, 213, 219, 0.9)';
+  const borderColor = isDark ? 'rgba(55, 65, 81, 0.6)' : 'rgba(180, 180, 180, 0.5)';
   const shadow = isDark 
-    ? '0 2px 8px rgba(0, 0, 0, 0.5)' 
-    : '0 2px 8px rgba(0, 0, 0, 0.12)';
+    ? '0 2px 10px rgba(0, 0, 0, 0.4)' 
+    : '0 2px 10px rgba(0, 0, 0, 0.1)';
   
   return L.divIcon({
     className: 'trip-route-station-marker',
@@ -250,10 +249,8 @@ function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
           left: 50%;
           transform: translateX(-50%);
           white-space: nowrap;
-          padding: 4px 10px;
-          background: ${labelBg};
+          padding: 5px 12px;
           border: 1px solid ${borderColor};
-          border-radius: 6px;
           font-size: 11px;
           font-weight: 600;
           color: ${textColor};
