@@ -555,12 +555,21 @@ function findNearestTrackSegment(
   return nearestTrack;
 }
 
-function buildTrackGraph(features: GeoJSONFeature[]): Record<string, string[]> {
-  const graph: Record<string, string[]> = {};
+interface TrackGraph {
+  neighbors: Record<string, string[]>;
+  edgeCoords: Record<string, [number, number][]>;
+  nodeCoords: Record<string, [number, number]>;
+}
+
+function buildTrackGraph(features: GeoJSONFeature[]): TrackGraph {
+  const neighbors: Record<string, string[]> = {};
+  const edgeCoords: Record<string, [number, number][]> = {};
+  const nodeCoords: Record<string, [number, number]> = {};
   const tolerance = 0.0005;
   
   const roundCoord = (val: number) => Math.round(val / tolerance) * tolerance;
   const coordKey = (lat: number, lng: number) => `${roundCoord(lat)},${roundCoord(lng)}`;
+  const edgeKey = (keyA: string, keyB: string) => keyA < keyB ? `${keyA}|${keyB}` : `${keyB}|${keyA}`;
   
   for (const feature of features) {
     if (feature.geometry.type !== "LineString" && feature.geometry.type !== "MultiLineString") {
@@ -572,36 +581,49 @@ function buildTrackGraph(features: GeoJSONFeature[]): Record<string, string[]> {
       : [feature.geometry.coordinates as number[][]];
     
     for (const coords of lineStrings) {
-      for (let i = 0; i < coords.length - 1; i++) {
-        const keyA = coordKey(coords[i][1], coords[i][0]);
-        const keyB = coordKey(coords[i + 1][1], coords[i + 1][0]);
-        
-        if (!graph[keyA]) graph[keyA] = [];
-        if (!graph[keyB]) graph[keyB] = [];
-        if (!graph[keyA].includes(keyB)) graph[keyA].push(keyB);
-        if (!graph[keyB].includes(keyA)) graph[keyB].push(keyA);
+      if (coords.length < 2) continue;
+      
+      const startKey = coordKey(coords[0][1], coords[0][0]);
+      const endKey = coordKey(coords[coords.length - 1][1], coords[coords.length - 1][0]);
+      
+      if (!nodeCoords[startKey]) {
+        nodeCoords[startKey] = [coords[0][1], coords[0][0]];
+      }
+      if (!nodeCoords[endKey]) {
+        nodeCoords[endKey] = [coords[coords.length - 1][1], coords[coords.length - 1][0]];
+      }
+      
+      if (!neighbors[startKey]) neighbors[startKey] = [];
+      if (!neighbors[endKey]) neighbors[endKey] = [];
+      if (!neighbors[startKey].includes(endKey)) neighbors[startKey].push(endKey);
+      if (!neighbors[endKey].includes(startKey)) neighbors[endKey].push(startKey);
+      
+      const eKey = edgeKey(startKey, endKey);
+      const segmentCoords: [number, number][] = coords.map(c => [c[1], c[0]] as [number, number]);
+      
+      if (!edgeCoords[eKey] || segmentCoords.length > edgeCoords[eKey].length) {
+        edgeCoords[eKey] = segmentCoords;
       }
     }
   }
   
-  return graph;
+  return { neighbors, edgeCoords, nodeCoords };
 }
 
 function findNearestGraphNode(
   point: [number, number],
-  graph: Record<string, string[]>,
+  graph: TrackGraph,
   maxDistance: number
 ): string | null {
   let nearestKey: string | null = null;
   let nearestDist = Infinity;
   
-  const keys = Object.keys(graph);
+  const keys = Object.keys(graph.neighbors);
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    const parts = key.split(',');
-    const lat = parseFloat(parts[0]);
-    const lng = parseFloat(parts[1]);
-    const dist = distanceBetweenPoints(point, [lat, lng]);
+    const coords = graph.nodeCoords[key];
+    if (!coords) continue;
+    const dist = distanceBetweenPoints(point, coords);
     if (dist < nearestDist && dist < maxDistance) {
       nearestDist = dist;
       nearestKey = key;
@@ -612,12 +634,14 @@ function findNearestGraphNode(
 }
 
 function findPathBFS(
-  graph: Record<string, string[]>,
+  graph: TrackGraph,
   startKey: string,
   endKey: string,
   maxNodes: number = 500
 ): [number, number][] {
   if (startKey === endKey) return [];
+  
+  const edgeKey = (keyA: string, keyB: string) => keyA < keyB ? `${keyA}|${keyB}` : `${keyB}|${keyA}`;
   
   const queue: { key: string; path: string[] }[] = [{ key: startKey, path: [startKey] }];
   const visited: Record<string, boolean> = { [startKey]: true };
@@ -627,7 +651,7 @@ function findPathBFS(
     const current = queue.shift()!;
     nodesVisited++;
     
-    const neighbors = graph[current.key];
+    const neighbors = graph.neighbors[current.key];
     if (!neighbors) continue;
     
     for (let i = 0; i < neighbors.length; i++) {
@@ -637,10 +661,31 @@ function findPathBFS(
       const newPath = [...current.path, neighbor];
       
       if (neighbor === endKey) {
-        return newPath.map(k => {
-          const parts = k.split(',');
-          return [parseFloat(parts[0]), parseFloat(parts[1])] as [number, number];
-        });
+        const result: [number, number][] = [];
+        for (let j = 0; j < newPath.length - 1; j++) {
+          const eKey = edgeKey(newPath[j], newPath[j + 1]);
+          const edgePoints = graph.edgeCoords[eKey];
+          if (edgePoints && edgePoints.length > 0) {
+            const startCoord = graph.nodeCoords[newPath[j]];
+            const firstEdgePoint = edgePoints[0];
+            const lastEdgePoint = edgePoints[edgePoints.length - 1];
+            
+            const distToFirst = startCoord ? distanceBetweenPoints(startCoord, firstEdgePoint) : Infinity;
+            const distToLast = startCoord ? distanceBetweenPoints(startCoord, lastEdgePoint) : Infinity;
+            
+            if (distToFirst <= distToLast) {
+              result.push(...edgePoints);
+            } else {
+              result.push(...[...edgePoints].reverse());
+            }
+          } else {
+            const coord = graph.nodeCoords[newPath[j]];
+            if (coord) result.push(coord);
+          }
+        }
+        const lastCoord = graph.nodeCoords[newPath[newPath.length - 1]];
+        if (lastCoord) result.push(lastCoord);
+        return result;
       }
       
       visited[neighbor] = true;
