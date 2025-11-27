@@ -225,33 +225,38 @@ function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
     size = 14;
   }
   
-  const textColor = isDark ? '#f3f4f6' : '#111827';
-  const borderColor = isDark ? 'rgba(55, 65, 81, 0.6)' : 'rgba(180, 180, 180, 0.5)';
+  const textColor = isDark ? '#f3f4f6' : '#1f2937';
+  const labelBg = isDark ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)';
+  const borderColor = isDark ? 'rgba(71, 85, 105, 0.5)' : 'rgba(203, 213, 225, 0.8)';
   const shadow = isDark 
-    ? '0 2px 10px rgba(0, 0, 0, 0.4)' 
-    : '0 2px 10px rgba(0, 0, 0, 0.1)';
+    ? '0 4px 12px rgba(0, 0, 0, 0.3)' 
+    : '0 4px 12px rgba(0, 0, 0, 0.08)';
   
   return L.divIcon({
-    className: 'trip-route-station-marker',
+    className: '',
     html: `
       <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
         <div style="
           width: ${size}px;
           height: ${size}px;
           background-color: ${bgColor};
-          border: 2.5px solid ${isDark ? '#1f2937' : '#ffffff'};
+          border: 2.5px solid ${isDark ? '#1e293b' : '#ffffff'};
           border-radius: 50%;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.35);
         "></div>
-        <div class="trip-route-station-label" style="
+        <div style="
           position: absolute;
           top: ${size + 6}px;
           left: 50%;
           transform: translateX(-50%);
           white-space: nowrap;
-          padding: 5px 12px;
+          padding: 6px 14px;
+          background: ${labelBg};
+          -webkit-backdrop-filter: blur(16px);
+          backdrop-filter: blur(16px);
           border: 1px solid ${borderColor};
-          font-size: 11px;
+          border-radius: 12px;
+          font-size: 12px;
           font-weight: 600;
           color: ${textColor};
           box-shadow: ${shadow};
@@ -386,25 +391,28 @@ export default function TripRouteMap({ legs }: TripRouteMapProps) {
 
   const tileUrl = isDark
     ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png";
+    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
   return (
     <div 
       className="h-[250px] rounded-lg overflow-hidden border relative" 
-      style={{ zIndex: 0 }}
+      style={{ zIndex: 0, isolation: 'isolate' }}
       data-testid="map-trip-route"
     >
       <MapContainer
         center={[stations[0].lat, stations[0].lng]}
         zoom={10}
         className="h-full w-full"
-        style={{ background: isDark ? '#1a1a2e' : '#f5f5f5' }}
+        style={{ 
+          background: isDark ? '#1a1a2e' : '#e8e8e8',
+          minHeight: '250px'
+        }}
         zoomControl={true}
         attributionControl={false}
       >
         <TileLayer 
-          url={tileUrl} 
-          className={isDark ? '' : 'leaflet-tile-light'}
+          url={tileUrl}
+          maxZoom={19}
         />
         <FitBounds stations={stations} />
         

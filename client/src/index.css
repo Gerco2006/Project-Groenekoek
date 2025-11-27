@@ -295,28 +295,36 @@
   }
 }
 
-/* Trip Route Map Station Markers */
-.trip-route-station-marker {
-  background: transparent !important;
-  border: none !important;
-}
-
-.trip-route-station-label {
-  -webkit-backdrop-filter: blur(12px) !important;
-  backdrop-filter: blur(12px) !important;
-  background: rgba(255, 255, 255, 0.75) !important;
-  border-radius: 10px !important;
-}
-
-.dark .trip-route-station-label {
-  background: rgba(17, 24, 39, 0.75) !important;
-}
-
-/* Leaflet map light mode fixes */
+/* Leaflet map fixes */
 .leaflet-container {
   font-family: inherit;
+  background: #e8e8e8;
+}
+
+.dark .leaflet-container {
+  background: #1a1a2e;
 }
 
 .leaflet-tile-pane {
   opacity: 1 !important;
+}
+
+.leaflet-pane {
+  z-index: 1;
+}
+
+.leaflet-marker-pane {
+  z-index: 10;
+}
+
+/* Ensure tiles load properly */
+.leaflet-tile {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Fix for Leaflet divIcon default styles */
+.leaflet-div-icon {
+  background: transparent !important;
+  border: none !important;
 }
