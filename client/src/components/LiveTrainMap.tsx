@@ -9,6 +9,39 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTheme } from "@/components/ThemeProvider";
 import "leaflet/dist/leaflet.css";
 
+function RailwayOverlay({ isDark }: { isDark: boolean }) {
+  const map = useMap();
+  const [opacity, setOpacity] = useState(isDark ? 0.8 : 0.7);
+  
+  useEffect(() => {
+    const handleZoom = () => {
+      const zoom = map.getZoom();
+      if (zoom > 15) {
+        const fadeAmount = Math.min(1, (zoom - 15) / 2);
+        setOpacity((isDark ? 0.8 : 0.7) * (1 - fadeAmount));
+      } else {
+        setOpacity(isDark ? 0.8 : 0.7);
+      }
+    };
+    
+    map.on('zoomend', handleZoom);
+    handleZoom();
+    
+    return () => {
+      map.off('zoomend', handleZoom);
+    };
+  }, [map, isDark]);
+  
+  return (
+    <TileLayer
+      url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
+      attribution='&copy; <a href="https://www.openrailwaymap.org">OpenRailwayMap</a>'
+      opacity={opacity}
+      className="transition-opacity duration-300"
+    />
+  );
+}
+
 interface TrainVehicle {
   treinNummer: number;
   ritId: string;
@@ -449,6 +482,7 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
                 : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               }
             />
+            <RailwayOverlay isDark={isDark} />
             <MapController center={NETHERLANDS_CENTER} zoom={DEFAULT_ZOOM} />
             
             <MapClickHandler onMapClick={() => setSelectedTrain(null)} />

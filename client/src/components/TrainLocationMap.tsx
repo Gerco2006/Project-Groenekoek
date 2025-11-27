@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents, Pane } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -555,6 +555,127 @@ function findNearestTrackSegment(
   return nearestTrack;
 }
 
+function findRouteBetweenStops(
+  stops: Array<{ lat: number; lng: number }>,
+  features: GeoJSONFeature[]
+): [number, number][] {
+  if (stops.length < 2) return [];
+  
+  const route: [number, number][] = [];
+  
+  for (let i = 0; i < stops.length - 1; i++) {
+    const start: [number, number] = [stops[i].lat, stops[i].lng];
+    const end: [number, number] = [stops[i + 1].lat, stops[i + 1].lng];
+    
+    const segmentRoute = findTracksBetweenPoints(start, end, features);
+    
+    if (segmentRoute.length > 0) {
+      if (route.length > 0) {
+        route.push(...segmentRoute.slice(1));
+      } else {
+        route.push(...segmentRoute);
+      }
+    } else {
+      if (route.length === 0) {
+        route.push(start);
+      }
+      route.push(end);
+    }
+  }
+  
+  return route;
+}
+
+function findTracksBetweenPoints(
+  start: [number, number],
+  end: [number, number],
+  features: GeoJSONFeature[]
+): [number, number][] {
+  let bestTrack: [number, number][] = [];
+  let bestScore = Infinity;
+  const maxDistance = 0.005;
+  
+  for (const feature of features) {
+    if (feature.geometry.type !== "LineString" && feature.geometry.type !== "MultiLineString") {
+      continue;
+    }
+
+    const lineStrings: number[][][] = feature.geometry.type === "MultiLineString"
+      ? feature.geometry.coordinates as number[][][]
+      : [feature.geometry.coordinates as number[][]];
+
+    for (const coords of lineStrings) {
+      const track = coords.map(c => [c[1], c[0]] as [number, number]);
+      
+      let startIdx = -1;
+      let endIdx = -1;
+      let startDist = Infinity;
+      let endDist = Infinity;
+      
+      for (let i = 0; i < track.length; i++) {
+        const distToStart = distanceBetweenPoints(track[i], start);
+        const distToEnd = distanceBetweenPoints(track[i], end);
+        
+        if (distToStart < startDist && distToStart < maxDistance) {
+          startDist = distToStart;
+          startIdx = i;
+        }
+        if (distToEnd < endDist && distToEnd < maxDistance) {
+          endDist = distToEnd;
+          endIdx = i;
+        }
+      }
+      
+      if (startIdx !== -1 && endIdx !== -1 && startIdx !== endIdx) {
+        const score = startDist + endDist;
+        if (score < bestScore) {
+          bestScore = score;
+          if (startIdx < endIdx) {
+            bestTrack = track.slice(startIdx, endIdx + 1);
+          } else {
+            bestTrack = track.slice(endIdx, startIdx + 1).reverse();
+          }
+        }
+      }
+    }
+  }
+  
+  return bestTrack;
+}
+
+function RailwayOverlay({ isDark }: { isDark: boolean }) {
+  const map = useMap();
+  const [opacity, setOpacity] = useState(isDark ? 0.8 : 0.7);
+  
+  useEffect(() => {
+    const handleZoom = () => {
+      const zoom = map.getZoom();
+      if (zoom > 15) {
+        const fadeAmount = Math.min(1, (zoom - 15) / 2);
+        setOpacity((isDark ? 0.8 : 0.7) * (1 - fadeAmount));
+      } else {
+        setOpacity(isDark ? 0.8 : 0.7);
+      }
+    };
+    
+    map.on('zoomend', handleZoom);
+    handleZoom();
+    
+    return () => {
+      map.off('zoomend', handleZoom);
+    };
+  }, [map, isDark]);
+  
+  return (
+    <TileLayer
+      url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
+      attribution='&copy; <a href="https://www.openrailwaymap.org">OpenRailwayMap</a>'
+      opacity={opacity}
+      className="transition-opacity duration-300"
+    />
+  );
+}
+
 function MapContent({ 
   train, 
   trainPosition, 
@@ -596,6 +717,16 @@ function MapContent({
     }
     return findNearestTrackSegment(trainPosition, spoorkaartData.payload.features, trainHeading);
   }, [spoorkaartData, trainPosition, trainHeading]);
+
+  const stopsRoute = useMemo(() => {
+    if (!spoorkaartData?.payload?.features || stops.length < 2) {
+      return [];
+    }
+    const validStops = stops
+      .filter(s => s.stop.stop?.lat && s.stop.stop?.lng && s.stop.status !== "PASSING")
+      .map(s => ({ lat: s.stop.stop.lat, lng: s.stop.stop.lng }));
+    return findRouteBetweenStops(validStops, spoorkaartData.payload.features);
+  }, [spoorkaartData, stops]);
 
   const handlePositionUpdate = useCallback((pos: [number, number]) => {
     setAnimatedPosition(pos);
@@ -647,11 +778,25 @@ function MapContent({
               : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             }
           />
+          <RailwayOverlay isDark={isDark} />
           <MapFollower 
             trainPosition={animatedPosition} 
             isFollowing={isFollowing} 
             onUserInteraction={handleUserInteraction}
           />
+          
+          {/* Route line between stops */}
+          {stopsRoute.length >= 2 && (
+            <Polyline
+              positions={stopsRoute}
+              pathOptions={{
+                color: isDark ? '#60a5fa' : '#3b82f6',
+                weight: 4,
+                opacity: 0.7,
+                dashArray: '8, 8',
+              }}
+            />
+          )}
           
           {/* Station markers */}
           {stops.map((stopData, index) => {
