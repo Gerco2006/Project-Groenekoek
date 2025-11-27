@@ -224,37 +224,43 @@ function calculateLabelPlacement(
 ): LabelPlacement {
   if (stations.length < 2) return 'bottom';
   
-  let prevStation: Station | null = null;
-  let nextStation: Station | null = null;
+  const stationPos: [number, number] = [station.lat, station.lng];
   
-  if (stationIndex > 0) {
-    prevStation = stations[stationIndex - 1];
-  }
-  if (stationIndex < stations.length - 1) {
-    nextStation = stations[stationIndex + 1];
+  let nearestSegmentIdx = -1;
+  let minDist = Infinity;
+  
+  for (let i = 0; i < routePositions.length - 1; i++) {
+    const p1 = routePositions[i];
+    const p2 = routePositions[i + 1];
+    const midLat = (p1[0] + p2[0]) / 2;
+    const midLng = (p1[1] + p2[1]) / 2;
+    const dist = Math.sqrt(
+      Math.pow(stationPos[0] - midLat, 2) + 
+      Math.pow(stationPos[1] - midLng, 2)
+    );
+    if (dist < minDist) {
+      minDist = dist;
+      nearestSegmentIdx = i;
+    }
   }
   
-  let dx = 0;
-  let dy = 0;
+  if (nearestSegmentIdx === -1 || routePositions.length < 2) {
+    return 'bottom';
+  }
   
-  if (prevStation) {
-    dx += station.lng - prevStation.lng;
-    dy += station.lat - prevStation.lat;
-  }
-  if (nextStation) {
-    dx += nextStation.lng - station.lng;
-    dy += nextStation.lat - station.lat;
-  }
+  const p1 = routePositions[nearestSegmentIdx];
+  const p2 = routePositions[Math.min(nearestSegmentIdx + 1, routePositions.length - 1)];
+  
+  const dx = p2[1] - p1[1];
+  const dy = p2[0] - p1[0];
   
   const absDx = Math.abs(dx);
   const absDy = Math.abs(dy);
   
-  if (absDx > absDy * 1.5) {
-    return dy >= 0 ? 'bottom' : 'top';
-  } else if (absDy > absDx * 1.5) {
-    return dx >= 0 ? 'left' : 'right';
+  if (absDx > absDy) {
+    return dy > 0 ? 'bottom' : 'top';
   } else {
-    return 'bottom';
+    return dx > 0 ? 'left' : 'right';
   }
 }
 
@@ -432,7 +438,7 @@ function FitBounds({ stations }: { stations: Station[] }) {
   useEffect(() => {
     if (stations.length > 0 && !fittedRef.current) {
       const bounds = L.latLngBounds(stations.map(s => [s.lat, s.lng] as [number, number]));
-      map.fitBounds(bounds, { padding: [50, 50] });
+      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
       fittedRef.current = true;
       
       setTimeout(() => {
@@ -554,17 +560,11 @@ export default function TripRouteMap({ legs, compact = false }: TripRouteMapProp
     ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    e.stopPropagation();
-  };
-
   return (
     <div 
       className={`${mapHeight} rounded-lg overflow-hidden border relative`}
       style={{ zIndex: 0, isolation: 'isolate' }}
       data-testid="map-trip-route"
-      onTouchStart={handleTouchStart}
-      onTouchMove={(e) => e.stopPropagation()}
       data-vaul-no-drag
     >
       <MapContainer
@@ -573,10 +573,14 @@ export default function TripRouteMap({ legs, compact = false }: TripRouteMapProp
         className="h-full w-full"
         style={{ 
           background: isDark ? '#1a1a2e' : '#e8e8e8',
-          minHeight: compact ? '150px' : '200px'
+          minHeight: compact ? '150px' : '200px',
+          touchAction: 'pan-x pan-y'
         }}
-        zoomControl={true}
+        zoomControl={false}
         attributionControl={false}
+        dragging={true}
+        touchZoom={true}
+        scrollWheelZoom={false}
       >
         <TileLayer 
           url={tileUrl}
