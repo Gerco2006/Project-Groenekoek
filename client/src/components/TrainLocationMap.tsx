@@ -14,6 +14,103 @@ function toRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
 
+function distanceBetweenPoints(p1: [number, number], p2: [number, number]): number {
+  const latDiff = p2[0] - p1[0];
+  const lngDiff = p2[1] - p1[1];
+  return Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+}
+
+function findNearestSegmentOnRoute(
+  position: [number, number],
+  route: [number, number][]
+): { segmentIndex: number; projectedPoint: [number, number]; progressOnSegment: number } {
+  if (route.length < 2) {
+    return { segmentIndex: 0, projectedPoint: position, progressOnSegment: 0 };
+  }
+
+  let nearestSegment = 0;
+  let nearestPoint: [number, number] = route[0];
+  let nearestDistance = Infinity;
+  let nearestProgress = 0;
+
+  for (let i = 0; i < route.length - 1; i++) {
+    const a = route[i];
+    const b = route[i + 1];
+    
+    const abLat = b[0] - a[0];
+    const abLng = b[1] - a[1];
+    const apLat = position[0] - a[0];
+    const apLng = position[1] - a[1];
+    
+    const abLenSq = abLat * abLat + abLng * abLng;
+    let t = 0;
+    
+    if (abLenSq > 0) {
+      t = Math.max(0, Math.min(1, (apLat * abLat + apLng * abLng) / abLenSq));
+    }
+    
+    const projLat = a[0] + t * abLat;
+    const projLng = a[1] + t * abLng;
+    const projected: [number, number] = [projLat, projLng];
+    
+    const dist = distanceBetweenPoints(position, projected);
+    
+    if (dist < nearestDistance) {
+      nearestDistance = dist;
+      nearestSegment = i;
+      nearestPoint = projected;
+      nearestProgress = t;
+    }
+  }
+
+  return { segmentIndex: nearestSegment, projectedPoint: nearestPoint, progressOnSegment: nearestProgress };
+}
+
+function moveAlongRoute(
+  currentPos: [number, number],
+  route: [number, number][],
+  distanceToMove: number,
+  currentSegment: number,
+  currentProgress: number
+): { newPos: [number, number]; newSegment: number; newProgress: number } {
+  if (route.length < 2) {
+    return { newPos: currentPos, newSegment: 0, newProgress: 0 };
+  }
+
+  let segment = currentSegment;
+  let progress = currentProgress;
+  let remainingDistance = distanceToMove;
+
+  while (remainingDistance > 0 && segment < route.length - 1) {
+    const a = route[segment];
+    const b = route[segment + 1];
+    
+    const segmentLength = distanceBetweenPoints(a, b);
+    const remainingInSegment = segmentLength * (1 - progress);
+    
+    if (remainingDistance <= remainingInSegment) {
+      progress += (remainingDistance / segmentLength);
+      remainingDistance = 0;
+    } else {
+      remainingDistance -= remainingInSegment;
+      segment++;
+      progress = 0;
+    }
+  }
+
+  if (segment >= route.length - 1) {
+    segment = route.length - 2;
+    progress = 1;
+  }
+
+  const a = route[segment];
+  const b = route[segment + 1];
+  const newLat = a[0] + progress * (b[0] - a[0]);
+  const newLng = a[1] + progress * (b[1] - a[1]);
+
+  return { newPos: [newLat, newLng], newSegment: segment, newProgress: progress };
+}
+
 interface AnimatedTrainMarkerProps {
   position: [number, number];
   speed: number;
@@ -21,26 +118,40 @@ interface AnimatedTrainMarkerProps {
   icon: L.DivIcon;
   zIndexOffset?: number;
   onPositionUpdate?: (pos: [number, number]) => void;
+  route?: [number, number][];
 }
 
-function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0, onPositionUpdate }: AnimatedTrainMarkerProps) {
+function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0, onPositionUpdate, route = [] }: AnimatedTrainMarkerProps) {
   const markerRef = useRef<L.Marker | null>(null);
   const animationRef = useRef<number | null>(null);
   const currentPosRef = useRef<[number, number]>(position);
   const speedRef = useRef<number>(speed);
-  const headingRef = useRef<number>(heading);
   const lastFrameTimeRef = useRef<number>(performance.now());
   const isInitializedRef = useRef<boolean>(false);
-  const lastGpsUpdateRef = useRef<number>(performance.now());
   const gpsPositionRef = useRef<[number, number]>(position);
+  const routeRef = useRef<[number, number][]>(route);
+  const currentSegmentRef = useRef<number>(0);
+  const currentProgressRef = useRef<number>(0);
 
   useEffect(() => {
     gpsPositionRef.current = position;
     speedRef.current = speed;
-    headingRef.current = heading;
-    lastGpsUpdateRef.current = performance.now();
+    routeRef.current = route;
 
-    if (!isInitializedRef.current) {
+    if (route.length >= 2) {
+      const { segmentIndex, projectedPoint, progressOnSegment } = findNearestSegmentOnRoute(position, route);
+      currentSegmentRef.current = segmentIndex;
+      currentProgressRef.current = progressOnSegment;
+      
+      if (!isInitializedRef.current) {
+        currentPosRef.current = projectedPoint;
+        isInitializedRef.current = true;
+        if (markerRef.current) {
+          markerRef.current.setLatLng(projectedPoint);
+        }
+        onPositionUpdate?.(projectedPoint);
+      }
+    } else if (!isInitializedRef.current) {
       currentPosRef.current = position;
       isInitializedRef.current = true;
       if (markerRef.current) {
@@ -48,7 +159,7 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0,
       }
       onPositionUpdate?.(position);
     }
-  }, [position, speed, heading, onPositionUpdate]);
+  }, [position, speed, route, onPositionUpdate]);
 
   useEffect(() => {
     if (markerRef.current) {
@@ -68,12 +179,29 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0,
       }
 
       const currentSpeed = speedRef.current;
-      const currentHeading = headingRef.current;
+      const currentRoute = routeRef.current;
       const [currentLat, currentLng] = currentPosRef.current;
-      const [gpsLat, gpsLng] = gpsPositionRef.current;
 
-      if (currentSpeed > 2) {
-        const headingRad = toRadians(currentHeading);
+      if (currentSpeed > 2 && currentRoute.length >= 2) {
+        const speedKmPerSec = currentSpeed / 3600;
+        const distanceKm = speedKmPerSec * deltaTime;
+        const distanceDegrees = distanceKm / KM_PER_DEGREE_LAT;
+
+        const { newPos, newSegment, newProgress } = moveAlongRoute(
+          [currentLat, currentLng],
+          currentRoute,
+          distanceDegrees,
+          currentSegmentRef.current,
+          currentProgressRef.current
+        );
+
+        currentSegmentRef.current = newSegment;
+        currentProgressRef.current = newProgress;
+        currentPosRef.current = newPos;
+        marker.setLatLng(newPos);
+        onPositionUpdate?.(newPos);
+      } else if (currentSpeed > 2) {
+        const headingRad = toRadians(heading);
         const speedKmPerSec = currentSpeed / 3600;
         const distanceKm = speedKmPerSec * deltaTime;
 
@@ -88,6 +216,7 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0,
         marker.setLatLng([newLat, newLng]);
         onPositionUpdate?.([newLat, newLng]);
       } else {
+        const [gpsLat, gpsLng] = gpsPositionRef.current;
         const errorLat = gpsLat - currentLat;
         const errorLng = gpsLng - currentLng;
         
@@ -112,7 +241,7 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0,
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [onPositionUpdate]);
+  }, [onPositionUpdate, heading]);
 
   return (
     <Marker
@@ -430,6 +559,7 @@ function MapContent({
             )}
             zIndexOffset={1000}
             onPositionUpdate={handlePositionUpdate}
+            route={routePositions}
           />
         </MapContainer>
       </MapTouchHandler>
@@ -451,16 +581,19 @@ function MapContent({
       </div>
 
       {!isFollowing && (
-        <Button
-          size="sm"
-          variant="secondary"
-          className="absolute bottom-3 right-3 z-[1000] shadow-lg"
+        <button
+          className="absolute bottom-3 right-3 z-[1000] rounded-lg px-3 py-1.5 shadow-lg flex items-center gap-2 hover:opacity-90 transition-opacity"
+          style={{
+            backgroundColor: isDark ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
           onClick={handleRecenter}
           data-testid="button-recenter-map"
         >
-          <Crosshair className="w-4 h-4 mr-1.5" />
-          Centreren
-        </Button>
+          <Crosshair className="w-4 h-4 text-primary" />
+          <span className="font-semibold text-sm">Centreren</span>
+        </button>
       )}
 
       {isFetching && (
