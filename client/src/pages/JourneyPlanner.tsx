@@ -592,9 +592,12 @@ export default function JourneyPlanner() {
   useEffect(() => {
     if (manuallySelectedTrip && detailMode === 'trip') {
       const tripStillExists = config.savedTrips.some(
-        (saved) =>
-          saved.departureTime === manuallySelectedTrip.rawDepartureTime &&
-          saved.arrivalTime === manuallySelectedTrip.rawArrivalTime
+        (saved) => {
+          const savedDep = saved.plannedDepartureTime || saved.departureTime;
+          const savedArr = saved.plannedArrivalTime || saved.arrivalTime;
+          return savedDep === manuallySelectedTrip.rawDepartureTime &&
+                 savedArr === manuallySelectedTrip.rawArrivalTime;
+        }
       );
 
       if (!tripStillExists) {
