@@ -69,6 +69,9 @@ export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: S
                   <div className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
                     <span>{formatTime(trip.departureTime)} - {formatTime(trip.arrivalTime)}</span>
+                    {trip.delayMinutes && trip.delayMinutes > 0 && (
+                      <span className="text-red-500 font-medium">+{trip.delayMinutes}'</span>
+                    )}
                   </div>
                   <span>{formatDate(trip.departureTime)}</span>
                   <span>{trip.duration}</span>
@@ -76,6 +79,12 @@ export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: S
                     <Badge variant="secondary" className="text-xs">Direct</Badge>
                   ) : (
                     <span>{trip.transfers} overstap{trip.transfers > 1 ? 'pen' : ''}</span>
+                  )}
+                  {trip.status && trip.status !== 'NORMAL' && (
+                    <Badge variant="destructive" className="text-xs">
+                      {trip.status === 'CANCELLED' ? 'Geannuleerd' : 
+                       trip.status === 'DISRUPTED' ? 'Storing' : trip.status}
+                    </Badge>
                   )}
                 </div>
               </div>
