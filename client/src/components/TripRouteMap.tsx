@@ -216,22 +216,22 @@ function findRouteBetweenStops(
 
 function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
   let bgColor = '#f97316';
-  let size = 12;
+  let size = 10;
   
   if (station.type === "start") {
     bgColor = '#22c55e';
-    size = 14;
+    size = 12;
   } else if (station.type === "end") {
     bgColor = '#ef4444';
-    size = 14;
+    size = 12;
   }
   
   const textColor = isDark ? '#f3f4f6' : '#1f2937';
   const labelBg = isDark ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)';
   const borderColor = isDark ? 'rgba(71, 85, 105, 0.5)' : 'rgba(203, 213, 225, 0.8)';
   const shadow = isDark 
-    ? '0 4px 12px rgba(0, 0, 0, 0.3)' 
-    : '0 4px 12px rgba(0, 0, 0, 0.08)';
+    ? '0 2px 8px rgba(0, 0, 0, 0.3)' 
+    : '0 2px 8px rgba(0, 0, 0, 0.08)';
   
   return L.divIcon({
     className: '',
@@ -241,23 +241,23 @@ function createStationIcon(station: Station, isDark: boolean): L.DivIcon {
           width: ${size}px;
           height: ${size}px;
           background-color: ${bgColor};
-          border: 2.5px solid ${isDark ? '#1e293b' : '#ffffff'};
+          border: 2px solid ${isDark ? '#1e293b' : '#ffffff'};
           border-radius: 50%;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+          box-shadow: 0 1px 4px rgba(0,0,0,0.3);
         "></div>
         <div style="
           position: absolute;
-          top: ${size + 6}px;
+          top: ${size + 4}px;
           left: 50%;
           transform: translateX(-50%);
           white-space: nowrap;
-          padding: 6px 14px;
+          padding: 3px 8px;
           background: ${labelBg};
-          -webkit-backdrop-filter: blur(16px);
-          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
           border: 1px solid ${borderColor};
-          border-radius: 12px;
-          font-size: 12px;
+          border-radius: 8px;
+          font-size: 10px;
           font-weight: 600;
           color: ${textColor};
           box-shadow: ${shadow};
@@ -395,11 +395,18 @@ export default function TripRouteMap({ legs, compact = false }: TripRouteMapProp
     ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <div 
       className={`${mapHeight} rounded-lg overflow-hidden border relative`}
       style={{ zIndex: 0, isolation: 'isolate' }}
       data-testid="map-trip-route"
+      onTouchStart={handleTouchStart}
+      onTouchMove={(e) => e.stopPropagation()}
+      data-vaul-no-drag
     >
       <MapContainer
         center={[stations[0].lat, stations[0].lng]}
