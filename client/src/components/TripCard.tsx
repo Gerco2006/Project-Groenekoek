@@ -29,7 +29,6 @@ export default function TripCard({
   const [showMap, setShowMap] = useState(false);
 
   const uniqueTrainTypes = Array.from(new Set(legs.map(leg => leg.trainType)));
-  const hasCoordinates = legs.some(leg => leg.fromLat && leg.fromLng && leg.toLat && leg.toLng);
 
   return (
     <Card className="overflow-hidden hover-elevate" data-testid="card-trip">
@@ -92,30 +91,28 @@ export default function TripCard({
 
       {expanded && (
         <div className="border-t bg-muted/20 p-4 space-y-3" data-testid="section-trip-details">
-          {hasCoordinates && (
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start gap-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowMap(!showMap);
-                }}
-                data-testid="button-toggle-route-map"
-              >
-                <Map className="w-4 h-4" />
-                <span>{showMap ? "Verberg route" : "Toon route op kaart"}</span>
-                {showMap ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
-              </Button>
-              
-              {showMap && (
-                <Suspense fallback={<div className="h-[250px] rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm">Kaart laden...</div>}>
-                  <TripRouteMap legs={legs} />
-                </Suspense>
-              )}
-            </div>
-          )}
+          <div className="space-y-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMap(!showMap);
+              }}
+              data-testid="button-toggle-route-map"
+            >
+              <Map className="w-4 h-4" />
+              <span>{showMap ? "Verberg route" : "Toon route op kaart"}</span>
+              {showMap ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+            </Button>
+            
+            {showMap && (
+              <Suspense fallback={<div className="h-[250px] rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm">Kaart laden...</div>}>
+                <TripRouteMap legs={legs} />
+              </Suspense>
+            )}
+          </div>
           
           {legs.map((leg, idx) => (
             <div key={idx} className="space-y-3">

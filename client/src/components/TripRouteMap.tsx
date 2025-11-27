@@ -32,62 +32,83 @@ function FitBounds({ stations }: { stations: Station[] }) {
 export default function TripRouteMap({ legs }: TripRouteMapProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  
-  const { data: spoorkaartData } = useQuery<{ payload: { features: any[] } }>({
-    queryKey: ["/api/spoorkaart"],
+
+  const { data: stationsData, isLoading: stationsLoading } = useQuery<{ payload: any[] }>({
+    queryKey: ["/api/stations"],
     queryFn: async () => {
-      const response = await fetch("/api/spoorkaart");
-      if (!response.ok) throw new Error("Failed to fetch railway tracks");
+      const response = await fetch("/api/stations");
+      if (!response.ok) throw new Error("Failed to fetch stations");
       return response.json();
     },
-    staleTime: 86400000,
-    gcTime: 86400000,
+    staleTime: 3600000,
+    gcTime: 3600000,
   });
 
   const stations = useMemo(() => {
     const result: Station[] = [];
+    const stationsList = stationsData?.payload || [];
+    
+    const findStationCoords = (name: string): { lat: number; lng: number } | null => {
+      const station = stationsList.find((s: any) => 
+        s.namen?.lang?.toLowerCase() === name.toLowerCase() ||
+        s.namen?.middel?.toLowerCase() === name.toLowerCase() ||
+        s.namen?.kort?.toLowerCase() === name.toLowerCase()
+      );
+      if (station?.lat && station?.lng) {
+        return { lat: station.lat, lng: station.lng };
+      }
+      return null;
+    };
     
     for (let i = 0; i < legs.length; i++) {
       const leg = legs[i];
       
-      if (i === 0 && leg.fromLat && leg.fromLng) {
-        result.push({
-          name: leg.from,
-          lat: leg.fromLat,
-          lng: leg.fromLng,
-          type: "start"
-        });
-      }
-      
-      if (leg.toLat && leg.toLng) {
-        const isEnd = i === legs.length - 1;
-        const isTransfer = i < legs.length - 1;
+      if (i === 0) {
+        const fromCoords = (leg.fromLat && leg.fromLng) 
+          ? { lat: leg.fromLat, lng: leg.fromLng }
+          : findStationCoords(leg.from);
         
-        if (!result.some(s => s.name === leg.to)) {
+        if (fromCoords) {
           result.push({
-            name: leg.to,
-            lat: leg.toLat,
-            lng: leg.toLng,
-            type: isEnd ? "end" : (isTransfer ? "transfer" : "end")
+            name: leg.from,
+            lat: fromCoords.lat,
+            lng: fromCoords.lng,
+            type: "start"
           });
         }
+      }
+      
+      const toCoords = (leg.toLat && leg.toLng) 
+        ? { lat: leg.toLat, lng: leg.toLng }
+        : findStationCoords(leg.to);
+      
+      if (toCoords && !result.some(s => s.name === leg.to)) {
+        const isEnd = i === legs.length - 1;
+        result.push({
+          name: leg.to,
+          lat: toCoords.lat,
+          lng: toCoords.lng,
+          type: isEnd ? "end" : "transfer"
+        });
       }
     }
     
     return result;
-  }, [legs]);
+  }, [legs, stationsData]);
 
   const routePositions = useMemo(() => {
-    if (!spoorkaartData?.payload?.features) {
-      return stations.map(s => [s.lat, s.lng] as [number, number]);
-    }
-    
     return stations.map(s => [s.lat, s.lng] as [number, number]);
-  }, [stations, spoorkaartData]);
+  }, [stations]);
 
-  const hasValidCoordinates = stations.length >= 2;
+  if (stationsLoading) {
+    return (
+      <div className="h-[250px] rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm">
+        Kaart laden...
+      </div>
+    );
+  }
 
-  if (!hasValidCoordinates) {
+  if (stations.length < 2) {
     return (
       <div className="h-[250px] rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm">
         Geen routegegevens beschikbaar
