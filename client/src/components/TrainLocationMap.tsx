@@ -455,10 +455,12 @@ interface SpoorkaartResponse {
 function findNearestTrackSegment(
   position: [number, number],
   features: GeoJSONFeature[],
+  heading: number,
   maxDistance: number = 0.01
 ): [number, number][] {
   let nearestTrack: [number, number][] = [];
   let nearestDistance = Infinity;
+  let nearestSegmentIndex = 0;
 
   for (const feature of features) {
     if (feature.geometry.type !== "LineString" && feature.geometry.type !== "MultiLineString") {
@@ -496,9 +498,32 @@ function findNearestTrackSegment(
         if (dist < nearestDistance && dist < maxDistance) {
           nearestDistance = dist;
           nearestTrack = coords.map(c => [c[1], c[0]] as [number, number]);
+          nearestSegmentIndex = i;
         }
       }
     }
+  }
+
+  if (nearestTrack.length < 2) {
+    return [];
+  }
+
+  const segmentStart = nearestTrack[nearestSegmentIndex];
+  const segmentEnd = nearestTrack[Math.min(nearestSegmentIndex + 1, nearestTrack.length - 1)];
+  
+  const trackHeading = Math.atan2(
+    segmentEnd[1] - segmentStart[1],
+    segmentEnd[0] - segmentStart[0]
+  ) * (180 / Math.PI);
+  
+  const normalizedTrackHeading = ((trackHeading % 360) + 360) % 360;
+  const normalizedTrainHeading = ((heading % 360) + 360) % 360;
+  
+  let headingDiff = Math.abs(normalizedTrackHeading - normalizedTrainHeading);
+  if (headingDiff > 180) headingDiff = 360 - headingDiff;
+  
+  if (headingDiff > 90) {
+    nearestTrack = nearestTrack.slice().reverse();
   }
 
   return nearestTrack;
@@ -537,18 +562,14 @@ function MapContent({
     gcTime: 86400000,
   });
 
+  const trainHeading = train?.richting || 0;
+
   const trackRoute = useMemo(() => {
     if (!spoorkaartData?.payload?.features || !trainPosition[0] || !trainPosition[1]) {
       return [];
     }
-    return findNearestTrackSegment(trainPosition, spoorkaartData.payload.features);
-  }, [spoorkaartData, trainPosition]);
-
-  const routePositions = useMemo(() => {
-    return stops
-      .filter(s => s.stop.stop?.lat && s.stop.stop?.lng)
-      .map(s => [s.stop.stop.lat, s.stop.stop.lng] as [number, number]);
-  }, [stops]);
+    return findNearestTrackSegment(trainPosition, spoorkaartData.payload.features, trainHeading);
+  }, [spoorkaartData, trainPosition, trainHeading]);
 
   const handlePositionUpdate = useCallback((pos: [number, number]) => {
     setAnimatedPosition(pos);
@@ -606,19 +627,6 @@ function MapContent({
             onUserInteraction={handleUserInteraction}
           />
           
-          {/* Route line connecting stops */}
-          {routePositions.length > 1 && (
-            <Polyline
-              positions={routePositions}
-              pathOptions={{
-                color: isDark ? "#6b7280" : "#9ca3af",
-                weight: 3,
-                opacity: 0.6,
-                dashArray: "5, 10",
-              }}
-            />
-          )}
-          
           {/* Station markers */}
           {stops.map((stopData, index) => {
             const { stop, isPassed, isNext } = stopData;
@@ -645,7 +653,7 @@ function MapContent({
             )}
             zIndexOffset={1000}
             onPositionUpdate={handlePositionUpdate}
-            route={trackRoute.length > 0 ? trackRoute : routePositions}
+            route={trackRoute}
           />
         </MapContainer>
       </MapTouchHandler>
