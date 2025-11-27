@@ -314,6 +314,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const data = await fetchNS("/v3/trips", params);
 
+      // Debug: log first trip's first leg to see available fields
+      if (data.trips && data.trips[0] && data.trips[0].legs && data.trips[0].legs[0]) {
+        const firstLeg = data.trips[0].legs[0];
+        console.log('[TravNL Debug] NS API trips response - first leg origin fields:', {
+          plannedDateTime: firstLeg.origin?.plannedDateTime,
+          actualDateTime: firstLeg.origin?.actualDateTime,
+          allOriginKeys: Object.keys(firstLeg.origin || {}),
+        });
+        console.log('[TravNL Debug] NS API trips response - first leg destination fields:', {
+          plannedDateTime: firstLeg.destination?.plannedDateTime,
+          actualDateTime: firstLeg.destination?.actualDateTime,
+          allDestinationKeys: Object.keys(firstLeg.destination || {}),
+        });
+      }
+
       if (data.trips) {
         for (const trip of data.trips) {
           if (trip.legs) {

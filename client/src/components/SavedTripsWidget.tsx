@@ -25,33 +25,60 @@ export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: S
     return format(date, "EEE d MMM", { locale: nl });
   };
 
+  const calculateDelayFromTimes = (planned: string | undefined, actual: string | undefined): number | undefined => {
+    if (!planned || !actual) return undefined;
+    const plannedDate = new Date(planned);
+    const actualDate = new Date(actual);
+    const diffMs = actualDate.getTime() - plannedDate.getTime();
+    const diffMins = Math.round(diffMs / 60000);
+    return diffMins > 0 ? diffMins : undefined;
+  };
+
   const getTripDelayInfo = (trip: SavedTrip): { 
     departureDelay: number | undefined;
     arrivalDelay: number | undefined;
     maxDelay: number | undefined;
     cancelled: boolean;
+    debugInfo: string;
   } => {
     let departureDelay: number | undefined;
     let arrivalDelay: number | undefined;
     let cancelled = false;
+    let debugInfo = "";
 
     if (trip.legs && trip.legs.length > 0) {
       const firstLeg = trip.legs[0];
       const lastLeg = trip.legs[trip.legs.length - 1];
       
+      // First try the pre-calculated delay fields
       departureDelay = firstLeg.departureDelayMinutes;
       arrivalDelay = lastLeg.arrivalDelayMinutes;
+      
+      // If no pre-calculated delays, try calculating from actual/planned times
+      if (departureDelay === undefined && firstLeg.plannedDeparture && firstLeg.actualDeparture) {
+        departureDelay = calculateDelayFromTimes(firstLeg.plannedDeparture, firstLeg.actualDeparture);
+        debugInfo += `calc_dep:${departureDelay ?? 'n'} `;
+      }
+      if (arrivalDelay === undefined && lastLeg.plannedArrival && lastLeg.actualArrival) {
+        arrivalDelay = calculateDelayFromTimes(lastLeg.plannedArrival, lastLeg.actualArrival);
+        debugInfo += `calc_arr:${arrivalDelay ?? 'n'} `;
+      }
+      
+      // Debug: show what times are available
+      debugInfo += `hasActDep:${!!firstLeg.actualDeparture} hasActArr:${!!lastLeg.actualArrival}`;
       
       cancelled = trip.legs.some(leg => leg.cancelled);
     }
 
+    // Fallback to trip-level delay
     if (!departureDelay && !arrivalDelay && trip.delayMinutes) {
       arrivalDelay = trip.delayMinutes;
+      debugInfo += ` tripLevel:${trip.delayMinutes}`;
     }
 
     const maxDelay = Math.max(departureDelay || 0, arrivalDelay || 0) || undefined;
 
-    return { departureDelay, arrivalDelay, maxDelay, cancelled };
+    return { departureDelay, arrivalDelay, maxDelay, cancelled, debugInfo };
   };
 
   if (trips.length === 0) {
@@ -79,7 +106,7 @@ export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: S
       </div>
       <div className="space-y-2">
         {trips.map((trip) => {
-          const { departureDelay, arrivalDelay, maxDelay, cancelled } = getTripDelayInfo(trip);
+          const { departureDelay, arrivalDelay, maxDelay, cancelled, debugInfo } = getTripDelayInfo(trip);
           const hasDelay = (maxDelay !== undefined && maxDelay > 0) || cancelled;
           const status = trip.status;
           
@@ -126,8 +153,8 @@ export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: S
                   </div>
                   
                   {/* Debug info - remove after testing */}
-                  <div className="text-[9px] text-orange-500 bg-orange-500/10 rounded px-1 py-0.5 mb-1">
-                    DEBUG: depDelay={departureDelay ?? 'geen'}, arrDelay={arrivalDelay ?? 'geen'}, tripDelay={trip.delayMinutes ?? 'geen'}
+                  <div className="text-[9px] text-orange-500 bg-orange-500/10 rounded px-1 py-0.5 mb-1 break-all">
+                    DEBUG: dep={departureDelay ?? '-'}, arr={arrivalDelay ?? '-'}, trip={trip.delayMinutes ?? '-'} | {debugInfo}
                   </div>
                   
                   <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
