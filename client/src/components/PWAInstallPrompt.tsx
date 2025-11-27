@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, X } from 'lucide-react';
+import { Download, X, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,6 +20,7 @@ export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     // Check if already dismissed
@@ -35,16 +36,18 @@ export function PWAInstallPrompt() {
     }
 
     // Check if on iOS (has different install flow)
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const iosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    setIsIOS(iosDevice);
+    
+    // Check if mobile
+    const isMobile = window.innerWidth < 768;
     
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       
-      // Only show on mobile devices
-      const isMobile = window.innerWidth < 768;
+      // Show dialog when we get the prompt (Android/Chrome)
       if (isMobile) {
-        // Small delay to not be too intrusive
         setTimeout(() => {
           setShowDialog(true);
         }, 3000);
@@ -53,14 +56,12 @@ export function PWAInstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // For iOS, show custom instructions after delay
-    if (isIOS) {
-      const isMobile = window.innerWidth < 768;
-      if (isMobile) {
-        setTimeout(() => {
-          setShowDialog(true);
-        }, 3000);
-      }
+    // For mobile devices, show dialog after delay
+    // On iOS this shows instructions, on Android it waits for beforeinstallprompt
+    if (isMobile) {
+      setTimeout(() => {
+        setShowDialog(true);
+      }, 3000);
     }
 
     return () => {
@@ -88,8 +89,6 @@ export function PWAInstallPrompt() {
     setDeferredPrompt(null);
   };
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
   if (isInstalled) {
     return null;
   }
@@ -104,7 +103,7 @@ export function PWAInstallPrompt() {
           </DialogTitle>
           <DialogDescription className="text-left">
             Voeg TravNL toe aan je startscherm voor snelle toegang tot reisinfo, 
-            vertrektijden en live treinposities. Werkt ook offline!
+            vertrektijden en live treinposities.
           </DialogDescription>
         </DialogHeader>
         
@@ -112,12 +111,29 @@ export function PWAInstallPrompt() {
           <div className="space-y-3 text-sm text-muted-foreground">
             <p>Om TravNL te installeren op je iPhone of iPad:</p>
             <ol className="list-decimal list-inside space-y-1">
-              <li>Tik op het <span className="font-medium">Deel</span>-icoon onderaan</li>
-              <li>Scroll naar beneden en tik op <span className="font-medium">"Zet op beginscherm"</span></li>
-              <li>Tik op <span className="font-medium">"Voeg toe"</span></li>
+              <li className="flex items-start gap-1">
+                <span>1.</span>
+                <span>Tik op het <Share className="inline w-4 h-4 mx-1" /> Deel-icoon onderaan</span>
+              </li>
+              <li className="flex items-start gap-1">
+                <span>2.</span>
+                <span>Scroll en tik op <span className="font-medium">"Zet op beginscherm"</span></span>
+              </li>
+              <li className="flex items-start gap-1">
+                <span>3.</span>
+                <span>Tik op <span className="font-medium">"Voeg toe"</span></span>
+              </li>
             </ol>
           </div>
-        ) : null}
+        ) : (
+          <div className="text-sm text-muted-foreground">
+            {deferredPrompt ? (
+              <p>Klik op de knop hieronder om TravNL te installeren als app.</p>
+            ) : (
+              <p>Gebruik het menu van je browser om deze site toe te voegen aan je startscherm.</p>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-col gap-2 mt-4">
           {!isIOS && deferredPrompt && (
