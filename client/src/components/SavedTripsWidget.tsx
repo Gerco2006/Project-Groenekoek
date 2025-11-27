@@ -13,21 +13,6 @@ interface SavedTripsWidgetProps {
 }
 
 export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: SavedTripsWidgetProps) {
-  // Debug: log all saved trips and their delay data
-  console.log('[TravNL Debug] SavedTripsWidget trips:', trips.map(t => ({
-    id: t.id,
-    from: t.from,
-    to: t.to,
-    delayMinutes: t.delayMinutes,
-    status: t.status,
-    legs: t.legs?.map(l => ({
-      from: l.from,
-      to: l.to,
-      departureDelayMinutes: l.departureDelayMinutes,
-      arrivalDelayMinutes: l.arrivalDelayMinutes,
-    }))
-  })));
-
   const formatTime = (dateTime: string) => {
     if (!dateTime) return "";
     const date = new Date(dateTime);
@@ -138,6 +123,11 @@ export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: S
                         <span className="text-red-500 font-bold">+{arrivalDelay}'</span>
                       )}
                     </div>
+                  </div>
+                  
+                  {/* Debug info - remove after testing */}
+                  <div className="text-[9px] text-orange-500 bg-orange-500/10 rounded px-1 py-0.5 mb-1">
+                    DEBUG: depDelay={departureDelay ?? 'geen'}, arrDelay={arrivalDelay ?? 'geen'}, tripDelay={trip.delayMinutes ?? 'geen'}
                   </div>
                   
                   <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
