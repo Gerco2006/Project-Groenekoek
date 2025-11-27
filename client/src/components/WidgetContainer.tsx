@@ -18,7 +18,7 @@ interface WidgetContainerProps {
   trackedMaterials: TrackedMaterial[];
   onRouteClick: (route: SavedRoute) => void;
   onRouteRemove: (id: string) => void;
-  onTripClick: (trip: SavedTrip) => void;
+  onTripClick: (trip: SavedTrip, liveTrip?: any) => void;
   onTripRemove: (id: string) => void;
   onDisruptionStationAdd: (stationName: string) => void;
   onDisruptionStationRemove: (id: string) => void;
