@@ -95,7 +95,7 @@ export function PWAInstallPrompt() {
 
   return (
     <Dialog open={showDialog} onOpenChange={setShowDialog}>
-      <DialogContent className="sm:max-w-md mx-4" data-testid="dialog-pwa-install">
+      <DialogContent className="w-[calc(100%-2rem)] max-w-md rounded-xl" data-testid="dialog-pwa-install">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Download className="w-5 h-5 text-primary" />
