@@ -416,7 +416,7 @@ export default function LiveTrainMap({ onTrainClick, collapsed = false }: LiveTr
           data-testid="button-toggle-map-collapse"
         >
           <Train className="w-5 h-5 text-primary" />
-          <span className="font-semibold">Live Treinen Kaart</span>
+          <span className="font-semibold">Actuele treinlocaties</span>
           {isCollapsed ? (
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           ) : (
