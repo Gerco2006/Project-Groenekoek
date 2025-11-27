@@ -555,25 +555,133 @@ function findNearestTrackSegment(
   return nearestTrack;
 }
 
+function buildTrackGraph(features: GeoJSONFeature[]): Record<string, string[]> {
+  const graph: Record<string, string[]> = {};
+  const tolerance = 0.0005;
+  
+  const roundCoord = (val: number) => Math.round(val / tolerance) * tolerance;
+  const coordKey = (lat: number, lng: number) => `${roundCoord(lat)},${roundCoord(lng)}`;
+  
+  for (const feature of features) {
+    if (feature.geometry.type !== "LineString" && feature.geometry.type !== "MultiLineString") {
+      continue;
+    }
+    
+    const lineStrings: number[][][] = feature.geometry.type === "MultiLineString"
+      ? feature.geometry.coordinates as number[][][]
+      : [feature.geometry.coordinates as number[][]];
+    
+    for (const coords of lineStrings) {
+      for (let i = 0; i < coords.length - 1; i++) {
+        const keyA = coordKey(coords[i][1], coords[i][0]);
+        const keyB = coordKey(coords[i + 1][1], coords[i + 1][0]);
+        
+        if (!graph[keyA]) graph[keyA] = [];
+        if (!graph[keyB]) graph[keyB] = [];
+        if (!graph[keyA].includes(keyB)) graph[keyA].push(keyB);
+        if (!graph[keyB].includes(keyA)) graph[keyB].push(keyA);
+      }
+    }
+  }
+  
+  return graph;
+}
+
+function findNearestGraphNode(
+  point: [number, number],
+  graph: Record<string, string[]>,
+  maxDistance: number
+): string | null {
+  let nearestKey: string | null = null;
+  let nearestDist = Infinity;
+  
+  const keys = Object.keys(graph);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const parts = key.split(',');
+    const lat = parseFloat(parts[0]);
+    const lng = parseFloat(parts[1]);
+    const dist = distanceBetweenPoints(point, [lat, lng]);
+    if (dist < nearestDist && dist < maxDistance) {
+      nearestDist = dist;
+      nearestKey = key;
+    }
+  }
+  
+  return nearestKey;
+}
+
+function findPathBFS(
+  graph: Record<string, string[]>,
+  startKey: string,
+  endKey: string,
+  maxNodes: number = 500
+): [number, number][] {
+  if (startKey === endKey) return [];
+  
+  const queue: { key: string; path: string[] }[] = [{ key: startKey, path: [startKey] }];
+  const visited: Record<string, boolean> = { [startKey]: true };
+  let nodesVisited = 0;
+  
+  while (queue.length > 0 && nodesVisited < maxNodes) {
+    const current = queue.shift()!;
+    nodesVisited++;
+    
+    const neighbors = graph[current.key];
+    if (!neighbors) continue;
+    
+    for (let i = 0; i < neighbors.length; i++) {
+      const neighbor = neighbors[i];
+      if (visited[neighbor]) continue;
+      
+      const newPath = [...current.path, neighbor];
+      
+      if (neighbor === endKey) {
+        return newPath.map(k => {
+          const parts = k.split(',');
+          return [parseFloat(parts[0]), parseFloat(parts[1])] as [number, number];
+        });
+      }
+      
+      visited[neighbor] = true;
+      queue.push({ key: neighbor, path: newPath });
+    }
+  }
+  
+  return [];
+}
+
 function findRouteBetweenStops(
   stops: Array<{ lat: number; lng: number }>,
   features: GeoJSONFeature[]
 ): [number, number][] {
   if (stops.length < 2) return [];
   
+  const graph = buildTrackGraph(features);
   const route: [number, number][] = [];
+  const maxSearchDistance = 0.05;
   
   for (let i = 0; i < stops.length - 1; i++) {
     const start: [number, number] = [stops[i].lat, stops[i].lng];
     const end: [number, number] = [stops[i + 1].lat, stops[i + 1].lng];
     
-    const segmentRoute = findTracksBetweenPoints(start, end, features);
+    const startNode = findNearestGraphNode(start, graph, maxSearchDistance);
+    const endNode = findNearestGraphNode(end, graph, maxSearchDistance);
     
-    if (segmentRoute.length > 0) {
-      if (route.length > 0) {
-        route.push(...segmentRoute.slice(1));
+    if (startNode && endNode) {
+      const pathSegment = findPathBFS(graph, startNode, endNode, 1000);
+      
+      if (pathSegment.length > 0) {
+        if (route.length === 0) {
+          route.push(start);
+        }
+        route.push(...pathSegment);
+        route.push(end);
       } else {
-        route.push(...segmentRoute);
+        if (route.length === 0) {
+          route.push(start);
+        }
+        route.push(end);
       }
     } else {
       if (route.length === 0) {
@@ -586,75 +694,18 @@ function findRouteBetweenStops(
   return route;
 }
 
-function findTracksBetweenPoints(
-  start: [number, number],
-  end: [number, number],
-  features: GeoJSONFeature[]
-): [number, number][] {
-  let bestTrack: [number, number][] = [];
-  let bestScore = Infinity;
-  const maxDistance = 0.02;
-  
-  for (const feature of features) {
-    if (feature.geometry.type !== "LineString" && feature.geometry.type !== "MultiLineString") {
-      continue;
-    }
-
-    const lineStrings: number[][][] = feature.geometry.type === "MultiLineString"
-      ? feature.geometry.coordinates as number[][][]
-      : [feature.geometry.coordinates as number[][]];
-
-    for (const coords of lineStrings) {
-      const track = coords.map(c => [c[1], c[0]] as [number, number]);
-      
-      let startIdx = -1;
-      let endIdx = -1;
-      let startDist = Infinity;
-      let endDist = Infinity;
-      
-      for (let i = 0; i < track.length; i++) {
-        const distToStart = distanceBetweenPoints(track[i], start);
-        const distToEnd = distanceBetweenPoints(track[i], end);
-        
-        if (distToStart < startDist && distToStart < maxDistance) {
-          startDist = distToStart;
-          startIdx = i;
-        }
-        if (distToEnd < endDist && distToEnd < maxDistance) {
-          endDist = distToEnd;
-          endIdx = i;
-        }
-      }
-      
-      if (startIdx !== -1 && endIdx !== -1 && startIdx !== endIdx) {
-        const score = startDist + endDist;
-        if (score < bestScore) {
-          bestScore = score;
-          if (startIdx < endIdx) {
-            bestTrack = track.slice(startIdx, endIdx + 1);
-          } else {
-            bestTrack = track.slice(endIdx, startIdx + 1).reverse();
-          }
-        }
-      }
-    }
-  }
-  
-  return bestTrack;
-}
-
 function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; isDark: boolean }) {
   const map = useMap();
-  const [opacity, setOpacity] = useState(isDark ? 0.8 : 0.7);
+  const [opacity, setOpacity] = useState(isDark ? 0.45 : 0.35);
   
   useEffect(() => {
     const handleZoom = () => {
       const zoom = map.getZoom();
       if (zoom > 15) {
         const fadeAmount = Math.min(1, (zoom - 15) / 2);
-        setOpacity((isDark ? 0.8 : 0.7) * (1 - fadeAmount));
+        setOpacity((isDark ? 0.45 : 0.35) * (1 - fadeAmount));
       } else {
-        setOpacity(isDark ? 0.8 : 0.7);
+        setOpacity(isDark ? 0.45 : 0.35);
       }
     };
     
@@ -691,8 +742,8 @@ function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; 
           key={index}
           positions={positions}
           pathOptions={{
-            color: isDark ? '#6b7280' : '#6b7280',
-            weight: 3,
+            color: isDark ? '#9ca3af' : '#6b7280',
+            weight: 2,
             opacity: opacity,
           }}
         />
@@ -819,8 +870,7 @@ function MapContent({
               pathOptions={{
                 color: isDark ? '#60a5fa' : '#3b82f6',
                 weight: 4,
-                opacity: 0.7,
-                dashArray: '8, 8',
+                opacity: 0.8,
               }}
             />
           )}

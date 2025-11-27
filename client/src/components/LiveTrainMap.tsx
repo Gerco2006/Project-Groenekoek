@@ -25,16 +25,16 @@ interface SpoorkaartResponse {
 
 function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; isDark: boolean }) {
   const map = useMap();
-  const [opacity, setOpacity] = useState(isDark ? 0.8 : 0.7);
+  const [opacity, setOpacity] = useState(isDark ? 0.45 : 0.35);
   
   useEffect(() => {
     const handleZoom = () => {
       const zoom = map.getZoom();
       if (zoom > 15) {
         const fadeAmount = Math.min(1, (zoom - 15) / 2);
-        setOpacity((isDark ? 0.8 : 0.7) * (1 - fadeAmount));
+        setOpacity((isDark ? 0.45 : 0.35) * (1 - fadeAmount));
       } else {
-        setOpacity(isDark ? 0.8 : 0.7);
+        setOpacity(isDark ? 0.45 : 0.35);
       }
     };
     
@@ -71,8 +71,8 @@ function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; 
           key={index}
           positions={positions}
           pathOptions={{
-            color: isDark ? '#6b7280' : '#6b7280',
-            weight: 3,
+            color: isDark ? '#9ca3af' : '#6b7280',
+            weight: 2,
             opacity: opacity,
           }}
         />
