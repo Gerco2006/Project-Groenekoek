@@ -593,7 +593,7 @@ function findTracksBetweenPoints(
 ): [number, number][] {
   let bestTrack: [number, number][] = [];
   let bestScore = Infinity;
-  const maxDistance = 0.005;
+  const maxDistance = 0.02;
   
   for (const feature of features) {
     if (feature.geometry.type !== "LineString" && feature.geometry.type !== "MultiLineString") {
@@ -645,16 +645,16 @@ function findTracksBetweenPoints(
 
 function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; isDark: boolean }) {
   const map = useMap();
-  const [opacity, setOpacity] = useState(isDark ? 0.6 : 0.5);
+  const [opacity, setOpacity] = useState(isDark ? 0.8 : 0.7);
   
   useEffect(() => {
     const handleZoom = () => {
       const zoom = map.getZoom();
       if (zoom > 15) {
         const fadeAmount = Math.min(1, (zoom - 15) / 2);
-        setOpacity((isDark ? 0.6 : 0.5) * (1 - fadeAmount));
+        setOpacity((isDark ? 0.8 : 0.7) * (1 - fadeAmount));
       } else {
-        setOpacity(isDark ? 0.6 : 0.5);
+        setOpacity(isDark ? 0.8 : 0.7);
       }
     };
     
@@ -691,8 +691,8 @@ function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; 
           key={index}
           positions={positions}
           pathOptions={{
-            color: isDark ? '#4b5563' : '#9ca3af',
-            weight: 2,
+            color: isDark ? '#6b7280' : '#6b7280',
+            weight: 3,
             opacity: opacity,
           }}
         />
