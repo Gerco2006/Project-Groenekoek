@@ -37,6 +37,10 @@ interface SelectedTrip {
   status?: string;
   rawDepartureTime?: string;
   rawArrivalTime?: string;
+  ctxRecon?: string;
+  fromCode?: string;
+  toCode?: string;
+  trainTypes?: string[];
 }
 
 interface SelectedTrain {
@@ -361,7 +365,7 @@ export default function JourneyPlanner() {
     
     if (isTripAlreadySaved(rawDepartureTime, from, to)) {
       const savedTrip = config.savedTrips.find(
-        t => t.departureTime === rawDepartureTime && t.from === from && t.to === to
+        t => (t.plannedDepartureTime === rawDepartureTime || t.departureTime === rawDepartureTime) && t.from === from && t.to === to
       );
       if (savedTrip) {
         removeSavedTrip(savedTrip.id);
@@ -369,49 +373,51 @@ export default function JourneyPlanner() {
       return;
     }
     
-    // Debug: log what's being saved
-    console.log('[TravNL Debug] Saving trip:', {
-      delayMinutes: selectedTrip.delayMinutes,
-      status: selectedTrip.status,
-      legsWithDelay: selectedTrip.legs.map(leg => ({
-        from: leg.from,
-        to: leg.to,
-        departureDelayMinutes: leg.departureDelayMinutes,
-        arrivalDelayMinutes: leg.arrivalDelayMinutes,
-      }))
-    });
-    
     addSavedTrip({
       name: `${from} → ${to}`,
       from,
       to,
-      departureTime: rawDepartureTime,
-      arrivalTime: rawArrivalTime,
+      fromCode: selectedTrip.fromCode,
+      toCode: selectedTrip.toCode,
+      ctxRecon: selectedTrip.ctxRecon,
+      plannedDepartureTime: rawDepartureTime,
+      plannedArrivalTime: rawArrivalTime,
       duration: selectedTrip.duration,
       transfers: selectedTrip.transfers,
-      legs: selectedTrip.legs,
-      delayMinutes: selectedTrip.delayMinutes,
-      status: selectedTrip.status,
+      trainTypes: selectedTrip.trainTypes,
     });
   };
 
-  const handleLoadSavedTrip = (trip: SavedTrip) => {
+  const handleLoadSavedTrip = (trip: SavedTrip, liveData?: any) => {
+    const depTime = trip.plannedDepartureTime || trip.departureTime || '';
+    const arrTime = trip.plannedArrivalTime || trip.arrivalTime || '';
+    
     const tripData: SelectedTrip = {
-      departureTime: formatTime(trip.departureTime),
-      arrivalTime: formatTime(trip.arrivalTime),
+      departureTime: formatTime(depTime),
+      arrivalTime: formatTime(arrTime),
       duration: trip.duration,
       transfers: trip.transfers,
-      legs: trip.legs,
-      delayMinutes: trip.delayMinutes,
-      status: trip.status,
-      rawDepartureTime: trip.departureTime,
-      rawArrivalTime: trip.arrivalTime,
+      legs: trip.legs || [],
+      delayMinutes: liveData?.departureDelay || liveData?.arrivalDelay,
+      status: liveData?.status || trip.status,
+      rawDepartureTime: depTime,
+      rawArrivalTime: arrTime,
+      ctxRecon: trip.ctxRecon,
+      fromCode: trip.fromCode,
+      toCode: trip.toCode,
+      trainTypes: trip.trainTypes,
     };
     
     setManuallySelectedTrip(tripData);
     setSelectedTripIndex(null);
     setSelectedTrain(null);
     setDetailMode('trip');
+    
+    // Set search context so we can fetch fresh trip data
+    if (trip.from && trip.to) {
+      setFrom(trip.from);
+      setTo(trip.to);
+    }
   };
 
   const formatTime = (dateTime: string) => {
@@ -515,6 +521,10 @@ export default function JourneyPlanner() {
       delayMinutes = delay;
     }
 
+    const trainTypes = Array.from(new Set(
+      legs.map(leg => leg.trainType)
+    ));
+
     return {
       departureTime,
       arrivalTime,
@@ -525,6 +535,10 @@ export default function JourneyPlanner() {
       status: trip.status,
       rawDepartureTime,
       rawArrivalTime,
+      ctxRecon: trip.ctxRecon,
+      fromCode: trip.legs?.[0]?.origin?.stationCode,
+      toCode: trip.legs?.[trip.legs.length - 1]?.destination?.stationCode,
+      trainTypes,
     };
   }, []);
 

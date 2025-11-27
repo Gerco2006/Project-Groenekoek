@@ -20,7 +20,9 @@ export function useWidgetManager() {
       
       setConfig((prev) => {
         const validTrips = prev.savedTrips.filter((trip) => {
-          const arrivalTime = new Date(trip.arrivalTime);
+          const arrivalTimeStr = trip.plannedArrivalTime || trip.arrivalTime;
+          if (!arrivalTimeStr) return false;
+          const arrivalTime = new Date(arrivalTimeStr);
           return arrivalTime >= fiveMinutesAgo;
         });
         
@@ -218,7 +220,7 @@ export function useWidgetManager() {
   const isTripAlreadySaved = (departureTime: string, from: string, to: string) => {
     return config.savedTrips.some(
       (trip) =>
-        trip.departureTime === departureTime &&
+        (trip.plannedDepartureTime === departureTime || trip.departureTime === departureTime) &&
         trip.from === from &&
         trip.to === to
     );

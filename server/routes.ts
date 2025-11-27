@@ -619,6 +619,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fetch live trip data using ctxRecon or fallback to search
+  app.get("/api/trip/live", async (req, res) => {
+    try {
+      const { ctxRecon, fromCode, toCode, plannedDeparture } = req.query;
+      
+      if (!ctxRecon && (!fromCode || !toCode || !plannedDeparture)) {
+        return res.status(400).json({ 
+          error: "Either ctxRecon or fromCode+toCode+plannedDeparture is required" 
+        });
+      }
+
+      // Try using ctxRecon first (most accurate)
+      if (ctxRecon) {
+        try {
+          const data = await fetchNS("/v3/trips", {
+            ctxRecon: ctxRecon as string,
+          });
+          
+          if (data.trips && data.trips.length > 0) {
+            const trip = data.trips[0];
+            // Add coordinates to legs
+            if (trip.legs) {
+              for (const leg of trip.legs) {
+                const originName = leg.origin?.name;
+                const destName = leg.destination?.name;
+                
+                if (originName) {
+                  const originCoords = await getStationCoordinates(originName);
+                  if (originCoords) {
+                    leg.origin.lat = originCoords.lat;
+                    leg.origin.lng = originCoords.lng;
+                  }
+                }
+                
+                if (destName) {
+                  const destCoords = await getStationCoordinates(destName);
+                  if (destCoords) {
+                    leg.destination.lat = destCoords.lat;
+                    leg.destination.lng = destCoords.lng;
+                  }
+                }
+              }
+            }
+            return res.json({ success: true, trip, source: 'ctxRecon' });
+          }
+        } catch (err) {
+          console.log("ctxRecon lookup failed, trying fallback search");
+        }
+      }
+
+      // Fallback: search for matching trip
+      if (fromCode && toCode && plannedDeparture) {
+        const data = await fetchNS("/v3/trips", {
+          fromStation: fromCode as string,
+          toStation: toCode as string,
+          dateTime: plannedDeparture as string,
+        });
+        
+        if (data.trips && data.trips.length > 0) {
+          // Find trip closest to the planned departure time
+          const targetTime = new Date(plannedDeparture as string).getTime();
+          let bestTrip = data.trips[0];
+          let bestDiff = Infinity;
+          
+          for (const trip of data.trips) {
+            const tripDep = trip.legs?.[0]?.origin?.plannedDateTime;
+            if (tripDep) {
+              const diff = Math.abs(new Date(tripDep).getTime() - targetTime);
+              if (diff < bestDiff) {
+                bestDiff = diff;
+                bestTrip = trip;
+              }
+            }
+          }
+          
+          // Add coordinates
+          if (bestTrip.legs) {
+            for (const leg of bestTrip.legs) {
+              const originName = leg.origin?.name;
+              const destName = leg.destination?.name;
+              
+              if (originName) {
+                const originCoords = await getStationCoordinates(originName);
+                if (originCoords) {
+                  leg.origin.lat = originCoords.lat;
+                  leg.origin.lng = originCoords.lng;
+                }
+              }
+              
+              if (destName) {
+                const destCoords = await getStationCoordinates(destName);
+                if (destCoords) {
+                  leg.destination.lat = destCoords.lat;
+                  leg.destination.lng = destCoords.lng;
+                }
+              }
+            }
+          }
+          
+          return res.json({ success: true, trip: bestTrip, source: 'search' });
+        }
+      }
+
+      // Trip not found
+      res.json({ success: false, error: 'Trip not found or no longer available' });
+    } catch (error) {
+      console.error("Error fetching live trip:", error);
+      res.status(500).json({ error: "Failed to fetch live trip data" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

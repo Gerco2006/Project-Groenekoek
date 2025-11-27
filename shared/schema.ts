@@ -60,14 +60,21 @@ export const savedTripSchema = z.object({
   name: z.string().optional(),
   from: z.string(),
   to: z.string(),
-  departureTime: z.string(),
-  arrivalTime: z.string(),
+  fromCode: z.string().optional(),
+  toCode: z.string().optional(),
+  ctxRecon: z.string().optional(),
+  plannedDepartureTime: z.string(),
+  plannedArrivalTime: z.string(),
   duration: z.string(),
   transfers: z.number(),
-  legs: z.array(tripLegSchema),
+  trainTypes: z.array(z.string()).optional(),
+  createdAt: z.string(),
+  // Legacy fields for migration (will be removed)
+  departureTime: z.string().optional(),
+  arrivalTime: z.string().optional(),
+  legs: z.array(tripLegSchema).optional(),
   delayMinutes: z.number().optional(),
   status: z.string().optional(),
-  createdAt: z.string(),
 });
 
 export type TripLeg = z.infer<typeof tripLegSchema>;
