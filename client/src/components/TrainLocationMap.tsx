@@ -557,19 +557,16 @@ function findNearestTrackSegment(
 
 interface TrackGraph {
   neighbors: Record<string, string[]>;
-  edgeCoords: Record<string, [number, number][]>;
   nodeCoords: Record<string, [number, number]>;
 }
 
 function buildTrackGraph(features: GeoJSONFeature[]): TrackGraph {
   const neighbors: Record<string, string[]> = {};
-  const edgeCoords: Record<string, [number, number][]> = {};
   const nodeCoords: Record<string, [number, number]> = {};
-  const tolerance = 0.0005;
+  const tolerance = 0.0003;
   
   const roundCoord = (val: number) => Math.round(val / tolerance) * tolerance;
   const coordKey = (lat: number, lng: number) => `${roundCoord(lat)},${roundCoord(lng)}`;
-  const edgeKey = (keyA: string, keyB: string) => keyA < keyB ? `${keyA}|${keyB}` : `${keyB}|${keyA}`;
   
   for (const feature of features) {
     if (feature.geometry.type !== "LineString" && feature.geometry.type !== "MultiLineString") {
@@ -583,31 +580,26 @@ function buildTrackGraph(features: GeoJSONFeature[]): TrackGraph {
     for (const coords of lineStrings) {
       if (coords.length < 2) continue;
       
-      const startKey = coordKey(coords[0][1], coords[0][0]);
-      const endKey = coordKey(coords[coords.length - 1][1], coords[coords.length - 1][0]);
-      
-      if (!nodeCoords[startKey]) {
-        nodeCoords[startKey] = [coords[0][1], coords[0][0]];
-      }
-      if (!nodeCoords[endKey]) {
-        nodeCoords[endKey] = [coords[coords.length - 1][1], coords[coords.length - 1][0]];
-      }
-      
-      if (!neighbors[startKey]) neighbors[startKey] = [];
-      if (!neighbors[endKey]) neighbors[endKey] = [];
-      if (!neighbors[startKey].includes(endKey)) neighbors[startKey].push(endKey);
-      if (!neighbors[endKey].includes(startKey)) neighbors[endKey].push(startKey);
-      
-      const eKey = edgeKey(startKey, endKey);
-      const segmentCoords: [number, number][] = coords.map(c => [c[1], c[0]] as [number, number]);
-      
-      if (!edgeCoords[eKey] || segmentCoords.length > edgeCoords[eKey].length) {
-        edgeCoords[eKey] = segmentCoords;
+      for (let i = 0; i < coords.length; i++) {
+        const key = coordKey(coords[i][1], coords[i][0]);
+        if (!nodeCoords[key]) {
+          nodeCoords[key] = [coords[i][1], coords[i][0]];
+        }
+        if (!neighbors[key]) neighbors[key] = [];
+        
+        if (i > 0) {
+          const prevKey = coordKey(coords[i-1][1], coords[i-1][0]);
+          if (!neighbors[key].includes(prevKey)) neighbors[key].push(prevKey);
+        }
+        if (i < coords.length - 1) {
+          const nextKey = coordKey(coords[i+1][1], coords[i+1][0]);
+          if (!neighbors[key].includes(nextKey)) neighbors[key].push(nextKey);
+        }
       }
     }
   }
   
-  return { neighbors, edgeCoords, nodeCoords };
+  return { neighbors, nodeCoords };
 }
 
 function findNearestGraphNode(
@@ -637,11 +629,10 @@ function findPathAStar(
   graph: TrackGraph,
   startKey: string,
   endKey: string,
-  maxNodes: number = 1000
+  maxNodes: number = 3000
 ): [number, number][] {
   if (startKey === endKey) return [];
   
-  const edgeKey = (keyA: string, keyB: string) => keyA < keyB ? `${keyA}|${keyB}` : `${keyB}|${keyA}`;
   const endCoord = graph.nodeCoords[endKey];
   if (!endCoord) return [];
   
@@ -668,31 +659,9 @@ function findPathAStar(
         path.unshift(node);
       }
       
-      const result: [number, number][] = [];
-      for (let j = 0; j < path.length - 1; j++) {
-        const eKey = edgeKey(path[j], path[j + 1]);
-        const edgePoints = graph.edgeCoords[eKey];
-        if (edgePoints && edgePoints.length > 0) {
-          const nodeCoord = graph.nodeCoords[path[j]];
-          const firstEdgePoint = edgePoints[0];
-          const lastEdgePoint = edgePoints[edgePoints.length - 1];
-          
-          const distToFirst = nodeCoord ? distanceBetweenPoints(nodeCoord, firstEdgePoint) : Infinity;
-          const distToLast = nodeCoord ? distanceBetweenPoints(nodeCoord, lastEdgePoint) : Infinity;
-          
-          if (distToFirst <= distToLast) {
-            result.push(...edgePoints);
-          } else {
-            result.push(...[...edgePoints].reverse());
-          }
-        } else {
-          const coord = graph.nodeCoords[path[j]];
-          if (coord) result.push(coord);
-        }
-      }
-      const lastCoord = graph.nodeCoords[path[path.length - 1]];
-      if (lastCoord) result.push(lastCoord);
-      return result;
+      return path
+        .map(key => graph.nodeCoords[key])
+        .filter((coord): coord is [number, number] => coord !== undefined);
     }
     
     closedSet[current] = true;
@@ -743,7 +712,7 @@ function findRouteBetweenStops(
     const endNode = findNearestGraphNode(end, graph, maxSearchDistance);
     
     if (startNode && endNode) {
-      const pathSegment = findPathAStar(graph, startNode, endNode, 2000);
+      const pathSegment = findPathAStar(graph, startNode, endNode, 5000);
       
       if (pathSegment.length > 0) {
         if (route.length === 0) {
