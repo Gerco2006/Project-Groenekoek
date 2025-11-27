@@ -1,12 +1,13 @@
 import { Link, useLocation } from "wouter";
-import { MapIcon, Clock, Train, MoreHorizontal } from "lucide-react";
+import { MapIcon, Clock, Train, MoreHorizontal, AlertTriangle } from "lucide-react";
 
 export default function BottomNav() {
   const [location] = useLocation();
 
   const navItems = [
     { path: "/", icon: MapIcon, label: "Planner" },
-    { path: "/vertrektijden", icon: Clock, label: "station"},
+    { path: "/vertrektijden", icon: Clock, label: "Station" },
+    { path: "/storingen", icon: AlertTriangle, label: "Storingen" },
     { path: "/treininfo", icon: Train, label: "Treininfo" },
     { path: "/meer", icon: MoreHorizontal, label: "Meer" },
   ];
