@@ -2,24 +2,22 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, X, Clock, ArrowRight, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
-import type { SavedTrip } from "@shared/schema";
+import type { SavedTrip, TripLeg } from "@shared/schema";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 
 interface LiveTripData {
-  departureTime: string;
-  arrivalTime: string;
+  legs: TripLeg[];
   departureDelay: number;
   arrivalDelay: number;
   cancelled: boolean;
   status: string;
-  trainTypes: string[];
 }
 
 interface SavedTripsWidgetProps {
   trips: SavedTrip[];
-  onTripClick: (trip: SavedTrip, liveData?: LiveTripData) => void;
+  onTripClick: (trip: SavedTrip, liveTrip?: any) => void;
   onTripRemove: (id: string) => void;
 }
 
@@ -29,39 +27,63 @@ function SavedTripCard({
   onTripRemove 
 }: { 
   trip: SavedTrip; 
-  onTripClick: (trip: SavedTrip, liveData?: LiveTripData) => void;
+  onTripClick: (trip: SavedTrip, liveTrip?: any) => void;
   onTripRemove: (id: string) => void;
 }) {
-  // Build query params
-  const queryParams = new URLSearchParams();
-  if (trip.ctxRecon) queryParams.set('ctxRecon', trip.ctxRecon);
-  if (trip.fromCode) queryParams.set('fromCode', trip.fromCode);
-  if (trip.toCode) queryParams.set('toCode', trip.toCode);
   const plannedDep = trip.plannedDepartureTime || trip.departureTime;
-  if (plannedDep) queryParams.set('plannedDeparture', plannedDep);
+  
+  // Build query params - use ctxRecon if available, otherwise use station names
+  const queryParams = new URLSearchParams();
+  if (trip.ctxRecon) {
+    queryParams.set('ctxRecon', trip.ctxRecon);
+  }
+  // Always include fallback params
+  if (trip.fromCode) {
+    queryParams.set('fromCode', trip.fromCode);
+  } else if (trip.from) {
+    queryParams.set('fromCode', trip.from);
+  }
+  if (trip.toCode) {
+    queryParams.set('toCode', trip.toCode);
+  } else if (trip.to) {
+    queryParams.set('toCode', trip.to);
+  }
+  if (plannedDep) {
+    queryParams.set('plannedDeparture', plannedDep);
+  }
 
-  const { data, isLoading, isError } = useQuery<{ success: boolean; trip?: any; error?: string }>({
+  const canFetch = !!plannedDep && (!!trip.ctxRecon || !!trip.from);
+
+  const { data, isLoading } = useQuery<{ success: boolean; trip?: any; error?: string }>({
     queryKey: ['/api/trip/live', trip.id],
     queryFn: async () => {
       const response = await fetch(`/api/trip/live?${queryParams.toString()}`);
       if (!response.ok) throw new Error('Failed to fetch');
       return response.json();
     },
-    enabled: !!plannedDep && (!!trip.ctxRecon || (!!trip.fromCode && !!trip.toCode)),
+    enabled: canFetch,
     staleTime: 30000,
     refetchInterval: 60000,
   });
 
   const formatTime = (dateTime: string) => {
     if (!dateTime) return "";
-    const date = new Date(dateTime);
-    return format(date, "HH:mm", { locale: nl });
+    try {
+      const date = new Date(dateTime);
+      return format(date, "HH:mm", { locale: nl });
+    } catch {
+      return "";
+    }
   };
 
   const formatDate = (dateTime: string) => {
     if (!dateTime) return "";
-    const date = new Date(dateTime);
-    return format(date, "EEE d MMM", { locale: nl });
+    try {
+      const date = new Date(dateTime);
+      return format(date, "EEE d MMM", { locale: nl });
+    } catch {
+      return "";
+    }
   };
 
   // Extract live data from API response
@@ -94,22 +116,12 @@ function SavedTripCard({
   
   const hasDelay = departureDelay > 0 || arrivalDelay > 0;
   const tripNotAvailable = data && !data.success;
-
-  // Build live data for click handler
-  const liveData: LiveTripData | undefined = liveTrip ? {
-    departureTime,
-    arrivalTime,
-    departureDelay,
-    arrivalDelay,
-    cancelled,
-    status: liveTrip.status || 'NORMAL',
-    trainTypes: liveTrip.legs?.map((l: any) => l.product?.categoryCode).filter(Boolean) || [],
-  } : undefined;
+  const hasLiveData = data?.success && liveTrip;
 
   return (
     <Card
       className={`p-3 hover-elevate cursor-pointer group ${cancelled ? 'border-destructive/50' : ''} ${tripNotAvailable ? 'opacity-60' : ''}`}
-      onClick={() => onTripClick(trip, liveData)}
+      onClick={() => onTripClick(trip, liveTrip)}
       data-testid={`saved-trip-${trip.id}`}
     >
       <div className="flex items-start gap-3">
@@ -169,7 +181,7 @@ function SavedTripCard({
                 <AlertTriangle className="w-3 h-3" />
                 Geannuleerd
               </Badge>
-            ) : !isLoading && data?.success ? (
+            ) : hasLiveData ? (
               hasDelay ? (
                 <Badge variant="outline" className="text-xs gap-1 ml-1 border-red-500/50 text-red-500">
                   <AlertTriangle className="w-3 h-3" />

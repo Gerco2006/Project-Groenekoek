@@ -388,7 +388,23 @@ export default function JourneyPlanner() {
     });
   };
 
-  const handleLoadSavedTrip = (trip: SavedTrip, liveData?: any) => {
+  const handleLoadSavedTrip = (trip: SavedTrip, liveTrip?: any) => {
+    // If we have live trip data from the API, use it
+    if (liveTrip) {
+      const transformedTrip = transformTrip(liveTrip);
+      setManuallySelectedTrip(transformedTrip);
+      setSelectedTripIndex(null);
+      setSelectedTrain(null);
+      setDetailMode('trip');
+      
+      if (trip.from && trip.to) {
+        setFrom(trip.from);
+        setTo(trip.to);
+      }
+      return;
+    }
+    
+    // Fallback: use stored data (for old format or when API fails)
     const depTime = trip.plannedDepartureTime || trip.departureTime || '';
     const arrTime = trip.plannedArrivalTime || trip.arrivalTime || '';
     
@@ -398,8 +414,8 @@ export default function JourneyPlanner() {
       duration: trip.duration,
       transfers: trip.transfers,
       legs: trip.legs || [],
-      delayMinutes: liveData?.departureDelay || liveData?.arrivalDelay,
-      status: liveData?.status || trip.status,
+      delayMinutes: trip.delayMinutes,
+      status: trip.status,
       rawDepartureTime: depTime,
       rawArrivalTime: arrTime,
       ctxRecon: trip.ctxRecon,
@@ -413,7 +429,6 @@ export default function JourneyPlanner() {
     setSelectedTrain(null);
     setDetailMode('trip');
     
-    // Set search context so we can fetch fresh trip data
     if (trip.from && trip.to) {
       setFrom(trip.from);
       setTo(trip.to);
