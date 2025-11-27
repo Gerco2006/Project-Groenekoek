@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
@@ -7,6 +7,116 @@ import { Map, ChevronDown, ChevronUp, Loader2, Gauge } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import "leaflet/dist/leaflet.css";
+
+function lerp(start: number, end: number, t: number): number {
+  return start + (end - start) * t;
+}
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+interface AnimatedTrainMarkerProps {
+  position: [number, number];
+  icon: L.DivIcon;
+  zIndexOffset?: number;
+}
+
+function AnimatedTrainMarker({ position, icon, zIndexOffset = 0 }: AnimatedTrainMarkerProps) {
+  const markerRef = useRef<L.Marker | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const lastPositionRef = useRef<[number, number] | null>(null);
+  const currentAnimatedPosRef = useRef<[number, number] | null>(null);
+
+  const animateToPosition = useCallback((targetLat: number, targetLng: number) => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+
+    const marker = markerRef.current;
+    if (!marker) return;
+
+    const startPos = currentAnimatedPosRef.current || lastPositionRef.current || [targetLat, targetLng];
+    const startLat = startPos[0];
+    const startLng = startPos[1];
+
+    const distance = Math.sqrt(
+      Math.pow(targetLat - startLat, 2) + Math.pow(targetLng - startLng, 2)
+    );
+    
+    if (distance < 0.00001) {
+      currentAnimatedPosRef.current = [targetLat, targetLng];
+      lastPositionRef.current = [targetLat, targetLng];
+      return;
+    }
+
+    const duration = Math.min(18000, Math.max(2000, distance * 500000));
+    const startTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeInOutCubic(progress);
+
+      const currentLat = lerp(startLat, targetLat, easedProgress);
+      const currentLng = lerp(startLng, targetLng, easedProgress);
+
+      currentAnimatedPosRef.current = [currentLat, currentLng];
+      
+      if (marker) {
+        marker.setLatLng([currentLat, currentLng]);
+      }
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        lastPositionRef.current = [targetLat, targetLng];
+        currentAnimatedPosRef.current = [targetLat, targetLng];
+      }
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+  }, []);
+
+  useEffect(() => {
+    if (position[0] && position[1]) {
+      if (!lastPositionRef.current) {
+        lastPositionRef.current = position;
+        currentAnimatedPosRef.current = position;
+        if (markerRef.current) {
+          markerRef.current.setLatLng(position);
+        }
+      } else {
+        animateToPosition(position[0], position[1]);
+      }
+    }
+  }, [position, animateToPosition]);
+
+  useEffect(() => {
+    if (markerRef.current) {
+      markerRef.current.setIcon(icon);
+    }
+  }, [icon]);
+
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  const initialPosition = currentAnimatedPosRef.current || position;
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={initialPosition}
+      icon={icon}
+      zIndexOffset={zIndexOffset}
+    />
+  );
+}
 
 function MapTouchHandler({ children }: { children: React.ReactNode }) {
   return (
@@ -259,8 +369,8 @@ function MapContent({
             );
           })}
           
-          {/* Train marker (on top) */}
-          <Marker
+          {/* Animated train marker (on top) */}
+          <AnimatedTrainMarker
             position={trainPosition}
             icon={createTrainIcon(
               train.type || "",
