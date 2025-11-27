@@ -633,63 +633,92 @@ function findNearestGraphNode(
   return nearestKey;
 }
 
-function findPathBFS(
+function findPathAStar(
   graph: TrackGraph,
   startKey: string,
   endKey: string,
-  maxNodes: number = 500
+  maxNodes: number = 1000
 ): [number, number][] {
   if (startKey === endKey) return [];
   
   const edgeKey = (keyA: string, keyB: string) => keyA < keyB ? `${keyA}|${keyB}` : `${keyB}|${keyA}`;
+  const endCoord = graph.nodeCoords[endKey];
+  if (!endCoord) return [];
   
-  const queue: { key: string; path: string[] }[] = [{ key: startKey, path: [startKey] }];
-  const visited: Record<string, boolean> = { [startKey]: true };
+  const gScore: Record<string, number> = { [startKey]: 0 };
+  const fScore: Record<string, number> = {};
+  const startCoord = graph.nodeCoords[startKey];
+  fScore[startKey] = startCoord ? distanceBetweenPoints(startCoord, endCoord) : Infinity;
+  
+  const cameFrom: Record<string, string> = {};
+  const openSet: string[] = [startKey];
+  const closedSet: Record<string, boolean> = {};
   let nodesVisited = 0;
   
-  while (queue.length > 0 && nodesVisited < maxNodes) {
-    const current = queue.shift()!;
+  while (openSet.length > 0 && nodesVisited < maxNodes) {
+    openSet.sort((a, b) => (fScore[a] || Infinity) - (fScore[b] || Infinity));
+    const current = openSet.shift()!;
     nodesVisited++;
     
-    const neighbors = graph.neighbors[current.key];
-    if (!neighbors) continue;
-    
-    for (let i = 0; i < neighbors.length; i++) {
-      const neighbor = neighbors[i];
-      if (visited[neighbor]) continue;
-      
-      const newPath = [...current.path, neighbor];
-      
-      if (neighbor === endKey) {
-        const result: [number, number][] = [];
-        for (let j = 0; j < newPath.length - 1; j++) {
-          const eKey = edgeKey(newPath[j], newPath[j + 1]);
-          const edgePoints = graph.edgeCoords[eKey];
-          if (edgePoints && edgePoints.length > 0) {
-            const startCoord = graph.nodeCoords[newPath[j]];
-            const firstEdgePoint = edgePoints[0];
-            const lastEdgePoint = edgePoints[edgePoints.length - 1];
-            
-            const distToFirst = startCoord ? distanceBetweenPoints(startCoord, firstEdgePoint) : Infinity;
-            const distToLast = startCoord ? distanceBetweenPoints(startCoord, lastEdgePoint) : Infinity;
-            
-            if (distToFirst <= distToLast) {
-              result.push(...edgePoints);
-            } else {
-              result.push(...[...edgePoints].reverse());
-            }
-          } else {
-            const coord = graph.nodeCoords[newPath[j]];
-            if (coord) result.push(coord);
-          }
-        }
-        const lastCoord = graph.nodeCoords[newPath[newPath.length - 1]];
-        if (lastCoord) result.push(lastCoord);
-        return result;
+    if (current === endKey) {
+      const path: string[] = [current];
+      let node = current;
+      while (cameFrom[node]) {
+        node = cameFrom[node];
+        path.unshift(node);
       }
       
-      visited[neighbor] = true;
-      queue.push({ key: neighbor, path: newPath });
+      const result: [number, number][] = [];
+      for (let j = 0; j < path.length - 1; j++) {
+        const eKey = edgeKey(path[j], path[j + 1]);
+        const edgePoints = graph.edgeCoords[eKey];
+        if (edgePoints && edgePoints.length > 0) {
+          const nodeCoord = graph.nodeCoords[path[j]];
+          const firstEdgePoint = edgePoints[0];
+          const lastEdgePoint = edgePoints[edgePoints.length - 1];
+          
+          const distToFirst = nodeCoord ? distanceBetweenPoints(nodeCoord, firstEdgePoint) : Infinity;
+          const distToLast = nodeCoord ? distanceBetweenPoints(nodeCoord, lastEdgePoint) : Infinity;
+          
+          if (distToFirst <= distToLast) {
+            result.push(...edgePoints);
+          } else {
+            result.push(...[...edgePoints].reverse());
+          }
+        } else {
+          const coord = graph.nodeCoords[path[j]];
+          if (coord) result.push(coord);
+        }
+      }
+      const lastCoord = graph.nodeCoords[path[path.length - 1]];
+      if (lastCoord) result.push(lastCoord);
+      return result;
+    }
+    
+    closedSet[current] = true;
+    const neighbors = graph.neighbors[current];
+    if (!neighbors) continue;
+    
+    const currentCoord = graph.nodeCoords[current];
+    
+    for (const neighbor of neighbors) {
+      if (closedSet[neighbor]) continue;
+      
+      const neighborCoord = graph.nodeCoords[neighbor];
+      if (!neighborCoord) continue;
+      
+      const edgeDist = currentCoord ? distanceBetweenPoints(currentCoord, neighborCoord) : 0.001;
+      const tentativeG = (gScore[current] || 0) + edgeDist;
+      
+      if (tentativeG < (gScore[neighbor] || Infinity)) {
+        cameFrom[neighbor] = current;
+        gScore[neighbor] = tentativeG;
+        fScore[neighbor] = tentativeG + distanceBetweenPoints(neighborCoord, endCoord);
+        
+        if (!openSet.includes(neighbor)) {
+          openSet.push(neighbor);
+        }
+      }
     }
   }
   
@@ -714,7 +743,7 @@ function findRouteBetweenStops(
     const endNode = findNearestGraphNode(end, graph, maxSearchDistance);
     
     if (startNode && endNode) {
-      const pathSegment = findPathBFS(graph, startNode, endNode, 1000);
+      const pathSegment = findPathAStar(graph, startNode, endNode, 2000);
       
       if (pathSegment.length > 0) {
         if (route.length === 0) {
