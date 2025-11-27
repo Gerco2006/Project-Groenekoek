@@ -1,15 +1,14 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Map, ChevronDown, ChevronUp, Loader2, Gauge } from "lucide-react";
+import { Map, ChevronDown, ChevronUp, Loader2, Gauge, Crosshair } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import "leaflet/dist/leaflet.css";
 
 const KM_PER_DEGREE_LAT = 111.32;
-const CORRECTION_BLEND_FACTOR = 0.15;
 
 function toRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
@@ -21,22 +20,25 @@ interface AnimatedTrainMarkerProps {
   heading: number;
   icon: L.DivIcon;
   zIndexOffset?: number;
+  onPositionUpdate?: (pos: [number, number]) => void;
 }
 
-function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0 }: AnimatedTrainMarkerProps) {
+function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0, onPositionUpdate }: AnimatedTrainMarkerProps) {
   const markerRef = useRef<L.Marker | null>(null);
   const animationRef = useRef<number | null>(null);
   const currentPosRef = useRef<[number, number]>(position);
-  const targetPosRef = useRef<[number, number]>(position);
   const speedRef = useRef<number>(speed);
   const headingRef = useRef<number>(heading);
   const lastFrameTimeRef = useRef<number>(performance.now());
   const isInitializedRef = useRef<boolean>(false);
+  const lastGpsUpdateRef = useRef<number>(performance.now());
+  const gpsPositionRef = useRef<[number, number]>(position);
 
   useEffect(() => {
-    targetPosRef.current = position;
+    gpsPositionRef.current = position;
     speedRef.current = speed;
     headingRef.current = heading;
+    lastGpsUpdateRef.current = performance.now();
 
     if (!isInitializedRef.current) {
       currentPosRef.current = position;
@@ -44,8 +46,9 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0 
       if (markerRef.current) {
         markerRef.current.setLatLng(position);
       }
+      onPositionUpdate?.(position);
     }
-  }, [position, speed, heading]);
+  }, [position, speed, heading, onPositionUpdate]);
 
   useEffect(() => {
     if (markerRef.current) {
@@ -59,7 +62,7 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0 
       lastFrameTimeRef.current = currentTime;
 
       const marker = markerRef.current;
-      if (!marker) {
+      if (!marker || deltaTime > 1) {
         animationRef.current = requestAnimationFrame(animate);
         return;
       }
@@ -67,9 +70,9 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0 
       const currentSpeed = speedRef.current;
       const currentHeading = headingRef.current;
       const [currentLat, currentLng] = currentPosRef.current;
-      const [targetLat, targetLng] = targetPosRef.current;
+      const [gpsLat, gpsLng] = gpsPositionRef.current;
 
-      if (currentSpeed > 1) {
+      if (currentSpeed > 2) {
         const headingRad = toRadians(currentHeading);
         const speedKmPerSec = currentSpeed / 3600;
         const distanceKm = speedKmPerSec * deltaTime;
@@ -78,26 +81,23 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0 
         const kmPerDegreeLng = KM_PER_DEGREE_LAT * Math.cos(toRadians(currentLat));
         const deltaLng = (distanceKm * Math.sin(headingRad)) / kmPerDegreeLng;
 
-        let newLat = currentLat + deltaLat;
-        let newLng = currentLng + deltaLng;
-
-        const errorLat = targetLat - newLat;
-        const errorLng = targetLng - newLng;
-        newLat += errorLat * CORRECTION_BLEND_FACTOR * deltaTime;
-        newLng += errorLng * CORRECTION_BLEND_FACTOR * deltaTime;
+        const newLat = currentLat + deltaLat;
+        const newLng = currentLng + deltaLng;
 
         currentPosRef.current = [newLat, newLng];
         marker.setLatLng([newLat, newLng]);
+        onPositionUpdate?.([newLat, newLng]);
       } else {
-        const errorLat = targetLat - currentLat;
-        const errorLng = targetLng - currentLng;
+        const errorLat = gpsLat - currentLat;
+        const errorLng = gpsLng - currentLng;
         
         if (Math.abs(errorLat) > 0.00001 || Math.abs(errorLng) > 0.00001) {
-          const blendFactor = Math.min(1, deltaTime * 2);
+          const blendFactor = Math.min(1, deltaTime * 3);
           const newLat = currentLat + errorLat * blendFactor;
           const newLng = currentLng + errorLng * blendFactor;
           currentPosRef.current = [newLat, newLng];
           marker.setLatLng([newLat, newLng]);
+          onPositionUpdate?.([newLat, newLng]);
         }
       }
 
@@ -112,7 +112,7 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0 
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, [onPositionUpdate]);
 
   return (
     <Marker
@@ -122,6 +122,40 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0 
       zIndexOffset={zIndexOffset}
     />
   );
+}
+
+interface MapFollowerProps {
+  trainPosition: [number, number];
+  isFollowing: boolean;
+  onUserInteraction: () => void;
+}
+
+function MapFollower({ trainPosition, isFollowing, onUserInteraction }: MapFollowerProps) {
+  const map = useMap();
+  const isFirstRenderRef = useRef(true);
+
+  useMapEvents({
+    dragstart: () => onUserInteraction(),
+    zoomstart: () => {
+      if (!isFirstRenderRef.current) {
+        onUserInteraction();
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (isFirstRenderRef.current) {
+      map.setView(trainPosition, 14, { animate: false });
+      isFirstRenderRef.current = false;
+      return;
+    }
+
+    if (isFollowing && trainPosition[0] && trainPosition[1]) {
+      map.setView(trainPosition, map.getZoom(), { animate: true, duration: 0.3 });
+    }
+  }, [map, trainPosition, isFollowing]);
+
+  return null;
 }
 
 function MapTouchHandler({ children }: { children: React.ReactNode }) {
@@ -269,16 +303,6 @@ function createStationIcon(isPassed: boolean, isNext: boolean, isDark: boolean):
   });
 }
 
-function MapCenterer({ position }: { position: [number, number] }) {
-  const map = useMap();
-  
-  useEffect(() => {
-    map.setView(position, 14, { animate: true });
-  }, [map, position]);
-  
-  return null;
-}
-
 interface StopWithStatus {
   stop: JourneyStop;
   isPassed: boolean;
@@ -302,11 +326,26 @@ function MapContent({
   setMapInstance: (map: L.Map | null) => void;
   stops: StopWithStatus[];
 }) {
+  const [isFollowing, setIsFollowing] = useState(true);
+  const [animatedPosition, setAnimatedPosition] = useState<[number, number]>(trainPosition);
+
   const routePositions = useMemo(() => {
     return stops
       .filter(s => s.stop.stop?.lat && s.stop.stop?.lng)
       .map(s => [s.stop.stop.lat, s.stop.stop.lng] as [number, number]);
   }, [stops]);
+
+  const handlePositionUpdate = useCallback((pos: [number, number]) => {
+    setAnimatedPosition(pos);
+  }, []);
+
+  const handleUserInteraction = useCallback(() => {
+    setIsFollowing(false);
+  }, []);
+
+  const handleRecenter = useCallback(() => {
+    setIsFollowing(true);
+  }, []);
 
   if (isLoading) {
     return (
@@ -346,7 +385,11 @@ function MapContent({
               : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             }
           />
-          <MapCenterer position={trainPosition} />
+          <MapFollower 
+            trainPosition={animatedPosition} 
+            isFollowing={isFollowing} 
+            onUserInteraction={handleUserInteraction}
+          />
           
           {/* Route line connecting stops */}
           {routePositions.length > 1 && (
@@ -386,6 +429,7 @@ function MapContent({
               isDark
             )}
             zIndexOffset={1000}
+            onPositionUpdate={handlePositionUpdate}
           />
         </MapContainer>
       </MapTouchHandler>
@@ -405,6 +449,19 @@ function MapContent({
           {Math.round(train.snelheid)} km/u
         </span>
       </div>
+
+      {!isFollowing && (
+        <Button
+          size="sm"
+          variant="secondary"
+          className="absolute bottom-3 right-3 z-[1000] shadow-lg"
+          onClick={handleRecenter}
+          data-testid="button-recenter-map"
+        >
+          <Crosshair className="w-4 h-4 mr-1.5" />
+          Centreren
+        </Button>
+      )}
 
       {isFetching && (
         <div className="absolute top-3 right-3 z-[1000]">
