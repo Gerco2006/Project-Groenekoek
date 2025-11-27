@@ -671,9 +671,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Fallback: search for matching trip
       if (fromCode && toCode && plannedDeparture) {
+        // Convert station names to codes if needed
+        const fromStationCode = await getStationCode(fromCode as string);
+        const toStationCode = await getStationCode(toCode as string);
+        
+        if (!fromStationCode || !toStationCode) {
+          return res.json({ success: false, error: 'Station not found' });
+        }
+        
         const data = await fetchNS("/v3/trips", {
-          fromStation: fromCode as string,
-          toStation: toCode as string,
+          fromStation: fromStationCode,
+          toStation: toStationCode,
           dateTime: plannedDeparture as string,
         });
         

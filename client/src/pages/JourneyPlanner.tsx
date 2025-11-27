@@ -389,9 +389,13 @@ export default function JourneyPlanner() {
   };
 
   const handleLoadSavedTrip = (trip: SavedTrip, liveTrip?: any) => {
+    console.log('[DEBUG] handleLoadSavedTrip called', { trip, liveTrip, hasLiveTrip: !!liveTrip });
+    
     // If we have live trip data from the API, use it
     if (liveTrip) {
+      console.log('[DEBUG] Using live trip data');
       const transformedTrip = transformTrip(liveTrip);
+      console.log('[DEBUG] Transformed trip:', transformedTrip);
       setManuallySelectedTrip(transformedTrip);
       setSelectedTripIndex(null);
       setSelectedTrain(null);
@@ -405,15 +409,20 @@ export default function JourneyPlanner() {
     }
     
     // Fallback: use stored data (for old format or when API fails)
+    console.log('[DEBUG] Using fallback stored data');
     const depTime = trip.plannedDepartureTime || trip.departureTime || '';
     const arrTime = trip.plannedArrivalTime || trip.arrivalTime || '';
+    
+    // For old format trips, legs might be stored directly
+    const legs = trip.legs || [];
+    console.log('[DEBUG] Fallback legs:', legs.length, 'legs');
     
     const tripData: SelectedTrip = {
       departureTime: formatTime(depTime),
       arrivalTime: formatTime(arrTime),
       duration: trip.duration,
       transfers: trip.transfers,
-      legs: trip.legs || [],
+      legs: legs,
       delayMinutes: trip.delayMinutes,
       status: trip.status,
       rawDepartureTime: depTime,
@@ -424,6 +433,7 @@ export default function JourneyPlanner() {
       trainTypes: trip.trainTypes,
     };
     
+    console.log('[DEBUG] Setting tripData:', tripData);
     setManuallySelectedTrip(tripData);
     setSelectedTripIndex(null);
     setSelectedTrain(null);

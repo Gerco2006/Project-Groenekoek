@@ -119,11 +119,18 @@ function SavedTripCard({
   const hasLiveData = data?.success && liveTrip;
 
   return (
-    <Card
-      className={`p-3 hover-elevate cursor-pointer group ${cancelled ? 'border-destructive/50' : ''} ${tripNotAvailable ? 'opacity-60' : ''}`}
-      onClick={() => onTripClick(trip, liveTrip)}
+    <button
+      type="button"
+      className="w-full text-left"
+      onClick={() => {
+        console.log('[DEBUG] Trip button clicked', trip.id);
+        onTripClick(trip, liveTrip);
+      }}
       data-testid={`saved-trip-${trip.id}`}
     >
+      <Card
+        className={`p-3 hover-elevate group ${cancelled ? 'border-destructive/50' : ''} ${tripNotAvailable ? 'opacity-60' : ''}`}
+      >
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
@@ -210,6 +217,7 @@ function SavedTripCard({
         </Button>
       </div>
     </Card>
+    </button>
   );
 }
 
