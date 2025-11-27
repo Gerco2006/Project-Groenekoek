@@ -1,8 +1,9 @@
-import { useMemo, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Polyline, Marker, useMap } from "react-leaflet";
+import { useMemo, useEffect, useRef, useState } from "react";
+import { MapContainer, TileLayer, Polyline, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useTheme } from "@/components/ThemeProvider";
 import { useQuery } from "@tanstack/react-query";
+import { Crosshair } from "lucide-react";
 import type { TripLeg } from "@shared/schema";
 import "leaflet/dist/leaflet.css";
 
@@ -462,9 +463,10 @@ function MapResizeHandler() {
   return null;
 }
 
-function FitBounds({ stations }: { stations: Station[] }) {
+function FitBounds({ stations, recenterTrigger }: { stations: Station[]; recenterTrigger: number }) {
   const map = useMap();
   const fittedRef = useRef(false);
+  const lastRecenterRef = useRef(0);
   
   useEffect(() => {
     if (stations.length > 0 && !fittedRef.current) {
@@ -478,6 +480,43 @@ function FitBounds({ stations }: { stations: Station[] }) {
     }
   }, [stations, map]);
   
+  useEffect(() => {
+    if (recenterTrigger > 0 && recenterTrigger !== lastRecenterRef.current && stations.length > 0) {
+      lastRecenterRef.current = recenterTrigger;
+      const bounds = L.latLngBounds(stations.map(s => [s.lat, s.lng] as [number, number]));
+      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12, animate: true });
+    }
+  }, [recenterTrigger, stations, map]);
+  
+  return null;
+}
+
+function MapMoveTracker({ onMoved }: { onMoved: (moved: boolean) => void }) {
+  const initialBoundsRef = useRef<L.LatLngBounds | null>(null);
+  
+  useMapEvents({
+    moveend: (e) => {
+      const map = e.target;
+      if (!initialBoundsRef.current) {
+        initialBoundsRef.current = map.getBounds();
+        return;
+      }
+      
+      const currentBounds = map.getBounds();
+      const initialCenter = initialBoundsRef.current.getCenter();
+      const currentCenter = currentBounds.getCenter();
+      
+      const latDiff = Math.abs(currentCenter.lat - initialCenter.lat);
+      const lngDiff = Math.abs(currentCenter.lng - initialCenter.lng);
+      
+      const hasMoved = latDiff > 0.001 || lngDiff > 0.001;
+      onMoved(hasMoved);
+    },
+    zoomend: (e) => {
+      onMoved(true);
+    }
+  });
+  
   return null;
 }
 
@@ -485,6 +524,13 @@ export default function TripRouteMap({ legs, compact = false, embedded = false }
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const mapHeight = compact ? "h-[150px]" : "h-[200px]";
+  const [hasMoved, setHasMoved] = useState(false);
+  const [recenterTrigger, setRecenterTrigger] = useState(0);
+
+  const handleRecenter = () => {
+    setRecenterTrigger(prev => prev + 1);
+    setHasMoved(false);
+  };
 
   const { data: stationsData, isLoading: stationsLoading } = useQuery<{ payload: any[] }>({
     queryKey: ["/api/stations"],
@@ -622,7 +668,8 @@ export default function TripRouteMap({ legs, compact = false, embedded = false }
           maxZoom={19}
         />
         <MapResizeHandler />
-        <FitBounds stations={stations} />
+        <FitBounds stations={stations} recenterTrigger={recenterTrigger} />
+        <MapMoveTracker onMoved={setHasMoved} />
         
         {routePositions.length > 1 && (
           <Polyline
@@ -647,6 +694,22 @@ export default function TripRouteMap({ legs, compact = false, embedded = false }
           ));
         })()}
       </MapContainer>
+
+      {hasMoved && (
+        <button
+          className="absolute bottom-3 right-3 z-[1000] rounded-lg px-3 py-1.5 shadow-lg flex items-center gap-2 hover:opacity-90 transition-opacity"
+          style={{
+            backgroundColor: isDark ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
+          onClick={handleRecenter}
+          data-testid="button-recenter-route-map"
+        >
+          <Crosshair className="w-4 h-4 text-primary" />
+          <span className="font-semibold text-sm">Centreren</span>
+        </button>
+      )}
     </div>
   );
 }
