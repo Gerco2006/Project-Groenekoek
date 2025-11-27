@@ -8,89 +8,44 @@ import { useTheme } from "@/components/ThemeProvider";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import "leaflet/dist/leaflet.css";
 
-function lerp(start: number, end: number, t: number): number {
-  return start + (end - start) * t;
-}
+const KM_PER_DEGREE_LAT = 111.32;
+const CORRECTION_BLEND_FACTOR = 0.15;
 
-function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function toRadians(degrees: number): number {
+  return degrees * (Math.PI / 180);
 }
 
 interface AnimatedTrainMarkerProps {
   position: [number, number];
+  speed: number;
+  heading: number;
   icon: L.DivIcon;
   zIndexOffset?: number;
 }
 
-function AnimatedTrainMarker({ position, icon, zIndexOffset = 0 }: AnimatedTrainMarkerProps) {
+function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0 }: AnimatedTrainMarkerProps) {
   const markerRef = useRef<L.Marker | null>(null);
   const animationRef = useRef<number | null>(null);
-  const lastPositionRef = useRef<[number, number] | null>(null);
-  const currentAnimatedPosRef = useRef<[number, number] | null>(null);
-
-  const animateToPosition = useCallback((targetLat: number, targetLng: number) => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-
-    const marker = markerRef.current;
-    if (!marker) return;
-
-    const startPos = currentAnimatedPosRef.current || lastPositionRef.current || [targetLat, targetLng];
-    const startLat = startPos[0];
-    const startLng = startPos[1];
-
-    const distance = Math.sqrt(
-      Math.pow(targetLat - startLat, 2) + Math.pow(targetLng - startLng, 2)
-    );
-    
-    if (distance < 0.00001) {
-      currentAnimatedPosRef.current = [targetLat, targetLng];
-      lastPositionRef.current = [targetLat, targetLng];
-      return;
-    }
-
-    const duration = Math.min(18000, Math.max(2000, distance * 500000));
-    const startTime = performance.now();
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeInOutCubic(progress);
-
-      const currentLat = lerp(startLat, targetLat, easedProgress);
-      const currentLng = lerp(startLng, targetLng, easedProgress);
-
-      currentAnimatedPosRef.current = [currentLat, currentLng];
-      
-      if (marker) {
-        marker.setLatLng([currentLat, currentLng]);
-      }
-
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        lastPositionRef.current = [targetLat, targetLng];
-        currentAnimatedPosRef.current = [targetLat, targetLng];
-      }
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-  }, []);
+  const currentPosRef = useRef<[number, number]>(position);
+  const targetPosRef = useRef<[number, number]>(position);
+  const speedRef = useRef<number>(speed);
+  const headingRef = useRef<number>(heading);
+  const lastFrameTimeRef = useRef<number>(performance.now());
+  const isInitializedRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (position[0] && position[1]) {
-      if (!lastPositionRef.current) {
-        lastPositionRef.current = position;
-        currentAnimatedPosRef.current = position;
-        if (markerRef.current) {
-          markerRef.current.setLatLng(position);
-        }
-      } else {
-        animateToPosition(position[0], position[1]);
+    targetPosRef.current = position;
+    speedRef.current = speed;
+    headingRef.current = heading;
+
+    if (!isInitializedRef.current) {
+      currentPosRef.current = position;
+      isInitializedRef.current = true;
+      if (markerRef.current) {
+        markerRef.current.setLatLng(position);
       }
     }
-  }, [position, animateToPosition]);
+  }, [position, speed, heading]);
 
   useEffect(() => {
     if (markerRef.current) {
@@ -99,6 +54,59 @@ function AnimatedTrainMarker({ position, icon, zIndexOffset = 0 }: AnimatedTrain
   }, [icon]);
 
   useEffect(() => {
+    const animate = (currentTime: number) => {
+      const deltaTime = (currentTime - lastFrameTimeRef.current) / 1000;
+      lastFrameTimeRef.current = currentTime;
+
+      const marker = markerRef.current;
+      if (!marker) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
+      const currentSpeed = speedRef.current;
+      const currentHeading = headingRef.current;
+      const [currentLat, currentLng] = currentPosRef.current;
+      const [targetLat, targetLng] = targetPosRef.current;
+
+      if (currentSpeed > 1) {
+        const headingRad = toRadians(currentHeading);
+        const speedKmPerSec = currentSpeed / 3600;
+        const distanceKm = speedKmPerSec * deltaTime;
+
+        const deltaLat = (distanceKm * Math.cos(headingRad)) / KM_PER_DEGREE_LAT;
+        const kmPerDegreeLng = KM_PER_DEGREE_LAT * Math.cos(toRadians(currentLat));
+        const deltaLng = (distanceKm * Math.sin(headingRad)) / kmPerDegreeLng;
+
+        let newLat = currentLat + deltaLat;
+        let newLng = currentLng + deltaLng;
+
+        const errorLat = targetLat - newLat;
+        const errorLng = targetLng - newLng;
+        newLat += errorLat * CORRECTION_BLEND_FACTOR * deltaTime;
+        newLng += errorLng * CORRECTION_BLEND_FACTOR * deltaTime;
+
+        currentPosRef.current = [newLat, newLng];
+        marker.setLatLng([newLat, newLng]);
+      } else {
+        const errorLat = targetLat - currentLat;
+        const errorLng = targetLng - currentLng;
+        
+        if (Math.abs(errorLat) > 0.00001 || Math.abs(errorLng) > 0.00001) {
+          const blendFactor = Math.min(1, deltaTime * 2);
+          const newLat = currentLat + errorLat * blendFactor;
+          const newLng = currentLng + errorLng * blendFactor;
+          currentPosRef.current = [newLat, newLng];
+          marker.setLatLng([newLat, newLng]);
+        }
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    lastFrameTimeRef.current = performance.now();
+    animationRef.current = requestAnimationFrame(animate);
+
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -106,12 +114,10 @@ function AnimatedTrainMarker({ position, icon, zIndexOffset = 0 }: AnimatedTrain
     };
   }, []);
 
-  const initialPosition = currentAnimatedPosRef.current || position;
-
   return (
     <Marker
       ref={markerRef}
-      position={initialPosition}
+      position={currentPosRef.current}
       icon={icon}
       zIndexOffset={zIndexOffset}
     />
@@ -372,6 +378,8 @@ function MapContent({
           {/* Animated train marker (on top) */}
           <AnimatedTrainMarker
             position={trainPosition}
+            speed={train.snelheid || 0}
+            heading={train.richting || 0}
             icon={createTrainIcon(
               train.type || "",
               train.richting || 0,
