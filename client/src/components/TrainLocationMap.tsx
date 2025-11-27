@@ -165,7 +165,7 @@ function AnimatedTrainMarker({ position, speed, heading, icon, zIndexOffset = 0,
       onPositionUpdate?.(currentPosRef.current);
     } else {
       const distanceFromGPS = distanceBetweenPoints(currentPosRef.current, position);
-      const maxDriftDistance = 0.0036; // ~400 meters
+      const maxDriftDistance = 0.0045; // ~500 meters
       
       if (distanceFromGPS > maxDriftDistance) {
         let newPosition: [number, number];
