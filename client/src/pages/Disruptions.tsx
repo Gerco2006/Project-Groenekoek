@@ -124,13 +124,9 @@ export default function Disruptions() {
   };
 
   const masterContent = (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Storingen & Werkzaamheden</h1>
-        <p className="text-muted-foreground">Bekijk actuele en geplande verstoringen</p>
-      </div>
+    <div className="min-h-screen bg-background md:px-4 pt-0 pb-3 md:py-6 space-y-6">
 
-      <div className="backdrop-blur-sm bg-card/80 rounded-xl p-6 space-y-4 border">
+      <div className="backdrop-blur-sm bg-card/80 rounded-t-none md:rounded-xl rounded-b-xl p-6 space-y-4 border">
         <StationSearch
           label="Filter op station (optioneel)"
           value={stationFilter}
