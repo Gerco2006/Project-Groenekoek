@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ArrowRight, Train, AlertCircle, Users } from "lucide-react";
+import { Clock, ArrowRight, Train, Users } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import type { TripLeg } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 const crowdingColors = {
   LOW: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
@@ -27,6 +29,11 @@ interface TripListItemButtonProps {
   delayMinutes?: number;
 }
 
+interface LiveDelayInfo {
+  departureDelay: number;
+  arrivalDelay: number;
+}
+
 export default function TripListItemButton({ 
   departureTime, 
   arrivalTime, 
@@ -35,20 +42,82 @@ export default function TripListItemButton({
   legs,
   onClick,
   isSelected = false,
-  delayMinutes
 }: TripListItemButtonProps) {
   const uniqueTrainTypes = Array.from(new Set(legs.map(leg => leg.trainType)));
   const firstLeg = legs[0];
   const lastLeg = legs[legs.length - 1];
+  
+  // Get train number for live delay fetching
+  const trainNumber = firstLeg?.trainNumber;
+  const fromStation = firstLeg?.from?.toLowerCase() || '';
+  const toStation = lastLeg?.to?.toLowerCase() || '';
+
+  // Fetch live delays from journey API
+  const { data: liveDelays } = useQuery<LiveDelayInfo | null>({
+    queryKey: ['/api/journey-delay', trainNumber, fromStation, toStation],
+    queryFn: async () => {
+      if (!trainNumber) return null;
+      
+      try {
+        const response = await fetch(`/api/journey?train=${trainNumber}`);
+        if (!response.ok) return null;
+        
+        const data = await response.json();
+        const stops = data?.payload?.stops;
+        if (!stops || stops.length === 0) return null;
+        
+        let departureDelay = 0;
+        let arrivalDelay = 0;
+        
+        for (const stop of stops) {
+          const stopName = stop.stop?.name?.toLowerCase() || '';
+          
+          // Match departure station
+          if (stopName.includes(fromStation) || fromStation.includes(stopName)) {
+            if (stop.departures?.[0]) {
+              const dep = stop.departures[0];
+              if (dep.plannedTime && dep.actualTime) {
+                const planned = new Date(dep.plannedTime).getTime();
+                const actual = new Date(dep.actualTime).getTime();
+                departureDelay = Math.max(0, Math.round((actual - planned) / 60000));
+              }
+            }
+          }
+          
+          // Match arrival station
+          if (stopName.includes(toStation) || toStation.includes(stopName)) {
+            if (stop.arrivals?.[0]) {
+              const arr = stop.arrivals[0];
+              if (arr.plannedTime && arr.actualTime) {
+                const planned = new Date(arr.plannedTime).getTime();
+                const actual = new Date(arr.actualTime).getTime();
+                arrivalDelay = Math.max(0, Math.round((actual - planned) / 60000));
+              }
+            }
+          }
+        }
+        
+        return { departureDelay, arrivalDelay };
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!trainNumber,
+    staleTime: 30000,
+    refetchInterval: 60000,
+  });
+
+  // Use live delays if available, otherwise fall back to stored delays
+  const departureDelay = liveDelays?.departureDelay ?? firstLeg?.departureDelayMinutes ?? 0;
+  const arrivalDelay = liveDelays?.arrivalDelay ?? lastLeg?.arrivalDelayMinutes ?? 0;
 
   // Calculate average crowding level from embedded crowdForecast data
-  const getAverageCrowding = () => {
+  const averageCrowding = useMemo(() => {
     const crowdingLevels: number[] = [];
     
     legs.forEach((leg) => {
       if (!leg.crowdForecast) return;
       
-      // Convert to numeric value
       const value = leg.crowdForecast === 'HIGH' ? 3 : leg.crowdForecast === 'MEDIUM' ? 2 : 1;
       crowdingLevels.push(value);
     });
@@ -59,9 +128,7 @@ export default function TripListItemButton({
     if (avg >= 2.5) return 'HIGH';
     if (avg >= 1.5) return 'MEDIUM';
     return 'LOW';
-  };
-
-  const averageCrowding = getAverageCrowding();
+  }, [legs]);
 
   return (
     <Button
@@ -85,12 +152,6 @@ export default function TripListItemButton({
               {crowdingLabels[averageCrowding as keyof typeof crowdingLabels]}
             </Badge>
           )}
-          {delayMinutes && delayMinutes > 0 && (
-            <Badge variant="destructive" className="gap-1">
-              <AlertCircle className="w-3 h-3" />
-              +{delayMinutes}
-            </Badge>
-          )}
         </div>
       </div>
       
@@ -98,10 +159,8 @@ export default function TripListItemButton({
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5">
             <div className="text-2xl font-bold" data-testid="text-departure-time">{departureTime}</div>
-            {firstLeg?.departureDelayMinutes && firstLeg.departureDelayMinutes > 0 && (
-              <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
-                +{firstLeg.departureDelayMinutes}
-              </Badge>
+            {departureDelay > 0 && (
+              <span className="text-red-500 font-bold text-sm">+{departureDelay}</span>
             )}
           </div>
           <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-[100px]">{firstLeg?.from}</div>
@@ -116,10 +175,8 @@ export default function TripListItemButton({
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5">
             <div className="text-2xl font-bold" data-testid="text-arrival-time">{arrivalTime}</div>
-            {lastLeg?.arrivalDelayMinutes && lastLeg.arrivalDelayMinutes > 0 && (
-              <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
-                +{lastLeg.arrivalDelayMinutes}
-              </Badge>
+            {arrivalDelay > 0 && (
+              <span className="text-red-500 font-bold text-sm">+{arrivalDelay}</span>
             )}
           </div>
           <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-[100px]">{lastLeg?.to}</div>
