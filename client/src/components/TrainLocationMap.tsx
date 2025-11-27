@@ -625,6 +625,52 @@ function findNearestGraphNode(
   return nearestKey;
 }
 
+function findBestStartNode(
+  start: [number, number],
+  end: [number, number],
+  graph: TrackGraph,
+  maxDistance: number
+): string | null {
+  const candidates: { key: string; score: number }[] = [];
+  const dirToEnd = Math.atan2(end[1] - start[1], end[0] - start[0]);
+  
+  const keys = Object.keys(graph.neighbors);
+  for (const key of keys) {
+    const coords = graph.nodeCoords[key];
+    if (!coords) continue;
+    const dist = distanceBetweenPoints(start, coords);
+    if (dist < maxDistance) {
+      const neighbors = graph.neighbors[key];
+      if (!neighbors || neighbors.length === 0) continue;
+      
+      let bestNeighborScore = -Infinity;
+      for (const neighborKey of neighbors) {
+        const neighborCoord = graph.nodeCoords[neighborKey];
+        if (!neighborCoord) continue;
+        
+        const dirToNeighbor = Math.atan2(neighborCoord[1] - coords[1], neighborCoord[0] - coords[0]);
+        let angleDiff = Math.abs(dirToEnd - dirToNeighbor);
+        if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
+        
+        const directionScore = Math.cos(angleDiff);
+        if (directionScore > bestNeighborScore) {
+          bestNeighborScore = directionScore;
+        }
+      }
+      
+      const distanceScore = 1 - (dist / maxDistance);
+      const totalScore = distanceScore * 0.3 + bestNeighborScore * 0.7;
+      
+      candidates.push({ key, score: totalScore });
+    }
+  }
+  
+  if (candidates.length === 0) return null;
+  
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates[0].key;
+}
+
 function findPathAStar(
   graph: TrackGraph,
   startKey: string,
@@ -708,8 +754,8 @@ function findRouteBetweenStops(
     const start: [number, number] = [stops[i].lat, stops[i].lng];
     const end: [number, number] = [stops[i + 1].lat, stops[i + 1].lng];
     
-    const startNode = findNearestGraphNode(start, graph, maxSearchDistance);
-    const endNode = findNearestGraphNode(end, graph, maxSearchDistance);
+    const startNode = findBestStartNode(start, end, graph, maxSearchDistance);
+    const endNode = findBestStartNode(end, start, graph, maxSearchDistance);
     
     if (startNode && endNode) {
       const pathSegment = findPathAStar(graph, startNode, endNode, 5000);
