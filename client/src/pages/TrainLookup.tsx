@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import TripDetailPanel from "@/components/TripDetailPanel";
 import PageContainer from "@/components/PageContainer";
+import MasterDetailLayout from "@/components/MasterDetailLayout";
 
 export default function TrainLookup() {
   const [searchMode, setSearchMode] = useState<"journey" | "material">("journey");
@@ -98,10 +99,9 @@ export default function TrainLookup() {
     return shortName || categoryCode || "Trein";
   };
 
-  return (
-    <PageContainer>
+  const masterContent = (
+    <div className="h-full overflow-y-auto">
       <div className="min-h-screen bg-background md:px-4 pt-0 pb-3 md:py-6 space-y-6">
-
         <div className="backdrop-blur-sm bg-card/80 rounded-t-none md:rounded-xl rounded-b-xl p-6 space-y-4 border">
           <div className="space-y-2">
             <Label className="text-sm font-medium">Zoek op</Label>
@@ -189,18 +189,28 @@ export default function TrainLookup() {
             </p>
           </div>
         )}
-
-        {trainInfo && (
-          <TripDetailPanel
-            open={!!searchedNumber && !!trainInfo}
-            onClose={() => setSearchedNumber("")}
-            trainType={getTrainType()}
-            trainNumber={actualJourneyNumber}
-            from={origin || "Onbekend"}
-            to={destination || "Onbekend"}
-          />
-        )}
       </div>
-    </PageContainer>
+    </div>
+  );
+
+  const detailContent = trainInfo && (
+    <TripDetailPanel
+      open={!!searchedNumber && !!trainInfo}
+      onClose={() => setSearchedNumber("")}
+      trainType={getTrainType()}
+      trainNumber={actualJourneyNumber}
+      from={origin || "Onbekend"}
+      to={destination || "Onbekend"}
+    />
+  );
+
+  return (
+    <div className="md:max-w-6xl mx-auto h-full overflow-hidden">
+      <MasterDetailLayout
+        master={masterContent}
+        detail={detailContent}
+        hasDetail={!!trainInfo}
+      />
+    </div>
   );
 }
