@@ -25,16 +25,16 @@ interface SpoorkaartResponse {
 
 function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; isDark: boolean }) {
   const map = useMap();
-  const [opacity, setOpacity] = useState(isDark ? 0.45 : 0.35);
+  const [opacity, setOpacity] = useState(isDark ? 0.6 : 0.5);
   
   useEffect(() => {
     const handleZoom = () => {
       const zoom = map.getZoom();
       if (zoom > 15) {
         const fadeAmount = Math.min(1, (zoom - 15) / 2);
-        setOpacity((isDark ? 0.45 : 0.35) * (1 - fadeAmount));
+        setOpacity((isDark ? 0.6 : 0.5) * (1 - fadeAmount));
       } else {
-        setOpacity(isDark ? 0.45 : 0.35);
+        setOpacity(isDark ? 0.6 : 0.5);
       }
     };
     
