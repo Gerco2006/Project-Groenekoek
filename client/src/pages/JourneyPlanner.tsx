@@ -273,14 +273,18 @@ export default function JourneyPlanner() {
 
   const routeStations = searchedFrom && searchedTo ? [searchedFrom, searchedTo, ...searchedViaStations.filter(v => v.trim())] : [];
   const routeDisruptions = Array.isArray(disruptionsData) 
-    ? disruptionsData.filter((d: any) => {
-        const affectedStations = d.publicationSections
-          ?.flatMap((ps: any) => ps.section?.stations || [])
-          .map((s: any) => s.name.toLowerCase()) || [];
-        return routeStations.some(rs => 
-          affectedStations.some((as: string) => as.includes(rs.toLowerCase()) || rs.toLowerCase().includes(as))
-        );
-      })
+    ? disruptionsData
+        .filter((d: any) => {
+          const affectedStations = d.publicationSections
+            ?.flatMap((ps: any) => ps.section?.stations || [])
+            .map((s: any) => s.name.toLowerCase()) || [];
+          return routeStations.some(rs => 
+            affectedStations.some((as: string) => as.includes(rs.toLowerCase()) || rs.toLowerCase().includes(as))
+          );
+        })
+        .filter((d: any, index: number, self: any[]) => 
+          index === self.findIndex((other: any) => other.id === d.id)
+        )
     : [];
 
   const handleSearch = () => {
