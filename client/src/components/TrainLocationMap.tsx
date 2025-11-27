@@ -157,7 +157,7 @@ function MapCenterer({ position }: { position: [number, number] }) {
   const map = useMap();
   
   useEffect(() => {
-    map.setView(position, 12, { animate: true });
+    map.setView(position, 14, { animate: true });
   }, [map, position]);
   
   return null;
@@ -217,7 +217,7 @@ function MapContent({
       <MapTouchHandler>
         <MapContainer
           center={trainPosition}
-          zoom={12}
+          zoom={14}
           className="h-[200px] w-full"
           ref={(map) => setMapInstance(map)}
           zoomControl={true}
@@ -322,7 +322,7 @@ export default function TrainLocationMap({
       }
       return response.json();
     },
-    refetchInterval: isExpanded ? 30000 : false,
+    refetchInterval: isExpanded ? 20000 : false,
     staleTime: 15000,
     enabled: isExpanded,
   });
