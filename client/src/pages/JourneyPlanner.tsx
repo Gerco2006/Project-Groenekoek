@@ -458,6 +458,10 @@ export default function JourneyPlanner() {
           cancelled: leg.cancelled || false,
           fromUicCode: leg.origin.uicCode,
           toUicCode: leg.destination.uicCode,
+          fromLat: leg.origin.lat,
+          fromLng: leg.origin.lng,
+          toLat: leg.destination.lat,
+          toLng: leg.destination.lng,
           departureDateTime: plannedDeparture,
           crowdForecast: leg.crowdForecast as 'LOW' | 'MEDIUM' | 'HIGH' | undefined,
         };

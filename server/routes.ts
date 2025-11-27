@@ -145,6 +145,39 @@ async function getStationCode(stationInput: string): Promise<string | null> {
   return matchedStation.code;
 }
 
+async function getStationCoordinates(stationNameOrUic: string): Promise<{ lat: number; lng: number } | null> {
+  if (!stationNameOrUic) return null;
+
+  const trimmedInput = stationNameOrUic.trim();
+  if (!trimmedInput) return null;
+
+  const now = Date.now();
+  if (!stationsCache || now - stationsCacheTime > STATIONS_CACHE_TTL) {
+    try {
+      const data = await fetchNS("/v2/stations", {});
+      stationsCache = data.payload || [];
+      stationsCacheTime = now;
+    } catch (error) {
+      console.error("Failed to fetch stations for coordinates lookup:", error);
+      return null;
+    }
+  }
+
+  const matchedStation = stationsCache.find((s: any) => 
+    s.UICCode === trimmedInput ||
+    s.code?.toLowerCase() === trimmedInput.toLowerCase() ||
+    s.namen?.lang?.toLowerCase() === trimmedInput.toLowerCase() ||
+    s.namen?.middel?.toLowerCase() === trimmedInput.toLowerCase() ||
+    s.namen?.kort?.toLowerCase() === trimmedInput.toLowerCase()
+  );
+
+  if (!matchedStation || !matchedStation.lat || !matchedStation.lng) {
+    return null;
+  }
+
+  return { lat: matchedStation.lat, lng: matchedStation.lng };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/departures", async (req, res) => {
     try {
@@ -280,6 +313,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const data = await fetchNS("/v3/trips", params);
+
+      if (data.trips) {
+        for (const trip of data.trips) {
+          if (trip.legs) {
+            for (const leg of trip.legs) {
+              const originName = leg.origin?.name;
+              const destName = leg.destination?.name;
+              
+              if (originName) {
+                const originCoords = await getStationCoordinates(originName);
+                if (originCoords) {
+                  leg.origin.lat = originCoords.lat;
+                  leg.origin.lng = originCoords.lng;
+                }
+              }
+              
+              if (destName) {
+                const destCoords = await getStationCoordinates(destName);
+                if (destCoords) {
+                  leg.destination.lat = destCoords.lat;
+                  leg.destination.lng = destCoords.lng;
+                }
+              }
+            }
+          }
+        }
+      }
 
       res.json(data);
     } catch (error) {

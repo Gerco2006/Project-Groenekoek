@@ -47,6 +47,10 @@ export const tripLegSchema = z.object({
   cancelled: z.boolean().optional(),
   fromUicCode: z.string().optional(),
   toUicCode: z.string().optional(),
+  fromLat: z.number().optional(),
+  fromLng: z.number().optional(),
+  toLat: z.number().optional(),
+  toLng: z.number().optional(),
   departureDateTime: z.string().optional(),
   crowdForecast: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(),
 });
