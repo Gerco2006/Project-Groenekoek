@@ -219,7 +219,7 @@ export default function TripDetailPanel({
   }, [open, journeyData?.payload?.stops, currentLocationIndex, isMobile]);
   
   const content = (
-    <div className={`flex flex-col ${isMobile ? '' : 'h-full'}`}>
+    <div className={`flex flex-col ${isMobile ? '' : 'h-full overflow-hidden'}`}>
       {!isMobile && (
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -655,7 +655,7 @@ export default function TripDetailPanel({
   if (!open) return null;
 
   return (
-    <div className="h-full border-l bg-background flex flex-col" data-testid="panel-trip-detail">
+    <div className="h-full border-l bg-background flex flex-col overflow-hidden" data-testid="panel-trip-detail">
       {content}
     </div>
   );
