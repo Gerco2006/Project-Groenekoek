@@ -25,6 +25,23 @@ export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: S
     return format(date, "EEE d MMM", { locale: nl });
   };
 
+  const getMaxDelay = (trip: SavedTrip): number | undefined => {
+    // First check trip-level delay
+    if (trip.delayMinutes && trip.delayMinutes > 0) {
+      return trip.delayMinutes;
+    }
+    // Fallback: check individual leg delays
+    if (trip.legs && trip.legs.length > 0) {
+      const delays = trip.legs
+        .map(leg => Math.max(leg.departureDelayMinutes || 0, leg.arrivalDelayMinutes || 0))
+        .filter(d => d > 0);
+      if (delays.length > 0) {
+        return Math.max(...delays);
+      }
+    }
+    return undefined;
+  };
+
   if (trips.length === 0) {
     return (
       <Card className="p-4">
@@ -69,9 +86,12 @@ export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: S
                   <div className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
                     <span>{formatTime(trip.departureTime)} - {formatTime(trip.arrivalTime)}</span>
-                    {trip.delayMinutes && trip.delayMinutes > 0 && (
-                      <span className="text-red-500 font-medium">+{trip.delayMinutes}'</span>
-                    )}
+                    {(() => {
+                      const delay = getMaxDelay(trip);
+                      return delay ? (
+                        <span className="text-red-500 font-medium">+{delay}'</span>
+                      ) : null;
+                    })()}
                   </div>
                   <span>{formatDate(trip.departureTime)}</span>
                   <span>{trip.duration}</span>

@@ -469,13 +469,21 @@ export default function JourneyPlanner() {
 
     const rawDepartureTime = trip.legs[0]?.origin?.plannedDateTime;
     const rawArrivalTime = trip.legs[trip.legs.length - 1]?.destination?.plannedDateTime;
+    const actualArrivalTime = trip.legs[trip.legs.length - 1]?.destination?.actualDateTime;
     const departureTime = formatTime(rawDepartureTime);
     const arrivalTime = formatTime(rawArrivalTime);
     const duration = calculateDuration(rawDepartureTime, rawArrivalTime);
 
-    const delayMinutes = trip.actualDurationInMinutes && trip.plannedDurationInMinutes 
-      ? trip.actualDurationInMinutes - trip.plannedDurationInMinutes 
-      : 0;
+    // Calculate delay from actual vs planned arrival time (most relevant for travelers)
+    let delayMinutes: number | undefined;
+    if (trip.actualDurationInMinutes && trip.plannedDurationInMinutes) {
+      const diff = trip.actualDurationInMinutes - trip.plannedDurationInMinutes;
+      delayMinutes = diff > 0 ? diff : undefined;
+    } else if (rawArrivalTime && actualArrivalTime) {
+      // Fallback: calculate from actual arrival vs planned arrival
+      const delay = calculateDelayMinutes(rawArrivalTime, actualArrivalTime);
+      delayMinutes = delay;
+    }
 
     return {
       departureTime,
@@ -483,7 +491,7 @@ export default function JourneyPlanner() {
       duration,
       transfers: trip.transfers || 0,
       legs,
-      delayMinutes: delayMinutes > 0 ? delayMinutes : undefined,
+      delayMinutes,
       status: trip.status,
       rawDepartureTime,
       rawArrivalTime,
