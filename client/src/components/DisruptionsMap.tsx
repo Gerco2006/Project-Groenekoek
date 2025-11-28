@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMap, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import { useQuery } from "@tanstack/react-query";
@@ -458,6 +458,60 @@ function MapLegend({ isDark }: { isDark: boolean }) {
   );
 }
 
+function MapZoomHandler({ 
+  selectedDisruption, 
+  defaultBounds 
+}: { 
+  selectedDisruption: Disruption | null;
+  defaultBounds: L.LatLngBounds;
+}) {
+  const map = useMap();
+  const previousBoundsRef = useRef<L.LatLngBounds | null>(null);
+  const previousZoomRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (selectedDisruption) {
+      if (!previousBoundsRef.current) {
+        previousBoundsRef.current = map.getBounds();
+        previousZoomRef.current = map.getZoom();
+      }
+
+      const coords: [number, number][] = [];
+      selectedDisruption.publicationSections?.forEach(ps => {
+        ps.section.stations?.forEach(st => {
+          if (st.coordinate) {
+            coords.push([st.coordinate.lat, st.coordinate.lng]);
+          }
+        });
+      });
+
+      if (coords.length > 0) {
+        const disruptionBounds = L.latLngBounds(coords);
+        map.flyToBounds(disruptionBounds, { 
+          padding: [60, 60],
+          duration: 0.5,
+          maxZoom: 12
+        });
+      }
+    } else {
+      if (previousBoundsRef.current && previousZoomRef.current !== null) {
+        map.flyToBounds(previousBoundsRef.current, {
+          duration: 0.5
+        });
+        previousBoundsRef.current = null;
+        previousZoomRef.current = null;
+      } else {
+        map.flyToBounds(defaultBounds, {
+          padding: [50, 50],
+          duration: 0.5
+        });
+      }
+    }
+  }, [selectedDisruption, map, defaultBounds]);
+
+  return null;
+}
+
 export default function DisruptionsMap({ 
   disruptions, 
   onDisruptionClick,
@@ -494,6 +548,11 @@ export default function DisruptionsMap({
   }, [disruptions]);
 
   const disruptionsWithoutCoords = disruptions.length - disruptionsWithCoords.length;
+
+  const selectedDisruption = useMemo(() => {
+    if (!selectedDisruptionId) return null;
+    return disruptions.find(d => d.id === selectedDisruptionId) || null;
+  }, [disruptions, selectedDisruptionId]);
 
   const bounds = useMemo(() => {
     const allCoords: [number, number][] = [];
@@ -553,6 +612,11 @@ export default function DisruptionsMap({
           selectedDisruptionId={selectedDisruptionId}
           isDark={isDark}
           trackGraph={trackGraph}
+        />
+        
+        <MapZoomHandler 
+          selectedDisruption={selectedDisruption}
+          defaultBounds={bounds}
         />
       </MapContainer>
       
