@@ -114,25 +114,21 @@ export default function DisruptionDetailPanel({
                     {disruption.timespans[0].cause.label.charAt(0).toUpperCase() + disruption.timespans[0].cause.label.slice(1)}
                   </Badge>
                 )}
-                {disruption.impact?.value && (
-                  <Badge 
-                    variant="outline" 
-                    className={
-                      disruption.impact.value >= 4 ? "border-red-500 text-red-500" :
-                      disruption.impact.value >= 3 ? "border-orange-500 text-orange-500" :
-                      "border-yellow-500 text-yellow-500"
-                    }
-                    data-testid="badge-impact"
-                  >
-                    Impact {disruption.impact.value}
-                  </Badge>
-                )}
                 {disruption.summaryAdditionalTravelTime && (
                   <Badge variant="outline">
                     +{disruption.summaryAdditionalTravelTime.shortLabel || disruption.summaryAdditionalTravelTime.label}
                   </Badge>
                 )}
               </div>
+
+              {/* Gevolg / Situatie */}
+              {disruption.timespans?.[0]?.situation?.label && (
+                <Card className="p-4 bg-destructive/10 border-destructive/20">
+                  <p className="text-sm">
+                    {disruption.timespans[0].situation.label}
+                  </p>
+                </Card>
+              )}
 
               {/* 1. Oorzaak - only for non-MAINTENANCE types (CALAMITY/DISRUPTION) */}
               {disruption.type !== 'MAINTENANCE' && disruption.description && (
