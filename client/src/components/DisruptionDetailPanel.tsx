@@ -109,6 +109,24 @@ export default function DisruptionDetailPanel({
                 <Badge variant="outline">
                   {getDisruptionTypeName(disruption.type || disruptionType)}
                 </Badge>
+                {disruption.timespans?.[0]?.cause?.label && (
+                  <Badge variant="outline" data-testid="badge-cause">
+                    {disruption.timespans[0].cause.label.charAt(0).toUpperCase() + disruption.timespans[0].cause.label.slice(1)}
+                  </Badge>
+                )}
+                {disruption.impact?.value && (
+                  <Badge 
+                    variant="outline" 
+                    className={
+                      disruption.impact.value >= 4 ? "border-red-500 text-red-500" :
+                      disruption.impact.value >= 3 ? "border-orange-500 text-orange-500" :
+                      "border-yellow-500 text-yellow-500"
+                    }
+                    data-testid="badge-impact"
+                  >
+                    Impact {disruption.impact.value}
+                  </Badge>
+                )}
                 {disruption.summaryAdditionalTravelTime && (
                   <Badge variant="outline">
                     +{disruption.summaryAdditionalTravelTime.shortLabel || disruption.summaryAdditionalTravelTime.label}
