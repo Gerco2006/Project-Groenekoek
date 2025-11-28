@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Construction, Clock, MapPin, Loader2, X, Info, FileText } from "lucide-react";
+import { AlertTriangle, Construction, Clock, MapPin, Loader2, X, Info } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -116,8 +116,8 @@ export default function DisruptionDetailPanel({
                 )}
               </div>
 
-              {/* Oorzaak - from timespans[].cause */}
-              {disruption.timespans?.some((ts: any) => ts.cause?.label) && (
+              {/* 1. Oorzaak - from timespans[].cause or description for CALAMITY */}
+              {disruption.timespans?.some((ts: any) => ts.cause?.label) ? (
                 <Card className="p-4">
                   <div className="flex items-start gap-3">
                     <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
@@ -133,42 +133,21 @@ export default function DisruptionDetailPanel({
                     </div>
                   </div>
                 </Card>
-              )}
-
-              {/* Huidige situatie - from timespans[].situation */}
-              {disruption.timespans?.some((ts: any) => ts.situation?.label) && (
+              ) : disruption.description ? (
                 <Card className="p-4">
                   <div className="flex items-start gap-3">
-                    <FileText className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
                     <div className="space-y-1 flex-1">
-                      <p className="font-semibold text-sm">Huidige situatie</p>
-                      {disruption.timespans
-                        .filter((ts: any) => ts.situation?.label)
-                        .map((ts: any, idx: number) => (
-                          <p key={idx} className="text-sm text-muted-foreground">
-                            {ts.situation.label}
-                          </p>
-                        ))}
-                    </div>
-                  </div>
-                </Card>
-              )}
-
-              {/* Description for CALAMITY type */}
-              {disruption.description && (
-                <Card className="p-4">
-                  <div className="flex items-start gap-3">
-                    <FileText className="w-5 h-5 text-muted-foreground mt-0.5" />
-                    <div className="space-y-1 flex-1">
-                      <p className="font-semibold text-sm">Beschrijving</p>
+                      <p className="font-semibold text-sm">Oorzaak</p>
                       <p className="text-sm text-muted-foreground whitespace-pre-line">
                         {disruption.description}
                       </p>
                     </div>
                   </div>
                 </Card>
-              )}
+              ) : null}
 
+              {/* 2. Periode */}
               {(disruption.start || disruption.end || disruption.timespans) && (
                 <Card className="p-4">
                   <div className="flex items-start gap-3">
@@ -195,34 +174,7 @@ export default function DisruptionDetailPanel({
                 </Card>
               )}
 
-              {disruption.publicationSections && disruption.publicationSections.length > 0 && (
-                <Card className="p-4">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
-                    <div className="space-y-2 flex-1">
-                      <p className="font-semibold text-sm">Getroffen trajecten</p>
-                      {disruption.publicationSections.map((section: any, idx: number) => {
-                        const stations = section.section?.stations || [];
-                        if (stations.length === 0) return null;
-                        
-                        return (
-                          <div key={idx} className="text-sm">
-                            <p className="font-medium">
-                              {stations.map((s: any) => s.name).join(" - ")}
-                            </p>
-                            {section.section?.direction && (
-                              <p className="text-muted-foreground">
-                                Richting: {section.section.direction}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </Card>
-              )}
-
+              {/* 3. Vervangend vervoer */}
               {disruption.alternativeTransportTimespans && disruption.alternativeTransportTimespans.length > 0 && (
                 <Card className="p-4 bg-blue-500/10 border-blue-500/20">
                   <p className="font-semibold text-sm mb-2">Vervangend vervoer</p>
@@ -236,21 +188,37 @@ export default function DisruptionDetailPanel({
                 </Card>
               )}
 
-              {disruption.expectedDuration && (
+              {/* 4. Trajecten */}
+              {disruption.publicationSections && disruption.publicationSections.length > 0 && (
                 <Card className="p-4">
-                  <p className="font-semibold text-sm mb-1">Verwachte duur</p>
-                  <p className="text-sm text-muted-foreground">
-                    {disruption.expectedDuration.description}
-                  </p>
-                </Card>
-              )}
-
-              {disruption.summaryAdditionalTravelTime?.label && (
-                <Card className="p-4">
-                  <p className="font-semibold text-sm mb-1">Extra reistijd</p>
-                  <p className="text-sm text-muted-foreground">
-                    {disruption.summaryAdditionalTravelTime.label}
-                  </p>
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div className="space-y-2 flex-1">
+                      <p className="font-semibold text-sm">Getroffen trajecten</p>
+                      {disruption.publicationSections.map((section: any, idx: number) => {
+                        const stations = section.section?.stations || [];
+                        if (stations.length === 0) return null;
+                        
+                        const direction = section.section?.direction;
+                        const directionLabel = direction === 'BOTH' ? 'Beide richtingen' : 
+                                               direction === 'ONE_WAY' ? 'Eén richting' : 
+                                               direction;
+                        
+                        return (
+                          <div key={idx} className="text-sm">
+                            <p className="font-medium">
+                              {stations.map((s: any) => s.name).join(" - ")}
+                            </p>
+                            {directionLabel && (
+                              <p className="text-muted-foreground">
+                                {directionLabel}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </Card>
               )}
             </>
