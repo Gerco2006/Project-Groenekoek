@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Construction, Clock, MapPin, Loader2, X } from "lucide-react";
+import { AlertTriangle, Construction, Clock, MapPin, Loader2, X, Info, FileText } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -115,6 +115,59 @@ export default function DisruptionDetailPanel({
                   </Badge>
                 )}
               </div>
+
+              {/* Oorzaak - from timespans[].cause */}
+              {disruption.timespans?.some((ts: any) => ts.cause?.label) && (
+                <Card className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div className="space-y-1 flex-1">
+                      <p className="font-semibold text-sm">Oorzaak</p>
+                      {disruption.timespans
+                        .filter((ts: any) => ts.cause?.label)
+                        .map((ts: any, idx: number) => (
+                          <p key={idx} className="text-sm text-muted-foreground">
+                            {ts.cause.label}
+                          </p>
+                        ))}
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Huidige situatie - from timespans[].situation */}
+              {disruption.timespans?.some((ts: any) => ts.situation?.label) && (
+                <Card className="p-4">
+                  <div className="flex items-start gap-3">
+                    <FileText className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div className="space-y-1 flex-1">
+                      <p className="font-semibold text-sm">Huidige situatie</p>
+                      {disruption.timespans
+                        .filter((ts: any) => ts.situation?.label)
+                        .map((ts: any, idx: number) => (
+                          <p key={idx} className="text-sm text-muted-foreground">
+                            {ts.situation.label}
+                          </p>
+                        ))}
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Description for CALAMITY type */}
+              {disruption.description && (
+                <Card className="p-4">
+                  <div className="flex items-start gap-3">
+                    <FileText className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div className="space-y-1 flex-1">
+                      <p className="font-semibold text-sm">Beschrijving</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">
+                        {disruption.description}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
 
               {(disruption.start || disruption.end || disruption.timespans) && (
                 <Card className="p-4">
