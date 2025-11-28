@@ -588,10 +588,13 @@ export default function DisruptionsMap({
     ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
     : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
-  if (isLoadingTracks) {
+  if (isLoadingTracks || isLoadingDisruptions) {
     return (
-      <div className="h-full flex items-center justify-center bg-muted/20">
+      <div className="h-full flex flex-col items-center justify-center bg-muted/20 gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">
+          {isLoadingTracks ? "Kaart laden..." : "Storingen ophalen..."}
+        </p>
       </div>
     );
   }
