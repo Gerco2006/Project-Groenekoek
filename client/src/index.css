@@ -338,7 +338,8 @@
   box-shadow: none !important;
   padding: 0 !important;
   color: inherit !important;
-  white-space: normal !important;
+  white-space: nowrap !important;
+  max-width: none !important;
   opacity: 1 !important;
 }
 
