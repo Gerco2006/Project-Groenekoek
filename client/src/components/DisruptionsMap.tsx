@@ -487,25 +487,35 @@ function MapZoomHandler({
 
       if (coords.length > 0) {
         const disruptionBounds = L.latLngBounds(coords);
-        map.flyToBounds(disruptionBounds, { 
-          padding: [60, 60],
-          duration: 0.5,
-          maxZoom: 12
-        });
+        setTimeout(() => {
+          map.invalidateSize();
+          setTimeout(() => {
+            map.flyToBounds(disruptionBounds, { 
+              padding: [40, 40],
+              duration: 0.5,
+              maxZoom: 11
+            });
+          }, 50);
+        }, 100);
       }
     } else {
-      if (previousBoundsRef.current && previousZoomRef.current !== null) {
-        map.flyToBounds(previousBoundsRef.current, {
-          duration: 0.5
-        });
-        previousBoundsRef.current = null;
-        previousZoomRef.current = null;
-      } else {
-        map.flyToBounds(defaultBounds, {
-          padding: [50, 50],
-          duration: 0.5
-        });
-      }
+      setTimeout(() => {
+        map.invalidateSize();
+        setTimeout(() => {
+          if (previousBoundsRef.current && previousZoomRef.current !== null) {
+            map.flyToBounds(previousBoundsRef.current, {
+              duration: 0.5
+            });
+            previousBoundsRef.current = null;
+            previousZoomRef.current = null;
+          } else {
+            map.flyToBounds(defaultBounds, {
+              padding: [50, 50],
+              duration: 0.5
+            });
+          }
+        }, 50);
+      }, 100);
     }
   }, [selectedDisruption, map, defaultBounds]);
 
