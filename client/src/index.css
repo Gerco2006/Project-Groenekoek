@@ -335,8 +335,26 @@
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
+  color: inherit !important;
 }
 
 .disruption-tooltip.leaflet-tooltip::before {
   display: none !important;
+}
+
+.disruption-tooltip .tooltip-content {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.disruption-tooltip.light .tooltip-content {
+  background: rgba(255, 255, 255, 0.85);
+  color: #111827;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.disruption-tooltip.dark .tooltip-content {
+  background: rgba(17, 24, 39, 0.85);
+  color: #f3f4f6;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }

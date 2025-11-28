@@ -219,6 +219,7 @@ export default function Disruptions() {
         disruptions={disruptions}
         onDisruptionClick={(d) => setSelectedDisruption(d)}
         selectedDisruptionId={selectedDisruption?.id}
+        isLoading={isLoading}
       />
     </div>
   );

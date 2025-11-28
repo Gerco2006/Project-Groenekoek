@@ -50,6 +50,7 @@ interface DisruptionsMapProps {
   disruptions: Disruption[];
   onDisruptionClick: (disruption: Disruption) => void;
   selectedDisruptionId?: string;
+  isLoading?: boolean;
 }
 
 function distanceBetweenPoints(p1: [number, number], p2: [number, number]): number {
@@ -367,17 +368,7 @@ function DisruptionLines({
                 sticky
                 className={`disruption-tooltip ${isDark ? 'dark' : 'light'}`}
               >
-                <div 
-                  className={`rounded-lg px-3 py-2 shadow-lg ${
-                    isDark 
-                      ? 'bg-gray-900/80 text-gray-100' 
-                      : 'bg-white/80 text-gray-900'
-                  }`}
-                  style={{
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
-                  }}
-                >
+                <div className="tooltip-content rounded-lg px-3 py-2 shadow-lg">
                   <div className="text-sm font-medium">{disruption.title}</div>
                   <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     {section.firstStation?.name} - {section.lastStation?.name}
@@ -410,20 +401,8 @@ function DisruptionLines({
                   click: () => onDisruptionClick(disruption),
                 }}
               >
-                <Tooltip 
-                  className={`disruption-tooltip ${isDark ? 'dark' : 'light'}`}
-                >
-                  <div 
-                    className={`rounded-lg px-2 py-1 shadow-lg text-xs ${
-                      isDark 
-                        ? 'bg-gray-900/80 text-gray-100' 
-                        : 'bg-white/80 text-gray-900'
-                    }`}
-                    style={{
-                      backdropFilter: 'blur(8px)',
-                      WebkitBackdropFilter: 'blur(8px)',
-                    }}
-                  >
+                <Tooltip className={`disruption-tooltip ${isDark ? 'dark' : 'light'}`}>
+                  <div className="tooltip-content rounded-lg px-2 py-1 shadow-lg text-xs">
                     {section.firstStation.name}
                   </div>
                 </Tooltip>
@@ -444,20 +423,8 @@ function DisruptionLines({
                   click: () => onDisruptionClick(disruption),
                 }}
               >
-                <Tooltip 
-                  className={`disruption-tooltip ${isDark ? 'dark' : 'light'}`}
-                >
-                  <div 
-                    className={`rounded-lg px-2 py-1 shadow-lg text-xs ${
-                      isDark 
-                        ? 'bg-gray-900/80 text-gray-100' 
-                        : 'bg-white/80 text-gray-900'
-                    }`}
-                    style={{
-                      backdropFilter: 'blur(8px)',
-                      WebkitBackdropFilter: 'blur(8px)',
-                    }}
-                  >
+                <Tooltip className={`disruption-tooltip ${isDark ? 'dark' : 'light'}`}>
+                  <div className="tooltip-content rounded-lg px-2 py-1 shadow-lg text-xs">
                     {section.lastStation.name}
                   </div>
                 </Tooltip>
@@ -494,7 +461,8 @@ function MapLegend({ isDark }: { isDark: boolean }) {
 export default function DisruptionsMap({ 
   disruptions, 
   onDisruptionClick,
-  selectedDisruptionId 
+  selectedDisruptionId,
+  isLoading: isLoadingDisruptions = false
 }: DisruptionsMapProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -600,7 +568,7 @@ export default function DisruptionsMap({
         </div>
       )}
       
-      {disruptions.length === 0 && (
+      {!isLoadingDisruptions && disruptions.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-[1000]">
           <div className="text-center p-4">
             <p className="text-muted-foreground">Geen storingen gevonden</p>
