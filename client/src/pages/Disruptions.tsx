@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, Construction, ChevronRight, MapPin, Clock, X } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { AlertTriangle, Construction, ChevronRight, X, Map, List } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DisruptionDetailPanel from "@/components/DisruptionDetailPanel";
+import DisruptionsMap from "@/components/DisruptionsMap";
 import StationSearch from "@/components/StationSearch";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
 import { useIsMobile } from "@/hooks/use-is-mobile";
@@ -30,6 +31,10 @@ interface Disruption {
       stations?: Array<{
         stationCode: string;
         name: string;
+        coordinate?: {
+          lat: number;
+          lng: number;
+        };
       }>;
     };
   }>;
@@ -37,6 +42,7 @@ interface Disruption {
 
 export default function Disruptions() {
   const isMobile = useIsMobile();
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
   const [activeFilter, setActiveFilter] = useState<"active" | "inactive">("active");
   const [selectedDisruption, setSelectedDisruption] = useState<Disruption | null>(null);
   const [stationFilter, setStationFilter] = useState("");
@@ -79,7 +85,6 @@ export default function Disruptions() {
     return activeMatch && stationMatch;
   });
 
-  // Clear selection if selected disruption is no longer in filtered list
   useEffect(() => {
     if (selectedDisruption) {
       const stillInList = disruptions.some(d => d.id === selectedDisruption.id);
@@ -89,7 +94,6 @@ export default function Disruptions() {
     }
   }, [disruptions, selectedDisruption]);
 
-  // Clear selection when filters change on mobile only
   useEffect(() => {
     if (isMobile) {
       setSelectedDisruption(null);
@@ -123,46 +127,8 @@ export default function Disruptions() {
     return "Storing";
   };
 
-  const masterContent = (
-    <div className="min-h-screen bg-background md:px-4 pt-0 pb-3 md:py-6 space-y-6">
-
-      <div className="backdrop-blur-sm bg-card/80 rounded-t-none md:rounded-xl rounded-b-xl p-6 space-y-4 border">
-        <StationSearch
-          label="Filter op station (optioneel)"
-          value={stationFilter}
-          onChange={setStationFilter}
-          placeholder="Bijv. Amsterdam Centraal"
-          testId="input-station-filter"
-        />
-        {stationFilter && (
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Storingen gefilterd op: <span className="font-semibold">{stationFilter}</span>
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setStationFilter("")}
-              data-testid="button-clear-filter"
-            >
-              <X className="w-4 h-4 mr-1" />
-              Wis filter
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as "active" | "inactive")} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="active" data-testid="tab-active">
-            Actief
-          </TabsTrigger>
-          <TabsTrigger value="inactive" data-testid="tab-inactive">
-            Gepland
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
+  const listContent = (
+    <div className="space-y-4">
       {isLoading && (
         <Card className="p-8 text-center text-muted-foreground">
           <p>Laden...</p>
@@ -184,9 +150,9 @@ export default function Disruptions() {
           {disruptions.map((disruption) => {
             const startTime = disruption.start || disruption.timespans?.[0]?.start;
             const endTime = disruption.end || disruption.timespans?.[0]?.end;
-            const affectedStations = disruption.publicationSections
-              ?.flatMap(ps => ps.section.stations || [])
-              .slice(0, 3);
+            const stations = disruption.publicationSections?.flatMap(ps => ps.section.stations || []) || [];
+            const firstStation = stations[0];
+            const lastStation = stations[stations.length - 1];
 
             return (
               <Card 
@@ -219,9 +185,11 @@ export default function Disruptions() {
                       {disruption.title}
                     </h3>
 
-                    {affectedStations && affectedStations.length > 0 && (
+                    {firstStation && lastStation && (
                       <p className="text-sm text-muted-foreground mb-2 truncate">
-                        {affectedStations.map(s => s.name).join(" - ")}
+                        {firstStation.name === lastStation.name 
+                          ? firstStation.name 
+                          : `${firstStation.name} - ${lastStation.name}`}
                       </p>
                     )}
 
@@ -242,6 +210,77 @@ export default function Disruptions() {
           })}
         </div>
       )}
+    </div>
+  );
+
+  const mapContent = (
+    <div className="h-[calc(100vh-280px)] md:h-[calc(100vh-220px)] min-h-[400px] rounded-lg overflow-hidden border">
+      <DisruptionsMap
+        disruptions={disruptions}
+        onDisruptionClick={(d) => setSelectedDisruption(d)}
+        selectedDisruptionId={selectedDisruption?.id}
+      />
+    </div>
+  );
+
+  const masterContent = (
+    <div className="min-h-screen bg-background md:px-4 pt-0 pb-3 md:py-6 space-y-4">
+      <div className="backdrop-blur-sm bg-card/80 rounded-t-none md:rounded-xl rounded-b-xl p-4 space-y-4 border">
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "map" | "list")} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="map" data-testid="tab-map" className="gap-2">
+              <Map className="w-4 h-4" />
+              Kaart
+            </TabsTrigger>
+            <TabsTrigger value="list" data-testid="tab-list" className="gap-2">
+              <List className="w-4 h-4" />
+              Lijst
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <StationSearch
+              label="Filter op station"
+              value={stationFilter}
+              onChange={setStationFilter}
+              placeholder="Bijv. Amsterdam Centraal"
+              testId="input-station-filter"
+            />
+          </div>
+          
+          <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as "active" | "inactive")} className="w-full sm:w-auto">
+            <TabsList className="grid w-full grid-cols-2 sm:w-auto">
+              <TabsTrigger value="active" data-testid="tab-active">
+                Actief
+              </TabsTrigger>
+              <TabsTrigger value="inactive" data-testid="tab-inactive">
+                Gepland
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        {stationFilter && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Gefilterd op: <span className="font-semibold">{stationFilter}</span>
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setStationFilter("")}
+              data-testid="button-clear-filter"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Wis
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {viewMode === "map" ? mapContent : listContent}
     </div>
   );
 
