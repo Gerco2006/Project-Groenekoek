@@ -329,32 +329,63 @@
   border: none !important;
 }
 
-/* Custom disruption tooltip styling */
-.disruption-tooltip.leaflet-tooltip {
-  background: transparent !important;
+/* Custom disruption tooltip styling - override ALL Leaflet defaults */
+.leaflet-tooltip.disruption-tooltip {
+  background: none !important;
+  background-color: transparent !important;
   border: none !important;
+  border-radius: 0 !important;
   box-shadow: none !important;
   padding: 0 !important;
   color: inherit !important;
+  white-space: normal !important;
+  opacity: 1 !important;
 }
 
-.disruption-tooltip.leaflet-tooltip::before {
+.leaflet-tooltip.disruption-tooltip::before,
+.leaflet-tooltip.disruption-tooltip::after {
   display: none !important;
+  content: none !important;
+  border: none !important;
 }
 
-.disruption-tooltip .tooltip-content {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* The actual tooltip content with blur using pseudo-element */
+.leaflet-tooltip.disruption-tooltip .tooltip-content {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  isolation: isolate;
 }
 
-.disruption-tooltip.light .tooltip-content {
-  background: rgba(255, 255, 255, 0.85);
+/* Blur background layer */
+.leaflet-tooltip.disruption-tooltip .tooltip-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-radius: inherit;
+}
+
+.leaflet-tooltip.disruption-tooltip.light .tooltip-content {
+  background-color: rgba(255, 255, 255, 0.7);
   color: #111827;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.disruption-tooltip.dark .tooltip-content {
-  background: rgba(17, 24, 39, 0.85);
+.leaflet-tooltip.disruption-tooltip.dark .tooltip-content {
+  background-color: rgba(30, 41, 59, 0.7);
   color: #f3f4f6;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.leaflet-tooltip.disruption-tooltip .tooltip-content .text-gray-400 {
+  color: #9ca3af !important;
+}
+
+.leaflet-tooltip.disruption-tooltip .tooltip-content .text-gray-500 {
+  color: #6b7280 !important;
 }
