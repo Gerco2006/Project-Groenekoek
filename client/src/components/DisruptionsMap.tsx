@@ -237,16 +237,16 @@ function findRouteBetweenStops(
 
 function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; isDark: boolean }) {
   const map = useMap();
-  const [opacity, setOpacity] = useState(isDark ? 0.4 : 0.3);
+  const [opacity, setOpacity] = useState(isDark ? 0.6 : 0.7);
   
   useEffect(() => {
     const handleZoom = () => {
       const zoom = map.getZoom();
       if (zoom > 15) {
         const fadeAmount = Math.min(1, (zoom - 15) / 2);
-        setOpacity((isDark ? 0.4 : 0.3) * (1 - fadeAmount));
+        setOpacity((isDark ? 0.6 : 0.7) * (1 - fadeAmount));
       } else {
-        setOpacity(isDark ? 0.4 : 0.3);
+        setOpacity(isDark ? 0.6 : 0.7);
       }
     };
     
@@ -283,8 +283,8 @@ function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; 
           key={index}
           positions={positions}
           pathOptions={{
-            color: isDark ? '#6b7280' : '#9ca3af',
-            weight: 2,
+            color: isDark ? '#94a3b8' : '#475569',
+            weight: 2.5,
             opacity: opacity,
           }}
         />
@@ -460,6 +460,8 @@ export default function DisruptionsMap({
     );
   }, [disruptions]);
 
+  const disruptionsWithoutCoords = disruptions.length - disruptionsWithCoords.length;
+
   const bounds = useMemo(() => {
     const allCoords: [number, number][] = [];
     
@@ -493,11 +495,12 @@ export default function DisruptionsMap({
   }
 
   return (
-    <div className="h-full w-full relative">
+    <div className="h-full w-full relative" style={{ minHeight: '400px' }}>
       <MapContainer
         bounds={bounds}
         boundsOptions={{ padding: [50, 50] }}
-        className="h-full w-full z-0"
+        className="h-full w-full"
+        style={{ zIndex: 0 }}
         zoomControl={true}
         scrollWheelZoom={true}
       >
@@ -521,10 +524,20 @@ export default function DisruptionsMap({
       
       <MapLegend isDark={isDark} />
       
-      {disruptionsWithCoords.length === 0 && (
+      {disruptionsWithoutCoords > 0 && (
+        <div 
+          className={`absolute top-4 right-4 z-[1000] px-3 py-2 rounded-lg text-xs shadow-lg ${
+            isDark ? 'bg-gray-800/90 text-gray-300' : 'bg-white/90 text-gray-600'
+          } backdrop-blur-sm`}
+        >
+          {disruptionsWithoutCoords} storing{disruptionsWithoutCoords > 1 ? 'en' : ''} zonder locatie (zie lijst)
+        </div>
+      )}
+      
+      {disruptions.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-[1000]">
           <div className="text-center p-4">
-            <p className="text-muted-foreground">Geen storingen met locatiegegevens gevonden</p>
+            <p className="text-muted-foreground">Geen storingen gevonden</p>
           </div>
         </div>
       )}

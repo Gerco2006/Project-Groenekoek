@@ -239,7 +239,7 @@ export default function Disruptions() {
           </TabsList>
         </Tabs>
 
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
           <div className="flex-1">
             <StationSearch
               label="Filter op station"
@@ -250,8 +250,8 @@ export default function Disruptions() {
             />
           </div>
           
-          <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as "active" | "inactive")} className="w-full sm:w-auto">
-            <TabsList className="grid w-full grid-cols-2 sm:w-auto">
+          <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as "active" | "inactive")} className="shrink-0">
+            <TabsList className="grid grid-cols-2">
               <TabsTrigger value="active" data-testid="tab-active">
                 Actief
               </TabsTrigger>
