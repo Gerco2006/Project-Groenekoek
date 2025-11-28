@@ -442,15 +442,23 @@ export default function DisruptionsMap({
   const { theme } = useTheme();
   const isDark = theme === "dark";
   
-  const { data: spoorkaartData, isLoading: isLoadingTracks } = useQuery<SpoorkaartResponse>({
+  const { data: spoorkaartData, isLoading: isLoadingTracks } = useQuery<{ payload: SpoorkaartResponse }>({
     queryKey: ["/api/spoorkaart"],
-    staleTime: 24 * 60 * 60 * 1000,
+    queryFn: async () => {
+      const response = await fetch("/api/spoorkaart");
+      if (!response.ok) {
+        throw new Error("Failed to fetch railway tracks");
+      }
+      return response.json();
+    },
+    staleTime: 86400000,
+    gcTime: 86400000,
   });
 
   const trackGraph = useMemo(() => {
-    if (!spoorkaartData?.features) return null;
-    return buildTrackGraph(spoorkaartData.features);
-  }, [spoorkaartData?.features]);
+    if (!spoorkaartData?.payload?.features) return null;
+    return buildTrackGraph(spoorkaartData.payload.features);
+  }, [spoorkaartData?.payload?.features]);
 
   const disruptionsWithCoords = useMemo(() => {
     return disruptions.filter(d => 
@@ -484,7 +492,7 @@ export default function DisruptionsMap({
 
   const tileUrl = isDark
     ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png";
+    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
   if (isLoadingTracks) {
     return (
@@ -505,12 +513,13 @@ export default function DisruptionsMap({
         scrollWheelZoom={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+          key={isDark ? "dark" : "light"}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url={tileUrl}
         />
         
-        {spoorkaartData?.features && (
-          <RailwayTracksLayer features={spoorkaartData.features} isDark={isDark} />
+        {spoorkaartData?.payload?.features && (
+          <RailwayTracksLayer features={spoorkaartData.payload.features} isDark={isDark} />
         )}
         
         <DisruptionLines 
