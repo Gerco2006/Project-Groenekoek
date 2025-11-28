@@ -328,3 +328,15 @@
   background: transparent !important;
   border: none !important;
 }
+
+/* Custom disruption tooltip styling */
+.disruption-tooltip.leaflet-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.disruption-tooltip.leaflet-tooltip::before {
+  display: none !important;
+}

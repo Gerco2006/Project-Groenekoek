@@ -237,16 +237,16 @@ function findRouteBetweenStops(
 
 function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; isDark: boolean }) {
   const map = useMap();
-  const [opacity, setOpacity] = useState(isDark ? 0.6 : 0.7);
+  const [opacity, setOpacity] = useState(isDark ? 0.4 : 0.45);
   
   useEffect(() => {
     const handleZoom = () => {
       const zoom = map.getZoom();
       if (zoom > 15) {
         const fadeAmount = Math.min(1, (zoom - 15) / 2);
-        setOpacity((isDark ? 0.6 : 0.7) * (1 - fadeAmount));
+        setOpacity((isDark ? 0.4 : 0.45) * (1 - fadeAmount));
       } else {
-        setOpacity(isDark ? 0.6 : 0.7);
+        setOpacity(isDark ? 0.4 : 0.45);
       }
     };
     
@@ -283,8 +283,8 @@ function RailwayTracksLayer({ features, isDark }: { features: GeoJSONFeature[]; 
           key={index}
           positions={positions}
           pathOptions={{
-            color: isDark ? '#94a3b8' : '#475569',
-            weight: 2.5,
+            color: isDark ? '#9ca3af' : '#6b7280',
+            weight: 2,
             opacity: opacity,
           }}
         />
@@ -355,21 +355,46 @@ function DisruptionLines({
             <Polyline
               positions={section.positions}
               pathOptions={{
-                color: baseColor,
-                weight: isSelected ? 6 : 4,
-                opacity: isSelected ? 1 : 0.8,
+                color: "transparent",
+                weight: 20,
+                opacity: 0,
               }}
               eventHandlers={{
                 click: () => onDisruptionClick(disruption),
               }}
             >
-              <Tooltip sticky>
-                <div className="text-sm font-medium">{disruption.title}</div>
-                <div className="text-xs text-muted-foreground">
-                  {section.firstStation?.name} - {section.lastStation?.name}
+              <Tooltip 
+                sticky
+                className={`disruption-tooltip ${isDark ? 'dark' : 'light'}`}
+              >
+                <div 
+                  className={`rounded-lg px-3 py-2 shadow-lg ${
+                    isDark 
+                      ? 'bg-gray-900/80 text-gray-100' 
+                      : 'bg-white/80 text-gray-900'
+                  }`}
+                  style={{
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                  }}
+                >
+                  <div className="text-sm font-medium">{disruption.title}</div>
+                  <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {section.firstStation?.name} - {section.lastStation?.name}
+                  </div>
                 </div>
               </Tooltip>
             </Polyline>
+            
+            <Polyline
+              positions={section.positions}
+              pathOptions={{
+                color: baseColor,
+                weight: isSelected ? 6 : 4,
+                opacity: isSelected ? 1 : 0.8,
+              }}
+              interactive={false}
+            />
             
             {section.firstStation?.coordinate && (
               <CircleMarker
@@ -385,7 +410,23 @@ function DisruptionLines({
                   click: () => onDisruptionClick(disruption),
                 }}
               >
-                <Tooltip>{section.firstStation.name}</Tooltip>
+                <Tooltip 
+                  className={`disruption-tooltip ${isDark ? 'dark' : 'light'}`}
+                >
+                  <div 
+                    className={`rounded-lg px-2 py-1 shadow-lg text-xs ${
+                      isDark 
+                        ? 'bg-gray-900/80 text-gray-100' 
+                        : 'bg-white/80 text-gray-900'
+                    }`}
+                    style={{
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                    }}
+                  >
+                    {section.firstStation.name}
+                  </div>
+                </Tooltip>
               </CircleMarker>
             )}
             
@@ -403,7 +444,23 @@ function DisruptionLines({
                   click: () => onDisruptionClick(disruption),
                 }}
               >
-                <Tooltip>{section.lastStation.name}</Tooltip>
+                <Tooltip 
+                  className={`disruption-tooltip ${isDark ? 'dark' : 'light'}`}
+                >
+                  <div 
+                    className={`rounded-lg px-2 py-1 shadow-lg text-xs ${
+                      isDark 
+                        ? 'bg-gray-900/80 text-gray-100' 
+                        : 'bg-white/80 text-gray-900'
+                    }`}
+                    style={{
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                    }}
+                  >
+                    {section.lastStation.name}
+                  </div>
+                </Tooltip>
               </CircleMarker>
             )}
           </g>
