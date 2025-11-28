@@ -116,24 +116,8 @@ export default function DisruptionDetailPanel({
                 )}
               </div>
 
-              {/* 1. Oorzaak - from timespans[].cause or description for CALAMITY */}
-              {disruption.timespans?.some((ts: any) => ts.cause?.label) ? (
-                <Card className="p-4">
-                  <div className="flex items-start gap-3">
-                    <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
-                    <div className="space-y-1 flex-1">
-                      <p className="font-semibold text-sm">Oorzaak</p>
-                      {disruption.timespans
-                        .filter((ts: any) => ts.cause?.label)
-                        .map((ts: any, idx: number) => (
-                          <p key={idx} className="text-sm text-muted-foreground">
-                            {ts.cause.label}
-                          </p>
-                        ))}
-                    </div>
-                  </div>
-                </Card>
-              ) : disruption.description ? (
+              {/* 1. Oorzaak - only for non-MAINTENANCE types (CALAMITY/DISRUPTION) */}
+              {disruption.type !== 'MAINTENANCE' && disruption.description && (
                 <Card className="p-4">
                   <div className="flex items-start gap-3">
                     <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
@@ -145,7 +129,7 @@ export default function DisruptionDetailPanel({
                     </div>
                   </div>
                 </Card>
-              ) : null}
+              )}
 
               {/* 2. Periode */}
               {(disruption.start || disruption.end || disruption.timespans) && (
@@ -199,6 +183,12 @@ export default function DisruptionDetailPanel({
                         const stations = section.section?.stations || [];
                         if (stations.length === 0) return null;
                         
+                        const firstStation = stations[0]?.name;
+                        const lastStation = stations[stations.length - 1]?.name;
+                        const trajectLabel = firstStation === lastStation 
+                          ? firstStation 
+                          : `${firstStation} - ${lastStation}`;
+                        
                         const direction = section.section?.direction;
                         const directionLabel = direction === 'BOTH' ? 'Beide richtingen' : 
                                                direction === 'ONE_WAY' ? 'Eén richting' : 
@@ -207,7 +197,7 @@ export default function DisruptionDetailPanel({
                         return (
                           <div key={idx} className="text-sm">
                             <p className="font-medium">
-                              {stations.map((s: any) => s.name).join(" - ")}
+                              {trajectLabel}
                             </p>
                             {directionLabel && (
                               <p className="text-muted-foreground">
