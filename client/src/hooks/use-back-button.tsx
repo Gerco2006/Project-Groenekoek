@@ -13,6 +13,15 @@ export function useBackButtonClose(isOpen: boolean, onClose: () => void) {
       window.history.pushState({ backButtonSheet: true }, "");
       hasAddedState.current = true;
     }
+    
+    return () => {
+      if (hasAddedState.current && isOpen) {
+        hasAddedState.current = false;
+        if (window.history.state?.backButtonSheet) {
+          window.history.back();
+        }
+      }
+    };
   }, [isOpen]);
 
   useEffect(() => {
