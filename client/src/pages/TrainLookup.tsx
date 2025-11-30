@@ -168,29 +168,6 @@ export default function TrainLookup() {
 
         <LiveTrainMap onTrainClick={handleMapTrainClick} collapsed={!!searchedNumber} />
 
-        {isLoading && (
-          <div className="backdrop-blur-sm bg-card/80 rounded-xl p-8 border text-center text-muted-foreground">
-            <p>Treininfo laden...</p>
-          </div>
-        )}
-
-        {!isLoading && searchedNumber && !actualJourneyData && (
-          <div className="backdrop-blur-sm bg-card/80 rounded-xl p-8 border text-center text-muted-foreground">
-            <p>Geen treininfo gevonden voor {searchedMode === "journey" ? "ritnummer" : "materieelnummer"} {searchedNumber}</p>
-            {searchedMode === "material" && (
-              <p className="mt-2 text-sm">Controleer of het materieelnummer correct is</p>
-            )}
-          </div>
-        )}
-
-        {!isLoading && !searchedNumber && (
-          <div className="backdrop-blur-sm bg-muted/50 rounded-xl p-6 border border-dashed">
-            <p className="text-sm text-muted-foreground text-center">
-              Voer een {searchMode === "journey" ? "ritnummer" : "materieelnummer"} in om de volledige route en actuele informatie te bekijken
-            </p>
-          </div>
-        )}
-
         {searchedMode === "material" && materialJourneyData?.ritnummer && (
           <div className="backdrop-blur-sm bg-card/80 rounded-xl p-4 border">
             <p className="text-sm text-muted-foreground">
