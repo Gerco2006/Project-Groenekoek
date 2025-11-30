@@ -14,6 +14,7 @@ interface DisruptionsWidgetProps {
   stations: DisruptionStation[];
   onStationAdd: (stationName: string) => void;
   onStationRemove: (id: string) => void;
+  onDisruptionClick?: (disruption: { id: string; type: string; title: string }) => void;
 }
 
 interface Disruption {
@@ -45,11 +46,20 @@ export default function DisruptionsWidget({
   stations,
   onStationAdd,
   onStationRemove,
+  onDisruptionClick,
 }: DisruptionsWidgetProps) {
   const isMobile = useIsMobile();
   const [newStationName, setNewStationName] = useState("");
   const [isAddingStation, setIsAddingStation] = useState(false);
   const [selectedDisruption, setSelectedDisruption] = useState<Disruption | null>(null);
+
+  const handleDisruptionClick = (disruption: Disruption) => {
+    if (!isMobile && onDisruptionClick) {
+      onDisruptionClick({ id: disruption.id, type: disruption.type, title: disruption.title });
+    } else {
+      setSelectedDisruption(disruption);
+    }
+  };
 
   const { data: allDisruptions, isLoading } = useQuery<any>({
     queryKey: ["/api/disruptions"],
@@ -203,7 +213,7 @@ export default function DisruptionsWidget({
                           <div key={disruption.id}>
                             <div
                               className="md:p-2 py-2 px-2 md:rounded-md md:border hover-elevate cursor-pointer"
-                              onClick={() => setSelectedDisruption(disruption)}
+                              onClick={() => handleDisruptionClick(disruption)}
                               data-testid={`disruption-item-${disruption.id}`}
                             >
                               <div className="flex items-start gap-2 text-sm">

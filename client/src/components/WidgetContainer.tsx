@@ -22,9 +22,11 @@ interface WidgetContainerProps {
   onTripRemove: (id: string) => void;
   onDisruptionStationAdd: (stationName: string) => void;
   onDisruptionStationRemove: (id: string) => void;
+  onDisruptionClick?: (disruption: { id: string; type: string; title: string }) => void;
   onMaterialAdd: (materialNumber: string, name?: string) => void;
   onMaterialRemove: (id: string) => void;
   onMaterialNameUpdate: (materialNumber: string, name: string) => void;
+  onMaterialDetailClick?: (trainData: { trainType: string; trainNumber: string; from: string; to: string }) => void;
   onSetDeparture: (stationName: string) => void;
   onSetDestination: (stationName: string) => void;
   onToggleWidget: (widgetId: WidgetId) => void;
@@ -43,9 +45,11 @@ export default function WidgetContainer({
   onTripRemove,
   onDisruptionStationAdd,
   onDisruptionStationRemove,
+  onDisruptionClick,
   onMaterialAdd,
   onMaterialRemove,
   onMaterialNameUpdate,
+  onMaterialDetailClick,
   onSetDeparture,
   onSetDestination,
   onToggleWidget,
@@ -113,6 +117,7 @@ export default function WidgetContainer({
               stations={disruptionStations}
               onStationAdd={onDisruptionStationAdd}
               onStationRemove={onDisruptionStationRemove}
+              onDisruptionClick={onDisruptionClick}
             />
           );
         }
@@ -124,6 +129,7 @@ export default function WidgetContainer({
               onMaterialAdd={onMaterialAdd}
               onMaterialRemove={onMaterialRemove}
               onMaterialNameUpdate={onMaterialNameUpdate}
+              onMaterialDetailClick={onMaterialDetailClick}
             />
           );
         }

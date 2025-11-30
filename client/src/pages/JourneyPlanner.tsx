@@ -14,6 +14,7 @@ import StationSearch from "@/components/StationSearch";
 import TripListItemButton from "@/components/TripListItemButton";
 import TripAdviceDetailPanel from "@/components/TripAdviceDetailPanel";
 import TripDetailPanel from "@/components/TripDetailPanel";
+import DisruptionDetailPanel from "@/components/DisruptionDetailPanel";
 import CollapsibleSearchForm from "@/components/CollapsibleSearchForm";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
 import WidgetContainer from "@/components/WidgetContainer";
@@ -63,7 +64,8 @@ export default function JourneyPlanner() {
   const [selectedTripIndex, setSelectedTripIndex] = useState<number | null>(null);
   const [manuallySelectedTrip, setManuallySelectedTrip] = useState<SelectedTrip | null>(null);
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
-  const [detailMode, setDetailMode] = useState<'trip' | 'train' | null>(null);
+  const [selectedDisruption, setSelectedDisruption] = useState<{ id: string; type: string; title: string } | null>(null);
+  const [detailMode, setDetailMode] = useState<'trip' | 'train' | 'disruption' | null>(null);
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
@@ -948,6 +950,14 @@ export default function JourneyPlanner() {
             onMaterialAdd={addTrackedMaterial}
             onMaterialRemove={removeTrackedMaterial}
             onMaterialNameUpdate={updateTrackedMaterialName}
+            onDisruptionClick={(disruption) => {
+              setSelectedDisruption(disruption);
+              setDetailMode('disruption');
+            }}
+            onMaterialDetailClick={(trainData) => {
+              setSelectedTrain(trainData);
+              setDetailMode('train');
+            }}
             onSetDeparture={(stationName) => {
               setFrom(stationName);
               setIsSearchFormOpen(true);
@@ -1004,6 +1014,16 @@ export default function JourneyPlanner() {
                 setSelectedTrain(null);
                 setDetailMode('trip');
               } : undefined}
+            />
+          ) : detailMode === 'disruption' && selectedDisruption ? (
+            <DisruptionDetailPanel
+              disruptionId={selectedDisruption.id}
+              disruptionType={selectedDisruption.type}
+              open={!!selectedDisruption}
+              onClose={() => {
+                setSelectedDisruption(null);
+                setDetailMode(null);
+              }}
             />
           ) : null
         }

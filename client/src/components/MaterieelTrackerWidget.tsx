@@ -8,12 +8,14 @@ import type { TrackedMaterial } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import TripDetailPanel from "./TripDetailPanel";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface MaterieelTrackerWidgetProps {
   trackedMaterials: TrackedMaterial[];
   onMaterialAdd: (materialNumber: string, name?: string) => void;
   onMaterialRemove: (id: string) => void;
   onMaterialNameUpdate: (materialNumber: string, name: string) => void;
+  onMaterialDetailClick?: (trainData: { trainType: string; trainNumber: string; from: string; to: string }) => void;
 }
 
 interface ProductInfo {
@@ -378,12 +380,50 @@ export default function MaterieelTrackerWidget({
   onMaterialAdd,
   onMaterialRemove,
   onMaterialNameUpdate,
+  onMaterialDetailClick,
 }: MaterieelTrackerWidgetProps) {
+  const isMobile = useIsMobile();
   const [isAdding, setIsAdding] = useState(false);
   const [newMaterialNumber, setNewMaterialNumber] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState<JourneyData | null>(null);
 
   const canAddMore = trackedMaterials.length < 3;
+
+  const handleShowDetail = (data: JourneyData) => {
+    const trainInfo = data?.journeyData?.payload;
+    const stops = trainInfo?.stops || [];
+    const origin = stops.length > 0 ? stops[0]?.stop?.name : null;
+    const destination = stops.length > 0 ? stops[stops.length - 1]?.stop?.name : null;
+    
+    const getProductFromStops = () => {
+      for (const stop of stops) {
+        const depProduct = stop.departures?.[0]?.product;
+        if (depProduct?.categoryCode) return depProduct;
+        const arrProduct = stop.arrivals?.[0]?.product;
+        if (arrProduct?.categoryCode) return arrProduct;
+      }
+      return null;
+    };
+    
+    const product = trainInfo?.product || getProductFromStops();
+    const getTrainTypeLocal = (categoryCode?: string, shortName?: string) => {
+      if (categoryCode === "SPR") return "Sprinter";
+      if (categoryCode === "IC") return "Intercity";
+      if (categoryCode === "INT") return "International";
+      return shortName || categoryCode || "Onbekend";
+    };
+    
+    if (!isMobile && onMaterialDetailClick) {
+      onMaterialDetailClick({
+        trainType: getTrainTypeLocal(product?.categoryCode, product?.shortCategoryName),
+        trainNumber: data.ritnummer,
+        from: origin || "Onbekend",
+        to: destination || "Onbekend",
+      });
+    } else {
+      setSelectedMaterial(data);
+    }
+  };
 
   const handleAdd = () => {
     if (!newMaterialNumber.trim() || !canAddMore) return;
@@ -482,7 +522,7 @@ export default function MaterieelTrackerWidget({
                 key={material.id}
                 material={material}
                 onRemove={() => onMaterialRemove(material.id)}
-                onShowDetail={setSelectedMaterial}
+                onShowDetail={handleShowDetail}
                 onNameUpdate={(name) => onMaterialNameUpdate(material.materialNumber, name)}
                 isLast={false}
               />
