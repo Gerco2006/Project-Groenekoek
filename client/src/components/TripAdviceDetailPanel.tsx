@@ -11,6 +11,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBackButtonClose } from "@/hooks/use-back-button";
 import type { TripLeg } from "@shared/schema";
 
 const TripRouteMap = lazy(() => import("./TripRouteMap"));
@@ -57,6 +58,7 @@ export default function TripAdviceDetailPanel({
   isTripSaved = false,
 }: TripAdviceDetailPanelProps) {
   const isMobile = useIsMobile();
+  useBackButtonClose(open && !!isMobile, onClose);
 
   // Calculate average crowding level from embedded crowdForecast data
   const getAverageCrowding = () => {

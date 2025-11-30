@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/drawer";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBackButtonClose } from "@/hooks/use-back-button";
 
 type WidgetId = 'savedRoutes' | 'savedTrips' | 'disruptions' | 'materieelTracker' | 'favoriteStations';
 
@@ -80,6 +81,7 @@ interface DragState {
 export default function WidgetSelector({ activeWidgets, onToggleWidget, onReorderWidgets }: WidgetSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
+  useBackButtonClose(isOpen && !!isMobile, () => setIsOpen(false));
   
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,

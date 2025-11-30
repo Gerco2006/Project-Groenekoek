@@ -17,6 +17,7 @@ import {
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBackButtonClose } from "@/hooks/use-back-button";
 import { useLocation } from "wouter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -88,6 +89,8 @@ export default function FavoriteStationsWidget({
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const isMobile = useIsMobile();
+  useBackButtonClose(isOpen && !!isMobile, () => setIsOpen(false));
+  useBackButtonClose(isSettingsOpen && !!isMobile, () => setIsSettingsOpen(false));
   const [, setLocation] = useLocation();
 
   useEffect(() => {

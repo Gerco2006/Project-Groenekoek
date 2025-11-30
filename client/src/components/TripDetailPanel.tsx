@@ -18,6 +18,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBackButtonClose } from "@/hooks/use-back-button";
 
 const crowdingColors = {
   LOW: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
@@ -51,6 +52,7 @@ export default function TripDetailPanel({
   onBack,
 }: TripDetailPanelProps) {
   const isMobile = useIsMobile();
+  useBackButtonClose(open && !!isMobile, onClose);
   const [showAllStations, setShowAllStations] = useState(false);
   const [trainInfoOpen, setTrainInfoOpen] = useState(true);
   const [materialInfoOpen, setMaterialInfoOpen] = useState(true);

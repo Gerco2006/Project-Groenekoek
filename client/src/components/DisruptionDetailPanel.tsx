@@ -10,6 +10,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBackButtonClose } from "@/hooks/use-back-button";
 import { useRef } from "react";
 
 interface DisruptionDetailPanelProps {
@@ -26,6 +27,7 @@ export default function DisruptionDetailPanel({
   disruptionType,
 }: DisruptionDetailPanelProps) {
   const isMobile = useIsMobile();
+  useBackButtonClose(open && !!isMobile, onClose);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
 
   const { data: disruptionData, isLoading } = useQuery<any>({
