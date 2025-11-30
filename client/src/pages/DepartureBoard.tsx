@@ -11,7 +11,6 @@ import StationSearch from "@/components/StationSearch";
 import DepartureRow from "@/components/DepartureRow";
 import TripDetailPanel from "@/components/TripDetailPanel";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
-import LiveTrainMap from "@/components/LiveTrainMap";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -249,15 +248,6 @@ export default function DepartureBoard() {
     }
   };
 
-  const handleMapTrainClick = (ritId: string, trainNumber: number, trainType: string) => {
-    setSelectedTrain({
-      trainType: trainType,
-      trainNumber: String(trainNumber),
-      destination: "",
-      journeyId: ritId,
-    });
-  };
-
   const formatTime = (dateTime: string) => {
     const date = new Date(dateTime);
     return date.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
@@ -340,7 +330,6 @@ export default function DepartureBoard() {
     <div className="h-full flex flex-col">
       <div className="shrink-0 md:px-4 pt-0 pb-3 md:py-6 space-y-4">
         {searchForm}
-        <LiveTrainMap onTrainClick={handleMapTrainClick} collapsed={!!searchedStation} />
       </div>
 
       {!isLoading && searchedStation && activeDisruptions.length > 0 && (

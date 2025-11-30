@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import TripDetailPanel from "@/components/TripDetailPanel";
 import PageContainer from "@/components/PageContainer";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
+import LiveTrainMap from "@/components/LiveTrainMap";
 
 export default function TrainLookup() {
   const [searchMode, setSearchMode] = useState<"journey" | "material">("journey");
@@ -99,6 +100,12 @@ export default function TrainLookup() {
     return shortName || categoryCode || "Trein";
   };
 
+  const handleMapTrainClick = (ritId: string, trainNumber: number, trainType: string) => {
+    setJourneyNumber(String(trainNumber));
+    setSearchedNumber(String(trainNumber));
+    setSearchedMode("journey");
+  };
+
   const masterContent = (
     <div className="h-full overflow-y-auto">
       <div className="min-h-screen bg-background md:px-4 pt-0 pb-3 md:py-6 space-y-6">
@@ -158,6 +165,8 @@ export default function TrainLookup() {
             {isLoading ? "Laden..." : "Zoek rit"}
           </Button>
         </div>
+
+        <LiveTrainMap onTrainClick={handleMapTrainClick} collapsed={!!searchedNumber} />
 
         {isLoading && (
           <div className="backdrop-blur-sm bg-card/80 rounded-xl p-8 border text-center text-muted-foreground">
