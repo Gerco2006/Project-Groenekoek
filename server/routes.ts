@@ -568,7 +568,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/places", async (req, res) => {
-    res.json({ version: "v3", test: true });
+    try {
+      const { q } = req.query;
+      
+      if (!q || typeof q !== 'string' || q.length < 2) {
+        return res.json({ payload: [] });
+      }
+
+      const response = await fetch(
+        `https://gateway.apiportal.ns.nl/places-api/v2/places?q=${encodeURIComponent(q)}&limit=10`,
+        {
+          headers: {
+            "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error(`Places API returned ${response.status}: ${response.statusText}`);
+        return res.json({ payload: [] });
+      }
+
+      const data = await response.json();
+      
+      const places: Array<{
+        name: string;
+        type: string;
+        lat?: number;
+        lng?: number;
+        stationCode?: string;
+      }> = [];
+      
+      if (data.payload && Array.isArray(data.payload)) {
+        for (const group of data.payload) {
+          if (group.locations && Array.isArray(group.locations)) {
+            for (const loc of group.locations) {
+              places.push({
+                name: loc.name || loc.stationName || '',
+                type: loc.type || group.type || 'unknown',
+                lat: loc.lat,
+                lng: loc.lng,
+                stationCode: loc.stationCode || loc.code,
+              });
+            }
+          }
+        }
+      }
+      
+      res.json({ payload: places });
+    } catch (error) {
+      console.error("Error fetching places:", error);
+      res.json({ payload: [] });
+    }
   });
 
   app.get("/api/disruptions", async (req, res) => {
