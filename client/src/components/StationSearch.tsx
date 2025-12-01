@@ -34,6 +34,8 @@ interface Station {
   UICCode: string;
   stationType: string;
   land: string;
+  lat?: number;
+  lng?: number;
 }
 
 interface Place {
@@ -252,6 +254,8 @@ export default function StationSearch({
         name: matchedStation.namen.lang,
         type: 'station',
         stationCode: matchedStation.code,
+        lat: matchedStation.lat,
+        lng: matchedStation.lng,
       });
       return;
     }
@@ -317,6 +321,8 @@ export default function StationSearch({
           type: 'station',
           isStation: true,
           isFavorite: favoriteStations.includes(station.code),
+          lat: station.lat,
+          lng: station.lng,
         });
       }
     }
@@ -411,6 +417,8 @@ export default function StationSearch({
             name: station.namen.lang,
             type: 'station',
             stationCode: station.code,
+            lat: station.lat,
+            lng: station.lng,
           });
           setFocused(false);
         }}
