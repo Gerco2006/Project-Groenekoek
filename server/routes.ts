@@ -210,6 +210,50 @@ async function getStationCoordinates(stationNameOrUic: string): Promise<{ lat: n
   return { lat: matchedStation.lat, lng: matchedStation.lng };
 }
 
+async function findNearestStation(lat: number, lng: number): Promise<{ code: string; name: string; distance: number } | null> {
+  const now = Date.now();
+  if (!stationsCache || now - stationsCacheTime > STATIONS_CACHE_TTL) {
+    try {
+      const data = await fetchNS("/v2/stations", {});
+      stationsCache = data.payload || [];
+      stationsCacheTime = now;
+    } catch (error) {
+      console.error("Failed to fetch stations for nearest lookup:", error);
+      return null;
+    }
+  }
+
+  const nlStations = stationsCache.filter((s: any) => 
+    s.land === 'NL' && s.lat && s.lng && s.code
+  );
+
+  if (nlStations.length === 0) return null;
+
+  let nearest: any = null;
+  let minDistance = Infinity;
+
+  for (const station of nlStations) {
+    const dLat = station.lat - lat;
+    const dLng = station.lng - lng;
+    const distance = Math.sqrt(dLat * dLat + dLng * dLng);
+    
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearest = station;
+    }
+  }
+
+  if (!nearest) return null;
+
+  const kmDistance = minDistance * 111;
+
+  return {
+    code: nearest.code,
+    name: nearest.namen?.lang || nearest.code,
+    distance: kmDistance
+  };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/departures", async (req, res) => {
     try {
@@ -296,26 +340,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lang: lang as string,
       };
 
+      let nearestFromStation: { code: string; name: string; distance: number } | null = null;
+      let nearestToStation: { code: string; name: string; distance: number } | null = null;
+
       const fromCode = await getStationCode(fromStation as string);
       if (fromCode) {
         params.fromStation = fromCode;
       } else if (fromLat && fromLng) {
-        params.originLat = fromLat as string;
-        params.originLng = fromLng as string;
-        params.originName = fromStation as string;
+        nearestFromStation = await findNearestStation(parseFloat(fromLat as string), parseFloat(fromLng as string));
+        if (nearestFromStation) {
+          params.fromStation = nearestFromStation.code;
+        } else {
+          return res.status(400).json({ error: `Geen treinstation gevonden in de buurt van: ${fromStation}` });
+        }
       } else {
-        return res.status(400).json({ error: `Location not found: ${fromStation}. Please select a location from the search results.` });
+        return res.status(400).json({ error: `Locatie niet gevonden: ${fromStation}. Selecteer een locatie uit de zoekresultaten.` });
       }
 
       const toCode = await getStationCode(toStation as string);
       if (toCode) {
         params.toStation = toCode;
       } else if (toLat && toLng) {
-        params.destinationLat = toLat as string;
-        params.destinationLng = toLng as string;
-        params.destinationName = toStation as string;
+        nearestToStation = await findNearestStation(parseFloat(toLat as string), parseFloat(toLng as string));
+        if (nearestToStation) {
+          params.toStation = nearestToStation.code;
+        } else {
+          return res.status(400).json({ error: `Geen treinstation gevonden in de buurt van: ${toStation}` });
+        }
       } else {
-        return res.status(400).json({ error: `Location not found: ${toStation}. Please select a location from the search results.` });
+        return res.status(400).json({ error: `Locatie niet gevonden: ${toStation}. Selecteer een locatie uit de zoekresultaten.` });
       }
 
       const viaCodes: string[] = [];
@@ -402,7 +455,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      res.json(data);
+      const response: any = { ...data };
+      
+      if (nearestFromStation) {
+        response.nearestFromStation = {
+          name: nearestFromStation.name,
+          originalLocation: fromStation,
+          distanceKm: Math.round(nearestFromStation.distance * 10) / 10
+        };
+      }
+      
+      if (nearestToStation) {
+        response.nearestToStation = {
+          name: nearestToStation.name,
+          originalLocation: toStation,
+          distanceKm: Math.round(nearestToStation.distance * 10) / 10
+        };
+      }
+
+      res.json(response);
     } catch (error) {
       console.error("Error fetching trips:", error);
       res.status(500).json({ error: "Failed to fetch trips" });

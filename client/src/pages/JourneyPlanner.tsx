@@ -205,8 +205,22 @@ export default function JourneyPlanner() {
       setScrollContextBackward(tripsData.scrollRequestBackwardContext || null);
       setEarlierTrips([]);
       setLaterTrips([]);
+      
+      if (tripsData.nearestFromStation || tripsData.nearestToStation) {
+        const messages: string[] = [];
+        if (tripsData.nearestFromStation) {
+          messages.push(`Vertrek: ${tripsData.nearestFromStation.name} (${tripsData.nearestFromStation.distanceKm} km)`);
+        }
+        if (tripsData.nearestToStation) {
+          messages.push(`Aankomst: ${tripsData.nearestToStation.name} (${tripsData.nearestToStation.distanceKm} km)`);
+        }
+        toast({
+          title: "Dichtstbijzijnde station gebruikt",
+          description: messages.join(" • "),
+        });
+      }
     }
-  }, [tripsData]);
+  }, [tripsData, toast]);
 
   const loadEarlierTrips = useCallback(async () => {
     if (!scrollContextBackward || isLoadingEarlier || !searchedFrom || !searchedTo) return;
