@@ -241,7 +241,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { 
         fromStation, 
-        toStation, 
+        toStation,
+        fromLat,
+        fromLng,
+        toLat,
+        toLng,
         dateTime,
         searchForArrival,
         viaStation,
@@ -256,14 +260,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "fromStation and toStation parameters are required" });
       }
 
+      const params: Record<string, string | string[]> = {
+        lang: lang as string,
+      };
+
       const fromCode = await getStationCode(fromStation as string);
-      if (!fromCode) {
-        return res.status(400).json({ error: `From station not found: ${fromStation}` });
+      if (fromCode) {
+        params.fromStation = fromCode;
+      } else if (fromLat && fromLng) {
+        params.originLat = fromLat as string;
+        params.originLng = fromLng as string;
+        params.originName = fromStation as string;
+      } else {
+        return res.status(400).json({ error: `Location not found: ${fromStation}. Please select a location from the search results.` });
       }
 
       const toCode = await getStationCode(toStation as string);
-      if (!toCode) {
-        return res.status(400).json({ error: `To station not found: ${toStation}` });
+      if (toCode) {
+        params.toStation = toCode;
+      } else if (toLat && toLng) {
+        params.destinationLat = toLat as string;
+        params.destinationLng = toLng as string;
+        params.destinationName = toStation as string;
+      } else {
+        return res.status(400).json({ error: `Location not found: ${toStation}. Please select a location from the search results.` });
       }
 
       const viaCodes: string[] = [];
@@ -277,12 +297,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           viaCodes.push(viaCode);
         }
       }
-
-      const params: Record<string, string | string[]> = {
-        fromStation: fromCode,
-        toStation: toCode,
-        lang: lang as string,
-      };
 
       if (dateTime) {
         params.dateTime = dateTime as string;
@@ -518,6 +532,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching stations:", error);
       res.status(500).json({ error: "Failed to fetch stations" });
+    }
+  });
+
+  app.get("/api/places", async (req, res) => {
+    try {
+      const { q } = req.query;
+      
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        return res.json({ payload: [] });
+      }
+
+      const data = await fetchNS("/v2/places", { q: q.trim() });
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching places:", error);
+      res.status(500).json({ error: "Failed to fetch places" });
     }
   });
 

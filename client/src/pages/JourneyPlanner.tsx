@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import StationSearch from "@/components/StationSearch";
+import StationSearch, { type PlaceSelection } from "@/components/StationSearch";
 import TripListItemButton from "@/components/TripListItemButton";
 import TripAdviceDetailPanel from "@/components/TripAdviceDetailPanel";
 import TripDetailPanel from "@/components/TripDetailPanel";
@@ -56,9 +56,26 @@ export default function JourneyPlanner() {
   const hasAutoSelectedRef = useRef(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [fromPlace, setFromPlace] = useState<PlaceSelection | null>(null);
+  const [toPlace, setToPlace] = useState<PlaceSelection | null>(null);
+  
+  const fromPlaceRef = useRef<PlaceSelection | null>(null);
+  const toPlaceRef = useRef<PlaceSelection | null>(null);
+  
+  const handleFromPlaceChange = (place: PlaceSelection | null) => {
+    setFromPlace(place);
+    fromPlaceRef.current = place;
+  };
+  
+  const handleToPlaceChange = (place: PlaceSelection | null) => {
+    setToPlace(place);
+    toPlaceRef.current = place;
+  };
   const [viaStations, setViaStations] = useState<string[]>([]);
   const [searchedFrom, setSearchedFrom] = useState("");
   const [searchedTo, setSearchedTo] = useState("");
+  const [searchedFromPlace, setSearchedFromPlace] = useState<PlaceSelection | null>(null);
+  const [searchedToPlace, setSearchedToPlace] = useState<PlaceSelection | null>(null);
   const [searchedViaStations, setSearchedViaStations] = useState<string[]>([]);
   const [searchMode, setSearchMode] = useState<"departure" | "arrival">("departure");
   const [selectedTripIndex, setSelectedTripIndex] = useState<number | null>(null);
@@ -100,9 +117,12 @@ export default function JourneyPlanner() {
   } = useWidgetManager();
 
   const swapStations = () => {
-    const temp = from;
+    const tempName = from;
+    const tempPlace = fromPlaceRef.current;
     setFrom(to);
-    setTo(temp);
+    handleFromPlaceChange(toPlaceRef.current);
+    setTo(tempName);
+    handleToPlaceChange(tempPlace);
   };
 
   const addViaStation = () => {
@@ -131,7 +151,7 @@ export default function JourneyPlanner() {
   };
 
   const { data: tripsData, isLoading, error } = useQuery<any>({
-    queryKey: ["/api/trips", searchedFrom, searchedTo, searchedViaStations, searchMode, date, time, addChangeTime, accessible],
+    queryKey: ["/api/trips", searchedFrom, searchedTo, searchedFromPlace, searchedToPlace, searchedViaStations, searchMode, date, time, addChangeTime, accessible],
     enabled: !!searchedFrom && !!searchedTo,
     queryFn: async () => {
       const dateTime = buildDateTime();
@@ -140,6 +160,16 @@ export default function JourneyPlanner() {
         toStation: searchedTo,
         dateTime: dateTime,
       });
+
+      if (searchedFromPlace?.lat && searchedFromPlace?.lng) {
+        params.append("fromLat", searchedFromPlace.lat.toString());
+        params.append("fromLng", searchedFromPlace.lng.toString());
+      }
+
+      if (searchedToPlace?.lat && searchedToPlace?.lng) {
+        params.append("toLat", searchedToPlace.lat.toString());
+        params.append("toLng", searchedToPlace.lng.toString());
+      }
 
       if (searchMode === "arrival") {
         params.append("searchForArrival", "true");
@@ -189,6 +219,16 @@ export default function JourneyPlanner() {
         scrollRequestBackwardContext: scrollContextBackward,
       });
 
+      if (searchedFromPlace?.lat && searchedFromPlace?.lng) {
+        params.append("fromLat", searchedFromPlace.lat.toString());
+        params.append("fromLng", searchedFromPlace.lng.toString());
+      }
+
+      if (searchedToPlace?.lat && searchedToPlace?.lng) {
+        params.append("toLat", searchedToPlace.lat.toString());
+        params.append("toLng", searchedToPlace.lng.toString());
+      }
+
       searchedViaStations.forEach((via) => {
         if (via.trim()) {
           params.append("viaStation", via);
@@ -217,7 +257,7 @@ export default function JourneyPlanner() {
     } finally {
       setIsLoadingEarlier(false);
     }
-  }, [scrollContextBackward, isLoadingEarlier, searchedFrom, searchedTo, searchedViaStations, selectedTripIndex, toast]);
+  }, [scrollContextBackward, isLoadingEarlier, searchedFrom, searchedTo, searchedFromPlace, searchedToPlace, searchedViaStations, selectedTripIndex, toast]);
 
   const loadLaterTrips = useCallback(async () => {
     if (!scrollContextForward || isLoadingLater || !searchedFrom || !searchedTo) return;
@@ -229,6 +269,16 @@ export default function JourneyPlanner() {
         toStation: searchedTo,
         scrollRequestForwardContext: scrollContextForward,
       });
+
+      if (searchedFromPlace?.lat && searchedFromPlace?.lng) {
+        params.append("fromLat", searchedFromPlace.lat.toString());
+        params.append("fromLng", searchedFromPlace.lng.toString());
+      }
+
+      if (searchedToPlace?.lat && searchedToPlace?.lng) {
+        params.append("toLat", searchedToPlace.lat.toString());
+        params.append("toLng", searchedToPlace.lng.toString());
+      }
 
       searchedViaStations.forEach((via) => {
         if (via.trim()) {
@@ -254,7 +304,7 @@ export default function JourneyPlanner() {
     } finally {
       setIsLoadingLater(false);
     }
-  }, [scrollContextForward, isLoadingLater, searchedFrom, searchedTo, searchedViaStations, toast]);
+  }, [scrollContextForward, isLoadingLater, searchedFrom, searchedTo, searchedFromPlace, searchedToPlace, searchedViaStations, toast]);
 
   const { data: disruptionsData } = useQuery<any>({
     queryKey: ["/api/disruptions"],
@@ -296,14 +346,17 @@ export default function JourneyPlanner() {
   const handleSearch = () => {
     if (!from.trim() || !to.trim()) {
       toast({
-        title: "Stations vereist",
-        description: "Voer zowel een vertrek- als aankomststation in",
+        title: "Locaties vereist",
+        description: "Voer zowel een vertrek- als aankomstlocatie in",
         variant: "destructive",
       });
       return;
     }
+    
     setSearchedFrom(from);
     setSearchedTo(to);
+    setSearchedFromPlace(fromPlaceRef.current);
+    setSearchedToPlace(toPlaceRef.current);
     setSearchedViaStations(viaStations.filter(v => v.trim() !== ""));
     setSelectedTripIndex(null);
     setManuallySelectedTrip(null);
@@ -340,10 +393,14 @@ export default function JourneyPlanner() {
     setFrom(route.from);
     setTo(route.to);
     setViaStations(route.viaStations.length > 0 ? route.viaStations : []);
+    handleFromPlaceChange(null);
+    handleToPlaceChange(null);
     
     setTimeout(() => {
       setSearchedFrom(route.from);
       setSearchedTo(route.to);
+      setSearchedFromPlace(null);
+      setSearchedToPlace(null);
       setSearchedViaStations(route.viaStations);
       setSelectedTripIndex(null);
       setManuallySelectedTrip(null);
@@ -620,6 +677,7 @@ export default function JourneyPlanner() {
               label="Van"
               value={from}
               onChange={setFrom}
+              onSelectPlace={handleFromPlaceChange}
               placeholder="Bijv. Amsterdam Centraal"
               testId="input-from-station"
             />
@@ -630,6 +688,7 @@ export default function JourneyPlanner() {
               label="Naar"
               value={to}
               onChange={setTo}
+              onSelectPlace={handleToPlaceChange}
               placeholder="Bijv. Rotterdam Centraal"
               testId="input-to-station"
             />
@@ -669,7 +728,7 @@ export default function JourneyPlanner() {
             <div className="flex gap-2 items-end">
               <div className="flex-1">
                 <StationSearch
-                  label="Tussenstop"
+                  label="Tussenstop (alleen stations)"
                   value={viaStations[0] || ""}
                   onChange={(value) => {
                     if (value) {
