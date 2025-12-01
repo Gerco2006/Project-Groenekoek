@@ -6,6 +6,7 @@ const NS_API_KEY = process.env.NS_API_KEY;
 const NS_BASE_URL = "https://gateway.apiportal.ns.nl/reisinformatie-api/api";
 const NS_DISRUPTIONS_BASE_URL = "https://gateway.apiportal.ns.nl/disruptions";
 const NS_VIRTUAL_TRAIN_URL = "https://gateway.apiportal.ns.nl/virtual-train-api";
+const NS_PLACES_URL = "https://gateway.apiportal.ns.nl/places-api/v2";
 
 async function fetchNS(endpoint: string, params: Record<string, string | string[]> = {}) {
   const url = new URL(`${NS_BASE_URL}${endpoint}`);
@@ -80,6 +81,37 @@ async function fetchNSVirtualTrain(endpoint: string, params: Record<string, stri
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`NS Virtual Train API error: ${response.status} - ${error}`);
+  }
+
+  return response.json();
+}
+
+async function fetchNSPlaces(endpoint: string, params: Record<string, string | string[]> = {}) {
+  const url = new URL(`${NS_PLACES_URL}${endpoint}`);
+  Object.entries(params).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach(v => {
+        if (v) url.searchParams.append(key, v);
+      });
+    } else if (value) {
+      url.searchParams.append(key, value);
+    }
+  });
+
+  console.log("Fetching NS Places:", url.toString());
+  
+  const response = await fetch(url.toString(), {
+    headers: {
+      "Ocp-Apim-Subscription-Key": NS_API_KEY || "",
+    },
+  });
+
+  console.log("NS Places response status:", response.status);
+  
+  if (!response.ok) {
+    const error = await response.text();
+    console.error("NS Places API error body:", error);
+    throw new Error(`NS Places API error: ${response.status} - ${error}`);
   }
 
   return response.json();
@@ -536,19 +568,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/places", async (req, res) => {
-    try {
-      const { q } = req.query;
-      
-      if (!q || typeof q !== 'string' || q.trim().length < 2) {
-        return res.json({ payload: [] });
-      }
-
-      const data = await fetchNS("/v2/places", { q: q.trim() });
-      res.json(data);
-    } catch (error) {
-      console.error("Error fetching places:", error);
-      res.status(500).json({ error: "Failed to fetch places" });
-    }
+    res.json({ version: "v3", test: true });
   });
 
   app.get("/api/disruptions", async (req, res) => {
