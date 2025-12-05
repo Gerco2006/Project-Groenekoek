@@ -4,13 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle, Star, ChevronUp, ChevronDown, Info, Train } from "lucide-react";
+import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle, Star, ChevronUp, ChevronDown } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import StationSearch, { type PlaceSelection } from "@/components/StationSearch";
+import StationSearch from "@/components/StationSearch";
 import TripListItemButton from "@/components/TripListItemButton";
 import TripAdviceDetailPanel from "@/components/TripAdviceDetailPanel";
 import TripDetailPanel from "@/components/TripDetailPanel";
@@ -56,26 +56,9 @@ export default function JourneyPlanner() {
   const hasAutoSelectedRef = useRef(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [fromPlace, setFromPlace] = useState<PlaceSelection | null>(null);
-  const [toPlace, setToPlace] = useState<PlaceSelection | null>(null);
-  
-  const fromPlaceRef = useRef<PlaceSelection | null>(null);
-  const toPlaceRef = useRef<PlaceSelection | null>(null);
-  
-  const handleFromPlaceChange = (place: PlaceSelection | null) => {
-    setFromPlace(place);
-    fromPlaceRef.current = place;
-  };
-  
-  const handleToPlaceChange = (place: PlaceSelection | null) => {
-    setToPlace(place);
-    toPlaceRef.current = place;
-  };
   const [viaStations, setViaStations] = useState<string[]>([]);
   const [searchedFrom, setSearchedFrom] = useState("");
   const [searchedTo, setSearchedTo] = useState("");
-  const [searchedFromPlace, setSearchedFromPlace] = useState<PlaceSelection | null>(null);
-  const [searchedToPlace, setSearchedToPlace] = useState<PlaceSelection | null>(null);
   const [searchedViaStations, setSearchedViaStations] = useState<string[]>([]);
   const [searchMode, setSearchMode] = useState<"departure" | "arrival">("departure");
   const [selectedTripIndex, setSelectedTripIndex] = useState<number | null>(null);
@@ -98,10 +81,6 @@ export default function JourneyPlanner() {
   const [laterTrips, setLaterTrips] = useState<any[]>([]);
   const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
   const [isLoadingLater, setIsLoadingLater] = useState(false);
-  const [nearestStationInfo, setNearestStationInfo] = useState<{
-    from?: { name: string; originalLocation: string; distanceKm: number };
-    to?: { name: string; originalLocation: string; distanceKm: number };
-  } | null>(null);
   const { toast } = useToast();
   const { 
     config, 
@@ -121,12 +100,9 @@ export default function JourneyPlanner() {
   } = useWidgetManager();
 
   const swapStations = () => {
-    const tempName = from;
-    const tempPlace = fromPlaceRef.current;
+    const temp = from;
     setFrom(to);
-    handleFromPlaceChange(toPlaceRef.current);
-    setTo(tempName);
-    handleToPlaceChange(tempPlace);
+    setTo(temp);
   };
 
   const addViaStation = () => {
@@ -155,7 +131,7 @@ export default function JourneyPlanner() {
   };
 
   const { data: tripsData, isLoading, error } = useQuery<any>({
-    queryKey: ["/api/trips", searchedFrom, searchedTo, searchedFromPlace, searchedToPlace, searchedViaStations, searchMode, date, time, addChangeTime, accessible],
+    queryKey: ["/api/trips", searchedFrom, searchedTo, searchedViaStations, searchMode, date, time, addChangeTime, accessible],
     enabled: !!searchedFrom && !!searchedTo,
     queryFn: async () => {
       const dateTime = buildDateTime();
@@ -164,16 +140,6 @@ export default function JourneyPlanner() {
         toStation: searchedTo,
         dateTime: dateTime,
       });
-
-      if (searchedFromPlace?.lat && searchedFromPlace?.lng) {
-        params.append("fromLat", searchedFromPlace.lat.toString());
-        params.append("fromLng", searchedFromPlace.lng.toString());
-      }
-
-      if (searchedToPlace?.lat && searchedToPlace?.lng) {
-        params.append("toLat", searchedToPlace.lat.toString());
-        params.append("toLng", searchedToPlace.lng.toString());
-      }
 
       if (searchMode === "arrival") {
         params.append("searchForArrival", "true");
@@ -209,15 +175,6 @@ export default function JourneyPlanner() {
       setScrollContextBackward(tripsData.scrollRequestBackwardContext || null);
       setEarlierTrips([]);
       setLaterTrips([]);
-      
-      if (tripsData.nearestFromStation || tripsData.nearestToStation) {
-        setNearestStationInfo({
-          from: tripsData.nearestFromStation,
-          to: tripsData.nearestToStation,
-        });
-      } else {
-        setNearestStationInfo(null);
-      }
     }
   }, [tripsData]);
 
@@ -231,16 +188,6 @@ export default function JourneyPlanner() {
         toStation: searchedTo,
         scrollRequestBackwardContext: scrollContextBackward,
       });
-
-      if (searchedFromPlace?.lat && searchedFromPlace?.lng) {
-        params.append("fromLat", searchedFromPlace.lat.toString());
-        params.append("fromLng", searchedFromPlace.lng.toString());
-      }
-
-      if (searchedToPlace?.lat && searchedToPlace?.lng) {
-        params.append("toLat", searchedToPlace.lat.toString());
-        params.append("toLng", searchedToPlace.lng.toString());
-      }
 
       searchedViaStations.forEach((via) => {
         if (via.trim()) {
@@ -270,7 +217,7 @@ export default function JourneyPlanner() {
     } finally {
       setIsLoadingEarlier(false);
     }
-  }, [scrollContextBackward, isLoadingEarlier, searchedFrom, searchedTo, searchedFromPlace, searchedToPlace, searchedViaStations, selectedTripIndex, toast]);
+  }, [scrollContextBackward, isLoadingEarlier, searchedFrom, searchedTo, searchedViaStations, selectedTripIndex, toast]);
 
   const loadLaterTrips = useCallback(async () => {
     if (!scrollContextForward || isLoadingLater || !searchedFrom || !searchedTo) return;
@@ -282,16 +229,6 @@ export default function JourneyPlanner() {
         toStation: searchedTo,
         scrollRequestForwardContext: scrollContextForward,
       });
-
-      if (searchedFromPlace?.lat && searchedFromPlace?.lng) {
-        params.append("fromLat", searchedFromPlace.lat.toString());
-        params.append("fromLng", searchedFromPlace.lng.toString());
-      }
-
-      if (searchedToPlace?.lat && searchedToPlace?.lng) {
-        params.append("toLat", searchedToPlace.lat.toString());
-        params.append("toLng", searchedToPlace.lng.toString());
-      }
 
       searchedViaStations.forEach((via) => {
         if (via.trim()) {
@@ -317,7 +254,7 @@ export default function JourneyPlanner() {
     } finally {
       setIsLoadingLater(false);
     }
-  }, [scrollContextForward, isLoadingLater, searchedFrom, searchedTo, searchedFromPlace, searchedToPlace, searchedViaStations, toast]);
+  }, [scrollContextForward, isLoadingLater, searchedFrom, searchedTo, searchedViaStations, toast]);
 
   const { data: disruptionsData } = useQuery<any>({
     queryKey: ["/api/disruptions"],
@@ -359,17 +296,14 @@ export default function JourneyPlanner() {
   const handleSearch = () => {
     if (!from.trim() || !to.trim()) {
       toast({
-        title: "Locaties vereist",
-        description: "Voer zowel een vertrek- als aankomstlocatie in",
+        title: "Stations vereist",
+        description: "Voer zowel een vertrek- als aankomststation in",
         variant: "destructive",
       });
       return;
     }
-    
     setSearchedFrom(from);
     setSearchedTo(to);
-    setSearchedFromPlace(fromPlaceRef.current);
-    setSearchedToPlace(toPlaceRef.current);
     setSearchedViaStations(viaStations.filter(v => v.trim() !== ""));
     setSelectedTripIndex(null);
     setManuallySelectedTrip(null);
@@ -406,14 +340,10 @@ export default function JourneyPlanner() {
     setFrom(route.from);
     setTo(route.to);
     setViaStations(route.viaStations.length > 0 ? route.viaStations : []);
-    handleFromPlaceChange(null);
-    handleToPlaceChange(null);
     
     setTimeout(() => {
       setSearchedFrom(route.from);
       setSearchedTo(route.to);
-      setSearchedFromPlace(null);
-      setSearchedToPlace(null);
       setSearchedViaStations(route.viaStations);
       setSelectedTripIndex(null);
       setManuallySelectedTrip(null);
@@ -690,7 +620,6 @@ export default function JourneyPlanner() {
               label="Van"
               value={from}
               onChange={setFrom}
-              onSelectPlace={handleFromPlaceChange}
               placeholder="Bijv. Amsterdam Centraal"
               testId="input-from-station"
             />
@@ -701,7 +630,6 @@ export default function JourneyPlanner() {
               label="Naar"
               value={to}
               onChange={setTo}
-              onSelectPlace={handleToPlaceChange}
               placeholder="Bijv. Rotterdam Centraal"
               testId="input-to-station"
             />
@@ -741,7 +669,7 @@ export default function JourneyPlanner() {
             <div className="flex gap-2 items-end">
               <div className="flex-1">
                 <StationSearch
-                  label="Tussenstop (alleen stations)"
+                  label="Tussenstop"
                   value={viaStations[0] || ""}
                   onChange={(value) => {
                     if (value) {
@@ -948,52 +876,6 @@ export default function JourneyPlanner() {
         <ScrollArea className="flex-1 md:px-4">
           <div className="space-y-3 pb-6">
             <h2 className="text-xl font-semibold">Reismogelijkheden</h2>
-            
-            {nearestStationInfo && (
-              <Alert className="border-blue-500/50 bg-blue-500/10" data-testid="alert-nearest-station">
-                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <AlertDescription className="ml-2">
-                  <div className="space-y-2">
-                    <p className="font-medium text-blue-800 dark:text-blue-200">
-                      De NS API biedt geen reisinformatie voor bus, tram of metro
-                    </p>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Je hebt een locatie ingevoerd die geen treinstation is. Er wordt automatisch het dichtstbijzijnde station gebruikt:
-                    </p>
-                    <div className="flex flex-col gap-1 text-sm">
-                      {nearestStationInfo.from && (
-                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                          <Train className="h-3.5 w-3.5" />
-                          <span>
-                            <span className="font-medium">{nearestStationInfo.from.originalLocation}</span>
-                            {" → "}
-                            <span className="font-semibold">{nearestStationInfo.from.name}</span>
-                            {" "}
-                            <span className="text-blue-600/70 dark:text-blue-400/70">
-                              ({nearestStationInfo.from.distanceKm} km)
-                            </span>
-                          </span>
-                        </div>
-                      )}
-                      {nearestStationInfo.to && (
-                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                          <Train className="h-3.5 w-3.5" />
-                          <span>
-                            <span className="font-medium">{nearestStationInfo.to.originalLocation}</span>
-                            {" → "}
-                            <span className="font-semibold">{nearestStationInfo.to.name}</span>
-                            {" "}
-                            <span className="text-blue-600/70 dark:text-blue-400/70">
-                              ({nearestStationInfo.to.distanceKm} km)
-                            </span>
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
             
             {scrollContextBackward && new Date(`${format(date, 'yyyy-MM-dd')}T${time}:00`) >= new Date() && (
               <Button

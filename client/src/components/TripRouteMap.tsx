@@ -7,10 +7,17 @@ import { Crosshair } from "lucide-react";
 import type { TripLeg } from "@shared/schema";
 import "leaflet/dist/leaflet.css";
 
+interface IntermediateStop {
+  name: string;
+  lat?: number;
+  lng?: number;
+}
+
 interface TripRouteMapProps {
   legs: TripLeg[];
   compact?: boolean;
   embedded?: boolean;
+  intermediateStops?: IntermediateStop[];
 }
 
 interface Station {
@@ -41,7 +48,7 @@ function distanceBetweenPoints(p1: [number, number], p2: [number, number]): numb
 function buildTrackGraph(features: GeoJSONFeature[]): TrackGraph {
   const neighbors: Record<string, string[]> = {};
   const nodeCoords: Record<string, [number, number]> = {};
-  const tolerance = 0.0003;
+  const tolerance = 0.0005;
   
   const roundCoord = (val: number) => Math.round(val / tolerance) * tolerance;
   const coordKey = (lat: number, lng: number) => `${roundCoord(lat)},${roundCoord(lng)}`;
@@ -181,7 +188,7 @@ function findRouteBetweenStops(
   
   const graph = buildTrackGraph(features);
   const route: [number, number][] = [];
-  const maxSearchDistance = 0.02;
+  const maxSearchDistance = 0.05;
   
   for (let i = 0; i < stops.length - 1; i++) {
     const start: [number, number] = [stops[i].lat, stops[i].lng];
@@ -191,7 +198,7 @@ function findRouteBetweenStops(
     const endNode = findNearestGraphNode(end, graph, maxSearchDistance);
     
     if (startNode && endNode && startNode !== endNode) {
-      const pathSegment = findPathAStar(graph, startNode, endNode, end, 5000);
+      const pathSegment = findPathAStar(graph, startNode, endNode, end, 15000);
       
       if (pathSegment.length > 0) {
         if (route.length === 0) {
@@ -520,7 +527,7 @@ function MapMoveTracker({ onMoved }: { onMoved: (moved: boolean) => void }) {
   return null;
 }
 
-export default function TripRouteMap({ legs, compact = false, embedded = false }: TripRouteMapProps) {
+export default function TripRouteMap({ legs, compact = false, embedded = false, intermediateStops }: TripRouteMapProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const mapHeight = compact ? "h-[150px]" : "h-[200px]";
@@ -579,6 +586,29 @@ export default function TripRouteMap({ legs, compact = false, embedded = false }
       return null;
     };
     
+    if (intermediateStops && intermediateStops.length >= 2) {
+      for (let i = 0; i < intermediateStops.length; i++) {
+        const stop = intermediateStops[i];
+        const coords = (stop.lat && stop.lng)
+          ? { lat: stop.lat, lng: stop.lng }
+          : findStationCoords(stop.name);
+        
+        if (coords) {
+          let type: Station['type'] = 'transfer';
+          if (i === 0) type = 'start';
+          else if (i === intermediateStops.length - 1) type = 'end';
+          
+          result.push({
+            name: stop.name,
+            lat: coords.lat,
+            lng: coords.lng,
+            type
+          });
+        }
+      }
+      return result;
+    }
+    
     for (let i = 0; i < legs.length; i++) {
       const leg = legs[i];
       
@@ -613,7 +643,7 @@ export default function TripRouteMap({ legs, compact = false, embedded = false }
     }
     
     return result;
-  }, [legs, stationsData]);
+  }, [legs, stationsData, intermediateStops]);
 
   const routePositions = useMemo(() => {
     const features = spoorkaartData?.payload?.features || [];
