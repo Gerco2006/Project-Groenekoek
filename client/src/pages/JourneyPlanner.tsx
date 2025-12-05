@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle, Star, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowDownUp, Search, Calendar as CalendarIcon, Clock, Loader2, Plus, X, Settings2, AlertTriangle, Star, ChevronUp, ChevronDown, Info, Train } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -98,6 +98,10 @@ export default function JourneyPlanner() {
   const [laterTrips, setLaterTrips] = useState<any[]>([]);
   const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
   const [isLoadingLater, setIsLoadingLater] = useState(false);
+  const [nearestStationInfo, setNearestStationInfo] = useState<{
+    from?: { name: string; originalLocation: string; distanceKm: number };
+    to?: { name: string; originalLocation: string; distanceKm: number };
+  } | null>(null);
   const { toast } = useToast();
   const { 
     config, 
@@ -207,20 +211,15 @@ export default function JourneyPlanner() {
       setLaterTrips([]);
       
       if (tripsData.nearestFromStation || tripsData.nearestToStation) {
-        const messages: string[] = [];
-        if (tripsData.nearestFromStation) {
-          messages.push(`Vertrek: ${tripsData.nearestFromStation.name} (${tripsData.nearestFromStation.distanceKm} km)`);
-        }
-        if (tripsData.nearestToStation) {
-          messages.push(`Aankomst: ${tripsData.nearestToStation.name} (${tripsData.nearestToStation.distanceKm} km)`);
-        }
-        toast({
-          title: "Dichtstbijzijnde station gebruikt",
-          description: messages.join(" • "),
+        setNearestStationInfo({
+          from: tripsData.nearestFromStation,
+          to: tripsData.nearestToStation,
         });
+      } else {
+        setNearestStationInfo(null);
       }
     }
-  }, [tripsData, toast]);
+  }, [tripsData]);
 
   const loadEarlierTrips = useCallback(async () => {
     if (!scrollContextBackward || isLoadingEarlier || !searchedFrom || !searchedTo) return;
@@ -949,6 +948,52 @@ export default function JourneyPlanner() {
         <ScrollArea className="flex-1 md:px-4">
           <div className="space-y-3 pb-6">
             <h2 className="text-xl font-semibold">Reismogelijkheden</h2>
+            
+            {nearestStationInfo && (
+              <Alert className="border-blue-500/50 bg-blue-500/10" data-testid="alert-nearest-station">
+                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <AlertDescription className="ml-2">
+                  <div className="space-y-2">
+                    <p className="font-medium text-blue-800 dark:text-blue-200">
+                      De NS API biedt geen reisinformatie voor bus, tram of metro
+                    </p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Je hebt een locatie ingevoerd die geen treinstation is. Er wordt automatisch het dichtstbijzijnde station gebruikt:
+                    </p>
+                    <div className="flex flex-col gap-1 text-sm">
+                      {nearestStationInfo.from && (
+                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                          <Train className="h-3.5 w-3.5" />
+                          <span>
+                            <span className="font-medium">{nearestStationInfo.from.originalLocation}</span>
+                            {" → "}
+                            <span className="font-semibold">{nearestStationInfo.from.name}</span>
+                            {" "}
+                            <span className="text-blue-600/70 dark:text-blue-400/70">
+                              ({nearestStationInfo.from.distanceKm} km)
+                            </span>
+                          </span>
+                        </div>
+                      )}
+                      {nearestStationInfo.to && (
+                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                          <Train className="h-3.5 w-3.5" />
+                          <span>
+                            <span className="font-medium">{nearestStationInfo.to.originalLocation}</span>
+                            {" → "}
+                            <span className="font-semibold">{nearestStationInfo.to.name}</span>
+                            {" "}
+                            <span className="text-blue-600/70 dark:text-blue-400/70">
+                              ({nearestStationInfo.to.distanceKm} km)
+                            </span>
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
             
             {scrollContextBackward && new Date(`${format(date, 'yyyy-MM-dd')}T${time}:00`) >= new Date() && (
               <Button
