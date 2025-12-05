@@ -533,6 +533,15 @@ export default function TripRouteMap({ legs, compact = false, embedded = false, 
   const mapHeight = compact ? "h-[150px]" : "h-[200px]";
   const [hasMoved, setHasMoved] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Early return if legs is empty or undefined
   if (!legs || legs.length === 0) {
@@ -656,7 +665,7 @@ export default function TripRouteMap({ legs, compact = false, embedded = false, 
     return findRouteBetweenStops(stops, features);
   }, [stations, spoorkaartData]);
 
-  if (stationsLoading) {
+  if (!isMounted || stationsLoading) {
     return (
       <div className={`${mapHeight} rounded-lg border bg-muted/50 flex items-center justify-center text-muted-foreground text-sm`}>
         Kaart laden...
