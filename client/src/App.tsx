@@ -12,6 +12,7 @@ import DepartureBoard from "@/pages/DepartureBoard";
 import TrainLookup from "@/pages/TrainLookup";
 import Disruptions from "@/pages/Disruptions";
 import MorePage from "@/pages/MorePage";
+import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
           <Route path="/treininfo" component={TrainLookup} />
           <Route path="/storingen" component={Disruptions} />
           <Route path="/meer" component={MorePage} />
+          <Route path="/instellingen" component={SettingsPage} />
           <Route component={NotFound} />
         </Switch>
       </div>
