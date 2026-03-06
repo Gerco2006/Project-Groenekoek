@@ -11,7 +11,6 @@ import StationSearch from "@/components/StationSearch";
 import DepartureRow from "@/components/DepartureRow";
 import TripDetailPanel from "@/components/TripDetailPanel";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
-import PageContainer from "@/components/PageContainer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -456,12 +455,12 @@ export default function DepartureBoard() {
   );
 
   return (
-    <PageContainer>
+    <div className="md:max-w-6xl mx-auto h-full overflow-hidden">
       <MasterDetailLayout
         master={masterContent}
         detail={detailContent}
         hasDetail={!!selectedTrain}
       />
-    </PageContainer>
+    </div>
   );
 }

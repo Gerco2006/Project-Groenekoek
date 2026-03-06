@@ -9,7 +9,6 @@ import DisruptionDetailPanel from "@/components/DisruptionDetailPanel";
 import DisruptionsMap from "@/components/DisruptionsMap";
 import StationSearch from "@/components/StationSearch";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
-import PageContainer from "@/components/PageContainer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface Disruption {
@@ -296,12 +295,12 @@ export default function Disruptions() {
   ) : null;
 
   return (
-    <PageContainer>
+    <div className="md:max-w-6xl mx-auto h-full overflow-hidden">
       <MasterDetailLayout
         master={masterContent}
         detail={detailPanel}
         hasDetail={!!selectedDisruption}
       />
-    </PageContainer>
+    </div>
   );
 }

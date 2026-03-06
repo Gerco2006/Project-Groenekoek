@@ -191,12 +191,12 @@ export default function TrainLookup() {
   );
 
   return (
-    <PageContainer>
+    <div className="md:max-w-6xl mx-auto h-full overflow-hidden">
       <MasterDetailLayout
         master={masterContent}
         detail={detailContent}
         hasDetail={!!trainInfo}
       />
-    </PageContainer>
+    </div>
   );
 }

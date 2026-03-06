@@ -18,7 +18,6 @@ import DisruptionDetailPanel from "@/components/DisruptionDetailPanel";
 import CollapsibleSearchForm from "@/components/CollapsibleSearchForm";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
 import WidgetContainer from "@/components/WidgetContainer";
-import PageContainer from "@/components/PageContainer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useWidgetManager } from "@/hooks/use-widget-manager";
 import { format } from "date-fns";
@@ -976,7 +975,7 @@ export default function JourneyPlanner() {
   );
 
   return (
-    <PageContainer>
+    <div className="md:max-w-6xl mx-auto h-full overflow-hidden">
       <MasterDetailLayout
         master={masterContent}
         detail={
@@ -1047,6 +1046,6 @@ export default function JourneyPlanner() {
           } : undefined}
         />
       )}
-    </PageContainer>
+    </div>
   );
 }
