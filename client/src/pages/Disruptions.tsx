@@ -295,12 +295,12 @@ export default function Disruptions() {
   ) : null;
 
   return (
-    <div className="md:max-w-6xl mx-auto h-full overflow-hidden">
+    <PageContainer>
       <MasterDetailLayout
         master={masterContent}
         detail={detailPanel}
         hasDetail={!!selectedDisruption}
       />
-    </div>
+    </PageContainer>
   );
 }

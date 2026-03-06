@@ -17,7 +17,7 @@ export default function SettingsPage() {
   const { mode, theme, setMode } = useTheme();
 
   return (
-    <PageContainer>
+    <PageContainer className="px-4">
       <div className="min-h-screen bg-background md:px-4 py-6 space-y-6">
         <div className="flex items-center gap-4">
           <Link href="/meer">

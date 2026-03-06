@@ -455,12 +455,12 @@ export default function DepartureBoard() {
   );
 
   return (
-    <div className="md:max-w-6xl mx-auto h-full overflow-hidden">
+    <PageContainer>
       <MasterDetailLayout
         master={masterContent}
         detail={detailContent}
         hasDetail={!!selectedTrain}
       />
-    </div>
+    </PageContainer>
   );
 }

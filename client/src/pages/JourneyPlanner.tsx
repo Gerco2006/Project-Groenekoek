@@ -975,7 +975,7 @@ export default function JourneyPlanner() {
   );
 
   return (
-    <div className="md:max-w-6xl mx-auto h-full overflow-hidden">
+    <PageContainer>
       <MasterDetailLayout
         master={masterContent}
         detail={
@@ -1046,6 +1046,6 @@ export default function JourneyPlanner() {
           } : undefined}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }
