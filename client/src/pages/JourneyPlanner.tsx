@@ -18,6 +18,7 @@ import DisruptionDetailPanel from "@/components/DisruptionDetailPanel";
 import CollapsibleSearchForm from "@/components/CollapsibleSearchForm";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
 import WidgetContainer from "@/components/WidgetContainer";
+import PageContainer from "@/components/PageContainer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useWidgetManager } from "@/hooks/use-widget-manager";
 import { format } from "date-fns";

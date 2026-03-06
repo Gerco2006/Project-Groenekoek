@@ -11,6 +11,7 @@ import StationSearch from "@/components/StationSearch";
 import DepartureRow from "@/components/DepartureRow";
 import TripDetailPanel from "@/components/TripDetailPanel";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
+import PageContainer from "@/components/PageContainer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {

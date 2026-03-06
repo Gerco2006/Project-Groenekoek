@@ -9,6 +9,7 @@ import DisruptionDetailPanel from "@/components/DisruptionDetailPanel";
 import DisruptionsMap from "@/components/DisruptionsMap";
 import StationSearch from "@/components/StationSearch";
 import MasterDetailLayout from "@/components/MasterDetailLayout";
+import PageContainer from "@/components/PageContainer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 
 interface Disruption {
