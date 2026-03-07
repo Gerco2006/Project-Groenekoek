@@ -173,10 +173,13 @@ export default function JourneyPlanner() {
     if (tripsData) {
       setScrollContextForward(tripsData.scrollRequestForwardContext || null);
       setScrollContextBackward(tripsData.scrollRequestBackwardContext || null);
-      setEarlierTrips([]);
-      setLaterTrips([]);
+      // Only clear if it's a fresh search, not a scroll
+      if (!isLoadingEarlier && !isLoadingLater) {
+        setEarlierTrips([]);
+        setLaterTrips([]);
+      }
     }
-  }, [tripsData]);
+  }, [tripsData, isLoadingEarlier, isLoadingLater]);
 
   const loadEarlierTrips = useCallback(async () => {
     if (!scrollContextBackward || isLoadingEarlier || !searchedFrom || !searchedTo) return;
