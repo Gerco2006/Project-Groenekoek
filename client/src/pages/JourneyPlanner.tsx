@@ -120,8 +120,10 @@ export default function JourneyPlanner() {
   };
 
   const buildDateTime = () => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return `${dateStr}T${time}:00`;
+    const d = new Date(date);
+    const [hours, minutes] = time.split(':');
+    d.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    return format(d, "yyyy-MM-dd'T'HH:mm:ss");
   };
 
   const resetToNow = () => {
@@ -133,6 +135,7 @@ export default function JourneyPlanner() {
   const { data: tripsData, isLoading, error } = useQuery<any>({
     queryKey: ["/api/trips", searchedFrom, searchedTo, searchedViaStations, searchMode, date, time, addChangeTime, accessible],
     enabled: !!searchedFrom && !!searchedTo,
+    placeholderData: (previousData) => previousData,
     queryFn: async () => {
       const dateTime = buildDateTime();
       const params = new URLSearchParams({
@@ -173,13 +176,10 @@ export default function JourneyPlanner() {
     if (tripsData) {
       setScrollContextForward(tripsData.scrollRequestForwardContext || null);
       setScrollContextBackward(tripsData.scrollRequestBackwardContext || null);
-      // Only clear if it's a fresh search, not a scroll
-      if (!isLoadingEarlier && !isLoadingLater) {
-        setEarlierTrips([]);
-        setLaterTrips([]);
-      }
+      setEarlierTrips([]);
+      setLaterTrips([]);
     }
-  }, [tripsData, isLoadingEarlier, isLoadingLater]);
+  }, [tripsData]);
 
   const loadEarlierTrips = useCallback(async () => {
     if (!scrollContextBackward || isLoadingEarlier || !searchedFrom || !searchedTo) return;
