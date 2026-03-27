@@ -14,19 +14,34 @@ import Disruptions from "@/pages/Disruptions";
 import MorePage from "@/pages/MorePage";
 import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/not-found";
+import { PageResetProvider, usePageReset } from "@/contexts/PageResetContext";
 
 function Router() {
+  const { pageKeys } = usePageReset();
+
   return (
     <>
       <TopNav />
       <div className="pb-20 md:pb-0 md:pt-16">
         <Switch>
-          <Route path="/" component={JourneyPlanner} />
-          <Route path="/vertrektijden" component={DepartureBoard} />
-          <Route path="/treininfo" component={TrainLookup} />
-          <Route path="/storingen" component={Disruptions} />
-          <Route path="/meer" component={MorePage} />
-          <Route path="/instellingen" component={SettingsPage} />
+          <Route path="/">
+            {() => <JourneyPlanner key={pageKeys["/"] || 0} />}
+          </Route>
+          <Route path="/vertrektijden">
+            {() => <DepartureBoard key={pageKeys["/vertrektijden"] || 0} />}
+          </Route>
+          <Route path="/treininfo">
+            {() => <TrainLookup key={pageKeys["/treininfo"] || 0} />}
+          </Route>
+          <Route path="/storingen">
+            {() => <Disruptions key={pageKeys["/storingen"] || 0} />}
+          </Route>
+          <Route path="/meer">
+            {() => <MorePage key={pageKeys["/meer"] || 0} />}
+          </Route>
+          <Route path="/instellingen">
+            {() => <SettingsPage key={pageKeys["/instellingen"] || 0} />}
+          </Route>
           <Route component={NotFound} />
         </Switch>
       </div>
@@ -42,7 +57,9 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <PWAInstallPrompt />
-          <Router />
+          <PageResetProvider>
+            <Router />
+          </PageResetProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
