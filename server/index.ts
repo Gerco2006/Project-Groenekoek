@@ -8,7 +8,7 @@ import { resolve } from "path";
 try {
   const envPath = resolve(process.cwd(), ".env");
   const envContent = readFileSync(envPath, "utf-8");
-  for (const line of envContent.split("\n")) {
+  for (const line of envContent.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
     const eqIndex = trimmed.indexOf("=");
