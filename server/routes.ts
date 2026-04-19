@@ -9,29 +9,35 @@ const NS_BASE_URL = "https://gateway.apiportal.ns.nl/reisinformatie-api/api";
 const NS_DISRUPTIONS_BASE_URL = "https://gateway.apiportal.ns.nl/disruptions";
 const NS_VIRTUAL_TRAIN_URL = "https://gateway.apiportal.ns.nl/virtual-train-api";
 
-// Simple in-memory cache for rolling stock types (5 min TTL)
-const rollingStockCache = new Map<string, { types: string[]; expires: number }>();
+// Simple in-memory cache for rolling stock (5 min TTL)
+const rollingStockCache = new Map<string, { types: string[]; numberOfParts: number | null; expires: number }>();
 
-async function fetchRollingStockTypes(trainNumber: string): Promise<string[]> {
+async function fetchRollingStock(trainNumber: string): Promise<{ types: string[]; numberOfParts: number | null }> {
+  if (!trainNumber) return { types: [], numberOfParts: null };
   const cached = rollingStockCache.get(trainNumber);
-  if (cached && cached.expires > Date.now()) return cached.types;
+  if (cached && cached.expires > Date.now()) return { types: cached.types, numberOfParts: cached.numberOfParts };
   try {
     const response = await fetch(
       `${NS_VIRTUAL_TRAIN_URL}/v1/trein/${trainNumber}`,
       { headers: { "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "" } }
     );
-    if (!response.ok) return [];
+    if (!response.ok) {
+      rollingStockCache.set(trainNumber, { types: [], numberOfParts: null, expires: Date.now() + 5 * 60 * 1000 });
+      return { types: [], numberOfParts: null };
+    }
     const data = await response.json();
-    const types: string[] = Array.from(
-      new Set<string>(
-        (data.materieeldelen || []).map((d: any) => d.type).filter(Boolean)
-      )
-    );
-    rollingStockCache.set(trainNumber, { types, expires: Date.now() + 5 * 60 * 1000 });
-    return types;
+    const parts = data.materieeldelen || [];
+    const types: string[] = Array.from(new Set<string>(parts.map((d: any) => d.type).filter(Boolean)));
+    const numberOfParts = parts.length > 0 ? parts.length : null;
+    rollingStockCache.set(trainNumber, { types, numberOfParts, expires: Date.now() + 5 * 60 * 1000 });
+    return { types, numberOfParts };
   } catch {
-    return [];
+    return { types: [], numberOfParts: null };
   }
+}
+
+async function fetchRollingStockTypes(trainNumber: string): Promise<string[]> {
+  return (await fetchRollingStock(trainNumber)).types;
 }
 
 async function enrichWithRollingStock(items: any[], numberField: string): Promise<any[]> {
@@ -392,6 +398,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   leg.destination.lng = destCoords.lng;
                 }
               }
+
+              // Enrich with number of train parts
+              if (leg.product?.number) {
+                const stock = await fetchRollingStock(leg.product.number);
+                if (stock.numberOfParts !== null) {
+                  leg.numberOfParts = stock.numberOfParts;
+                }
+              }
             }
           }
         }
@@ -701,6 +715,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     leg.destination.lng = destCoords.lng;
                   }
                 }
+
+                if (leg.product?.number) {
+                  const stock = await fetchRollingStock(leg.product.number);
+                  if (stock.numberOfParts !== null) leg.numberOfParts = stock.numberOfParts;
+                }
               }
             }
             return res.json({ success: true, trip, source: 'ctxRecon' });
@@ -763,6 +782,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   leg.destination.lat = destCoords.lat;
                   leg.destination.lng = destCoords.lng;
                 }
+              }
+
+              if (leg.product?.number) {
+                const stock = await fetchRollingStock(leg.product.number);
+                if (stock.numberOfParts !== null) leg.numberOfParts = stock.numberOfParts;
               }
             }
           }

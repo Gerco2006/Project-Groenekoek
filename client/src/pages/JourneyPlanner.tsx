@@ -574,6 +574,7 @@ export default function JourneyPlanner() {
           toLng: leg.destination.lng,
           departureDateTime: plannedDeparture,
           crowdForecast: leg.crowdForecast as 'LOW' | 'MEDIUM' | 'HIGH' | undefined,
+          numberOfParts: typeof leg.numberOfParts === 'number' ? leg.numberOfParts : undefined,
         };
       }) || [];
 

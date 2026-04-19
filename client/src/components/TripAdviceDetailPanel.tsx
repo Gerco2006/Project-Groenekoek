@@ -207,7 +207,14 @@ export default function TripAdviceDetailPanel({
                   >
                     <div className="p-3 sm:p-4">
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                        <div className="flex items-center gap-2 min-w-0">
+                          <TrainBadge type={leg.trainType} number={leg.trainNumber} />
+                          {leg.numberOfParts && leg.numberOfParts > 0 && (
+                            <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                              {leg.numberOfParts} {leg.numberOfParts === 1 ? 'deel' : 'delen'}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {leg.cancelled && (
                             <Badge variant="destructive" className="text-[10px] sm:text-xs px-1.5 py-0.5 h-5">
