@@ -4,26 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, FileText } from "lucide-react";
 import PageContainer from "@/components/PageContainer";
+import ReactMarkdown from "react-markdown";
 
 interface ChangelogEntry {
   name: string;
   type: "grote-update" | "kleine-update";
   content: string;
-}
-
-function renderMarkdown(md: string): string {
-  return md
-    .replace(/^#{3}\s+(.+)$/gm, '<h3 class="text-base font-semibold mt-4 mb-1">$1</h3>')
-    .replace(/^#{2}\s+(.+)$/gm, '<h2 class="text-lg font-semibold mt-5 mb-2">$1</h2>')
-    .replace(/^#{1}\s+(.+)$/gm, '<h1 class="text-xl font-bold mt-0 mb-3">$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
-    .replace(/(<li[\s\S]*?<\/li>)(\n<li)/g, '$1$2')
-    .replace(/(<li[^>]*>[\s\S]*?<\/li>)+/g, (match) => `<ul class="space-y-1 my-2">${match}</ul>`)
-    .replace(/\n{2,}/g, '</p><p class="mb-3">')
-    .replace(/^(?!<[hul])(.+)$/gm, (line) => line.trim() ? line : '')
-    .replace(/^<\/p><p class="mb-3">(<[hul])/, '$1');
 }
 
 export default function ChangelogPage() {
@@ -88,10 +74,25 @@ export default function ChangelogPage() {
                   {entry.type === "grote-update" ? "Grote update" : "Kleine update"}
                 </Badge>
               </div>
-              <div
-                className="px-4 py-4 text-sm text-foreground leading-relaxed prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(entry.content) }}
-              />
+              <div className="px-4 py-4 text-sm text-foreground leading-relaxed">
+                <ReactMarkdown
+                  components={{
+                    h1: ({ children }) => <h1 className="text-xl font-bold mt-0 mb-3">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-lg font-semibold mt-5 mb-2">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-base font-semibold mt-4 mb-1">{children}</h3>,
+                    p: ({ children }) => <p className="mb-3">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc ml-5 space-y-1 my-2">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal ml-5 space-y-1 my-2">{children}</ol>,
+                    li: ({ children }) => <li>{children}</li>,
+                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                    em: ({ children }) => <em className="italic">{children}</em>,
+                    code: ({ children }) => <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono">{children}</code>,
+                    hr: () => <hr className="my-4 border-border" />,
+                  }}
+                >
+                  {entry.content}
+                </ReactMarkdown>
+              </div>
             </div>
           ))}
         </div>
