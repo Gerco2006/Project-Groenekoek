@@ -2,12 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 
+const NS_API_KEY = process.env.NS_API_KEY;
 const NS_BASE_URL = "https://gateway.apiportal.ns.nl/reisinformatie-api/api";
 const NS_DISRUPTIONS_BASE_URL = "https://gateway.apiportal.ns.nl/disruptions";
 const NS_VIRTUAL_TRAIN_URL = "https://gateway.apiportal.ns.nl/virtual-train-api";
 
 async function fetchNS(endpoint: string, params: Record<string, string | string[]> = {}) {
-  const NS_API_KEY = process.env.NS_API_KEY;
   const url = new URL(`${NS_BASE_URL}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
     if (Array.isArray(value)) {
@@ -34,7 +34,6 @@ async function fetchNS(endpoint: string, params: Record<string, string | string[
 }
 
 async function fetchNSDisruptions(endpoint: string, params: Record<string, string | string[]> = {}) {
-  const NS_API_KEY = process.env.NS_API_KEY;
   const url = new URL(`${NS_DISRUPTIONS_BASE_URL}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
     if (Array.isArray(value)) {
@@ -61,7 +60,6 @@ async function fetchNSDisruptions(endpoint: string, params: Record<string, strin
 }
 
 async function fetchNSVirtualTrain(endpoint: string, params: Record<string, string | string[]> = {}) {
-  const NS_API_KEY = process.env.NS_API_KEY;
   const url = new URL(`${NS_VIRTUAL_TRAIN_URL}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
     if (Array.isArray(value)) {
