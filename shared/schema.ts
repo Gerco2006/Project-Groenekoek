@@ -53,7 +53,7 @@ export const tripLegSchema = z.object({
   toLng: z.number().optional(),
   departureDateTime: z.string().optional(),
   crowdForecast: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(),
-  numberOfParts: z.number().optional(),
+  numberOfCarriages: z.number().optional(),
 });
 
 export const savedTripSchema = z.object({

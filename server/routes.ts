@@ -10,15 +10,26 @@ const NS_DISRUPTIONS_BASE_URL = "https://gateway.apiportal.ns.nl/disruptions";
 const NS_VIRTUAL_TRAIN_URL = "https://gateway.apiportal.ns.nl/virtual-train-api";
 
 // Simple in-memory cache for rolling stock (5 min TTL)
-const rollingStockCache = new Map<string, { types: string[]; numberOfParts: number | null; expires: number }>();
+const rollingStockCache = new Map<string, { types: string[]; numberOfCarriages: number | null; expires: number }>();
 
-async function fetchRollingStock(trainNumber: string): Promise<{ types: string[]; numberOfParts: number | null }> {
-  if (!trainNumber) return { types: [], numberOfParts: null };
+// Parse carriage count from type name, e.g. "VIRM-4" → 4, "SLT-6" → 6, "FLIRT3" → 3
+function parseCarriageCount(type: string): number | null {
+  if (!type) return null;
+  const match = type.match(/-?(\d+)$/);
+  if (match) {
+    const n = parseInt(match[1]);
+    if (n >= 1 && n <= 20) return n;
+  }
+  return null;
+}
+
+async function fetchRollingStock(trainNumber: string): Promise<{ types: string[]; numberOfCarriages: number | null }> {
+  if (!trainNumber) return { types: [], numberOfCarriages: null };
   const cached = rollingStockCache.get(trainNumber);
-  if (cached && cached.expires > Date.now()) return { types: cached.types, numberOfParts: cached.numberOfParts };
+  if (cached && cached.expires > Date.now()) return { types: cached.types, numberOfCarriages: cached.numberOfCarriages };
 
   let types: string[] = [];
-  let numberOfParts: number | null = null;
+  let numberOfCarriages: number | null = null;
 
   // Try virtual train API first (real-time, works for active trains)
   try {
@@ -28,30 +39,45 @@ async function fetchRollingStock(trainNumber: string): Promise<{ types: string[]
     );
     if (vtResponse.ok) {
       const data = await vtResponse.json();
-      const parts = data.materieeldelen || [];
+      const parts: any[] = data.materieeldelen || [];
       if (parts.length > 0) {
         types = Array.from(new Set<string>(parts.map((d: any) => d.type).filter(Boolean)));
-        numberOfParts = parts.length;
+        // Sum bakken (individual carriages) per stel; fall back to type suffix if missing
+        const total = parts.reduce((sum: number, part: any) => {
+          if (Array.isArray(part.bakken) && part.bakken.length > 0) return sum + part.bakken.length;
+          return sum + (parseCarriageCount(part.type) ?? 1);
+        }, 0);
+        numberOfCarriages = total > 0 ? total : null;
       }
     }
   } catch { /* ignore */ }
 
   // Fallback: journey API for planned stock (works for future trains too)
-  if (numberOfParts === null) {
+  if (numberOfCarriages === null) {
     try {
       const journeyData = await fetchNS("/v2/journey", { train: trainNumber });
-      // NS API may wrap in payload or return directly
       const payload = journeyData?.payload ?? journeyData;
       const stock = payload?.plannedStock ?? payload?.actualStock;
-      if (stock?.numberOfParts) {
-        numberOfParts = stock.numberOfParts;
-        if (!types.length && stock.trainType) types = [stock.trainType];
+      if (stock) {
+        const trainParts: any[] = stock.trainParts || [];
+        if (trainParts.length > 0) {
+          // Sum carriages inferred from each stel's trainType (e.g. "VIRM-4" → 4)
+          const total = trainParts.reduce((sum: number, part: any) => {
+            return sum + (parseCarriageCount(part.trainType) ?? 1);
+          }, 0);
+          numberOfCarriages = total > 0 ? total : null;
+          if (!types.length && stock.trainType) types = [stock.trainType];
+        } else if (stock.numberOfParts) {
+          // Last resort: use stellen count (less accurate but better than nothing)
+          numberOfCarriages = stock.numberOfParts;
+          if (!types.length && stock.trainType) types = [stock.trainType];
+        }
       }
     } catch { /* ignore */ }
   }
 
-  rollingStockCache.set(trainNumber, { types, numberOfParts, expires: Date.now() + 5 * 60 * 1000 });
-  return { types, numberOfParts };
+  rollingStockCache.set(trainNumber, { types, numberOfCarriages, expires: Date.now() + 5 * 60 * 1000 });
+  return { types, numberOfCarriages };
 }
 
 async function fetchRollingStockTypes(trainNumber: string): Promise<string[]> {
@@ -417,11 +443,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
 
-              // Enrich with number of train parts
+              // Enrich with number of carriages
               if (leg.product?.number) {
                 const stock = await fetchRollingStock(leg.product.number);
-                if (stock.numberOfParts !== null) {
-                  leg.numberOfParts = stock.numberOfParts;
+                if (stock.numberOfCarriages !== null) {
+                  leg.numberOfCarriages = stock.numberOfCarriages;
                 }
               }
             }
@@ -736,7 +762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
                 if (leg.product?.number) {
                   const stock = await fetchRollingStock(leg.product.number);
-                  if (stock.numberOfParts !== null) leg.numberOfParts = stock.numberOfParts;
+                  if (stock.numberOfCarriages !== null) leg.numberOfCarriages = stock.numberOfCarriages;
                 }
               }
             }
@@ -804,7 +830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
               if (leg.product?.number) {
                 const stock = await fetchRollingStock(leg.product.number);
-                if (stock.numberOfParts !== null) leg.numberOfParts = stock.numberOfParts;
+                if (stock.numberOfCarriages !== null) leg.numberOfCarriages = stock.numberOfCarriages;
               }
             }
           }

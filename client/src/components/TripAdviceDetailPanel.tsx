@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { X, Clock, Train, MapPin, AlertCircle, Star, Users, ChevronLeft } from "lucide-react";
+import { X, Clock, Train, MapPin, AlertCircle, Star, Users, ChevronLeft, StretchHorizontal } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -207,12 +207,13 @@ export default function TripAdviceDetailPanel({
                   >
                     <div className="p-3 sm:p-4">
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <TrainBadge type={leg.trainType} number={leg.trainNumber} />
-                          {leg.numberOfParts && leg.numberOfParts > 0 && (
-                            <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                              {leg.numberOfParts} {leg.numberOfParts === 1 ? 'deel' : 'delen'}
-                            </span>
+                          {leg.numberOfCarriages != null && leg.numberOfCarriages > 0 && (
+                            <Badge variant="outline" className="gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 h-5 shrink-0 bg-muted/40">
+                              <StretchHorizontal className="w-3 h-3" />
+                              {leg.numberOfCarriages}
+                            </Badge>
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
