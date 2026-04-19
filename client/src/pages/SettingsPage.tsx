@@ -36,6 +36,7 @@ function loadFavorites(): string[] {
 
 function persistFavorites(codes: string[]) {
   localStorage.setItem(FAVORITE_STATIONS_KEY, JSON.stringify(codes));
+  window.dispatchEvent(new Event('travnl-favorites-changed'));
 }
 
 export default function SettingsPage() {

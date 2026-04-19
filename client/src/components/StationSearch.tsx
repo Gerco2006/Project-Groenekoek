@@ -68,9 +68,16 @@ export default function StationSearch({
         setFavoriteStations(getFavoriteStations());
       }
     };
+    const handleCustomChange = () => {
+      setFavoriteStations(getFavoriteStations());
+    };
     
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('travnl-favorites-changed', handleCustomChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('travnl-favorites-changed', handleCustomChange);
+    };
   }, []);
 
   const { data: stationsData } = useQuery<any>({
@@ -143,7 +150,9 @@ export default function StationSearch({
   }, [inputValue, focused, stations, onChange]);
 
   const favoriteStationsList = focused && !inputValue
-    ? stations.filter(station => favoriteStations.includes(station.code))
+    ? favoriteStations
+        .map(code => stations.find(s => s.code === code))
+        .filter((s): s is Station => s !== undefined)
     : [];
 
   const filteredStations = inputValue && focused
@@ -154,9 +163,12 @@ export default function StationSearch({
           station.code.toLowerCase().includes(inputValue.toLowerCase())
         )
         .sort((a, b) => {
-          const aIsFavorite = favoriteStations.includes(a.code);
-          const bIsFavorite = favoriteStations.includes(b.code);
-          
+          const aFavIdx = favoriteStations.indexOf(a.code);
+          const bFavIdx = favoriteStations.indexOf(b.code);
+          const aIsFavorite = aFavIdx !== -1;
+          const bIsFavorite = bFavIdx !== -1;
+
+          if (aIsFavorite && bIsFavorite) return aFavIdx - bFavIdx;
           if (aIsFavorite && !bIsFavorite) return -1;
           if (!aIsFavorite && bIsFavorite) return 1;
           
