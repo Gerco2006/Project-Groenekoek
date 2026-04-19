@@ -16,24 +16,42 @@ async function fetchRollingStock(trainNumber: string): Promise<{ types: string[]
   if (!trainNumber) return { types: [], numberOfParts: null };
   const cached = rollingStockCache.get(trainNumber);
   if (cached && cached.expires > Date.now()) return { types: cached.types, numberOfParts: cached.numberOfParts };
+
+  let types: string[] = [];
+  let numberOfParts: number | null = null;
+
+  // Try virtual train API first (real-time, works for active trains)
   try {
-    const response = await fetch(
+    const vtResponse = await fetch(
       `${NS_VIRTUAL_TRAIN_URL}/v1/trein/${trainNumber}`,
       { headers: { "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "" } }
     );
-    if (!response.ok) {
-      rollingStockCache.set(trainNumber, { types: [], numberOfParts: null, expires: Date.now() + 5 * 60 * 1000 });
-      return { types: [], numberOfParts: null };
+    if (vtResponse.ok) {
+      const data = await vtResponse.json();
+      const parts = data.materieeldelen || [];
+      if (parts.length > 0) {
+        types = Array.from(new Set<string>(parts.map((d: any) => d.type).filter(Boolean)));
+        numberOfParts = parts.length;
+      }
     }
-    const data = await response.json();
-    const parts = data.materieeldelen || [];
-    const types: string[] = Array.from(new Set<string>(parts.map((d: any) => d.type).filter(Boolean)));
-    const numberOfParts = parts.length > 0 ? parts.length : null;
-    rollingStockCache.set(trainNumber, { types, numberOfParts, expires: Date.now() + 5 * 60 * 1000 });
-    return { types, numberOfParts };
-  } catch {
-    return { types: [], numberOfParts: null };
+  } catch { /* ignore */ }
+
+  // Fallback: journey API for planned stock (works for future trains too)
+  if (numberOfParts === null) {
+    try {
+      const journeyData = await fetchNS("/v2/journey", { train: trainNumber });
+      // NS API may wrap in payload or return directly
+      const payload = journeyData?.payload ?? journeyData;
+      const stock = payload?.plannedStock ?? payload?.actualStock;
+      if (stock?.numberOfParts) {
+        numberOfParts = stock.numberOfParts;
+        if (!types.length && stock.trainType) types = [stock.trainType];
+      }
+    } catch { /* ignore */ }
   }
+
+  rollingStockCache.set(trainNumber, { types, numberOfParts, expires: Date.now() + 5 * 60 * 1000 });
+  return { types, numberOfParts };
 }
 
 async function fetchRollingStockTypes(trainNumber: string): Promise<string[]> {
