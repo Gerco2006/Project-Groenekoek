@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, FileText, ChevronLeft } from "lucide-react";
+import { useLocation } from "wouter";
 import PageContainer from "@/components/PageContainer";
 import ReactMarkdown from "react-markdown";
 
@@ -14,6 +16,7 @@ interface ChangelogEntry {
 
 export default function ChangelogPage() {
   const [filter, setFilter] = useState<"alle" | "grote-update" | "kleine-update">("alle");
+  const [, navigate] = useLocation();
 
   const { data: entries = [], isLoading, error } = useQuery<ChangelogEntry[]>({
     queryKey: ["/api/changelog"],
@@ -27,6 +30,15 @@ export default function ChangelogPage() {
     <PageContainer>
       <div className="min-h-screen bg-background md:px-4 py-6 space-y-6">
         <div>
+          <Button
+            variant="ghost"
+            className="gap-1 -ml-2 mb-2"
+            onClick={() => navigate("/meer")}
+            data-testid="button-back-meer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Meer
+          </Button>
           <h1 className="text-3xl font-bold mb-2">Changelog</h1>
           <p className="text-muted-foreground">Overzicht van alle updates en wijzigingen</p>
         </div>
