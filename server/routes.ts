@@ -9,6 +9,41 @@ const NS_BASE_URL = "https://gateway.apiportal.ns.nl/reisinformatie-api/api";
 const NS_DISRUPTIONS_BASE_URL = "https://gateway.apiportal.ns.nl/disruptions";
 const NS_VIRTUAL_TRAIN_URL = "https://gateway.apiportal.ns.nl/virtual-train-api";
 
+// Simple in-memory cache for rolling stock types (5 min TTL)
+const rollingStockCache = new Map<string, { types: string[]; expires: number }>();
+
+async function fetchRollingStockTypes(trainNumber: string): Promise<string[]> {
+  const cached = rollingStockCache.get(trainNumber);
+  if (cached && cached.expires > Date.now()) return cached.types;
+  try {
+    const response = await fetch(
+      `${NS_VIRTUAL_TRAIN_URL}/v1/trein/${trainNumber}`,
+      { headers: { "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "" } }
+    );
+    if (!response.ok) return [];
+    const data = await response.json();
+    const types: string[] = Array.from(
+      new Set<string>(
+        (data.materieeldelen || []).map((d: any) => d.type).filter(Boolean)
+      )
+    );
+    rollingStockCache.set(trainNumber, { types, expires: Date.now() + 5 * 60 * 1000 });
+    return types;
+  } catch {
+    return [];
+  }
+}
+
+async function enrichWithRollingStock(items: any[], numberField: string): Promise<any[]> {
+  const results = await Promise.all(
+    items.map(async (item) => {
+      const types = await fetchRollingStockTypes(item.product?.[numberField] || "");
+      return { ...item, rollingStockTypes: types };
+    })
+  );
+  return results;
+}
+
 async function fetchNS(endpoint: string, params: Record<string, string | string[]> = {}) {
   const url = new URL(`${NS_BASE_URL}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
@@ -200,7 +235,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lang: lang as string,
       });
 
-      res.json(data);
+      const departures = data?.payload?.departures || [];
+      const enriched = await enrichWithRollingStock(departures, "number");
+      res.json({ ...data, payload: { ...data.payload, departures: enriched } });
     } catch (error) {
       console.error("Error fetching departures:", error);
       res.status(500).json({ error: "Failed to fetch departures" });
@@ -232,7 +269,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const data = await fetchNS("/v2/arrivals", params);
 
-      res.json(data);
+      const arrivals = data?.payload?.arrivals || [];
+      const enriched = await enrichWithRollingStock(arrivals, "number");
+      res.json({ ...data, payload: { ...data.payload, arrivals: enriched } });
     } catch (error) {
       console.error("Error fetching arrivals:", error);
       res.status(500).json({ error: "Failed to fetch arrivals" });

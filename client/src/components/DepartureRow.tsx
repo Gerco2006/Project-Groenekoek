@@ -9,6 +9,7 @@ interface DepartureRowProps {
   platform: string;
   trainType: string;
   trainNumber: string;
+  rollingStockTypes?: string[];
   delay?: number;
   onClick?: () => void;
   mode?: "departure" | "arrival";
@@ -20,6 +21,7 @@ export default function DepartureRow({
   platform,
   trainType,
   trainNumber,
+  rollingStockTypes,
   delay,
   onClick,
   mode = "departure"
@@ -53,7 +55,7 @@ export default function DepartureRow({
                 <div className="shrink-0">
                   <TrainBadge type={trainType} number={trainNumber} />
                 </div>
-                <RollingStockBadge trainNumber={trainNumber} className="flex-1 min-w-0" />
+                <RollingStockBadge types={rollingStockTypes} />
               </div>
               <div className="bg-primary/10 text-primary px-2 py-1 rounded-lg font-bold text-xs text-center shrink-0 ml-1">
                 Spoor {platform}
@@ -78,7 +80,7 @@ export default function DepartureRow({
 
             <div className="flex items-center gap-1.5 shrink-0">
               <TrainBadge type={trainType} number={trainNumber} />
-              <RollingStockBadge trainNumber={trainNumber} />
+              <RollingStockBadge types={rollingStockTypes} />
             </div>
 
             <div className="flex-1 flex items-center gap-2 min-w-0">

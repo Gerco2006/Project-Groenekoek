@@ -4,7 +4,7 @@ import { RefreshCw, Search, AlertTriangle, ChevronRight, ChevronDown, ChevronUp,
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useSearch, useLocation } from "wouter";
 import StationSearch from "@/components/StationSearch";
@@ -44,6 +44,7 @@ interface Departure {
   routeStations?: Array<{ uicCode: string; mediumName: string }>;
   departureStatus?: string;
   messages?: Array<{ message: string }>;
+  rollingStockTypes?: string[];
 }
 
 interface Arrival {
@@ -64,6 +65,7 @@ interface Arrival {
   routeStations?: Array<{ uicCode: string; mediumName: string }>;
   arrivalStatus?: string;
   messages?: Array<{ message: string }>;
+  rollingStockTypes?: string[];
 }
 
 export default function DepartureBoard() {
@@ -97,6 +99,7 @@ export default function DepartureBoard() {
   const { data: departuresData, isLoading: isDeparturesLoading, isFetching: isDeparturesFetching, refetch: refetchDepartures, error: departuresError } = useQuery<any>({
     queryKey: ["/api/departures", searchedStation, maxJourneys],
     enabled: !!searchedStation,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const response = await fetch(`/api/departures?station=${encodeURIComponent(searchedStation)}&maxJourneys=${maxJourneys}`);
       if (!response.ok) {
@@ -110,6 +113,7 @@ export default function DepartureBoard() {
   const { data: arrivalsData, isLoading: isArrivalsLoading, isFetching: isArrivalsFetching, refetch: refetchArrivals, error: arrivalsError } = useQuery<any>({
     queryKey: ["/api/arrivals", searchedStation, maxJourneys],
     enabled: !!searchedStation,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const response = await fetch(`/api/arrivals?station=${encodeURIComponent(searchedStation)}&maxJourneys=${maxJourneys}`);
       if (!response.ok) {
@@ -391,6 +395,7 @@ export default function DepartureBoard() {
                     platform={departure.actualTrack || departure.plannedTrack}
                     trainType={departure.product.longCategoryName}
                     trainNumber={departure.product.number}
+                    rollingStockTypes={departure.rollingStockTypes}
                     delay={delay > 0 ? delay : undefined}
                     mode="departure"
                     onClick={() => setSelectedTrain({
@@ -434,6 +439,7 @@ export default function DepartureBoard() {
                     platform={arrival.actualTrack || arrival.plannedTrack}
                     trainType={arrival.product.longCategoryName}
                     trainNumber={arrival.product.number}
+                    rollingStockTypes={arrival.rollingStockTypes}
                     delay={delay > 0 ? delay : undefined}
                     mode="arrival"
                     onClick={() => setSelectedTrain({
