@@ -250,7 +250,7 @@ export default function TripAdviceDetailPanel({
                               <div className="text-xs sm:text-sm text-muted-foreground truncate">{leg.from}</div>
                             </div>
                             {leg.platform && (
-                              <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0.5 h-5 shrink-0">
+                              <Badge variant="outline" className="text-sm font-semibold shrink-0">
                                 Spoor {leg.platform}
                               </Badge>
                             )}
@@ -269,7 +269,7 @@ export default function TripAdviceDetailPanel({
                               <div className="text-xs sm:text-sm text-muted-foreground truncate">{leg.to}</div>
                             </div>
                             {leg.arrivalPlatform && (
-                              <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0.5 h-5 shrink-0">
+                              <Badge variant="outline" className="text-sm font-semibold shrink-0">
                                 Spoor {leg.arrivalPlatform}
                               </Badge>
                             )}
