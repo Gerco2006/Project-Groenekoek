@@ -417,7 +417,7 @@ export default function TripDetailPanel({
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <span className={`font-semibold ${isPassing ? "text-muted-foreground" : ""}`}>
+                            <span className={`text-base font-semibold ${isPassing ? "text-muted-foreground" : ""}`}>
                               {stop.stop?.name}
                             </span>
                             {isCurrentLocation && (
@@ -457,14 +457,14 @@ export default function TripDetailPanel({
                           )}
 
                           {isPassing ? (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 text-base sm:text-sm text-muted-foreground">
                               <AlertCircle className="w-3 h-3" />
                               <span>Trein stopt hier niet</span>
                             </div>
                           ) : (
                             <div className="space-y-1">
                               {arrivalTime && (
-                                <div className="flex items-center gap-2 text-sm">
+                                <div className="flex items-center gap-2 text-base sm:text-sm">
                                   <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
                                   <span className="text-muted-foreground">Aankomst:</span>
                                   <span className="font-medium">{arrivalTime}</span>
@@ -476,7 +476,7 @@ export default function TripDetailPanel({
                                 </div>
                               )}
                               {departureTime && (
-                                <div className="flex items-center gap-2 text-sm">
+                                <div className="flex items-center gap-2 text-base sm:text-sm">
                                   <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
                                   <span className="text-muted-foreground">Vertrek:</span>
                                   <span className="font-medium">{departureTime}</span>
@@ -488,7 +488,7 @@ export default function TripDetailPanel({
                                 </div>
                               )}
                               {isMobile && platform && (
-                                <div className="flex items-center gap-2 text-sm flex-wrap">
+                                <div className="flex items-center gap-2 text-base sm:text-sm flex-wrap">
                                   <Badge variant="outline" className="shrink-0">
                                     Spoor {platform}
                                   </Badge>
