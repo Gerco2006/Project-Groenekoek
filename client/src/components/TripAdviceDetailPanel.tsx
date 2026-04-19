@@ -352,7 +352,7 @@ export default function TripAdviceDetailPanel({
           )}
         </div>
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-20">
           {content}
         </div>
       </div>
