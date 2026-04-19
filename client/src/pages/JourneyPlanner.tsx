@@ -182,33 +182,55 @@ export default function JourneyPlanner() {
   }, [tripsData]);
 
   const loadEarlierTrips = useCallback(async () => {
-    if (!scrollContextBackward || isLoadingEarlier || !searchedFrom || !searchedTo) return;
-    
+    if (isLoadingEarlier || !searchedFrom || !searchedTo) return;
+
+    // Use the first visible trip's departure time as the anchor
+    const allTrips = [...earlierTrips, ...(tripsData?.trips ?? []), ...laterTrips];
+    const firstRawTime = allTrips[0]?.legs?.[0]?.origin?.plannedDateTime;
+    if (!firstRawTime) return;
+
+    // Search 3 hours before the first trip so we get a window of earlier departures
+    const anchorMs = new Date(firstRawTime).getTime();
+    const searchFrom = new Date(anchorMs - 3 * 60 * 60 * 1000);
+    const dateTimeStr = format(searchFrom, "yyyy-MM-dd'T'HH:mm:ss");
+
     setIsLoadingEarlier(true);
     try {
       const params = new URLSearchParams({
         fromStation: searchedFrom,
         toStation: searchedTo,
-        scrollRequestBackwardContext: scrollContextBackward,
+        dateTime: dateTimeStr,
       });
 
       searchedViaStations.forEach((via) => {
-        if (via.trim()) {
-          params.append("viaStation", via);
-        }
+        if (via.trim()) params.append("viaStation", via);
       });
+      if (addChangeTime > 0) params.append("addChangeTime", addChangeTime.toString());
+      if (accessible) params.append("wheelChairAccessible", "ACCESSIBLE");
 
       const response = await fetch(`/api/trips?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch earlier trips");
-      
+
       const data = await response.json();
       if (data.trips && data.trips.length > 0) {
-        const newTripsCount = data.trips.length;
-        setEarlierTrips(prev => [...data.trips, ...prev]);
-        setScrollContextBackward(data.scrollRequestBackwardContext || null);
-        if (selectedTripIndex !== null) {
-          setSelectedTripIndex(prev => prev !== null ? prev + newTripsCount : null);
+        // Keep only trips that depart strictly before the current first trip
+        const newEarlier = data.trips.filter((t: any) => {
+          const dep = t.legs?.[0]?.origin?.plannedDateTime;
+          return dep && new Date(dep).getTime() < anchorMs;
+        });
+
+        if (newEarlier.length > 0) {
+          const newTripsCount = newEarlier.length;
+          setEarlierTrips(prev => [...newEarlier, ...prev]);
+          setScrollContextBackward(data.scrollRequestBackwardContext || null);
+          if (selectedTripIndex !== null) {
+            setSelectedTripIndex(prev => prev !== null ? prev + newTripsCount : null);
+          }
+        } else {
+          setScrollContextBackward(null);
         }
+      } else {
+        setScrollContextBackward(null);
       }
     } catch (error) {
       console.error("Error loading earlier trips:", error);
@@ -220,32 +242,58 @@ export default function JourneyPlanner() {
     } finally {
       setIsLoadingEarlier(false);
     }
-  }, [scrollContextBackward, isLoadingEarlier, searchedFrom, searchedTo, searchedViaStations, selectedTripIndex, toast]);
+  }, [isLoadingEarlier, searchedFrom, searchedTo, searchedViaStations, earlierTrips, tripsData, laterTrips, addChangeTime, accessible, selectedTripIndex, toast]);
 
   const loadLaterTrips = useCallback(async () => {
-    if (!scrollContextForward || isLoadingLater || !searchedFrom || !searchedTo) return;
-    
+    if (isLoadingLater || !searchedFrom || !searchedTo) return;
+
+    // Use the last visible trip's departure time as the anchor
+    const allTrips = [...earlierTrips, ...(tripsData?.trips ?? []), ...laterTrips];
+    const lastTrip = allTrips[allTrips.length - 1];
+    const lastLegs: any[] = lastTrip?.legs ?? [];
+    const lastRawTime: string | undefined =
+      lastLegs[lastLegs.length - 1]?.destination?.plannedDateTime
+      || lastLegs[0]?.origin?.plannedDateTime;
+    if (!lastRawTime) return;
+
+    // Search from 1 minute after the last trip's departure to avoid duplicates
+    const lastDep: string = lastLegs[0]?.origin?.plannedDateTime || lastRawTime;
+    const searchFrom = new Date(new Date(lastDep).getTime() + 60 * 1000);
+    const dateTimeStr = format(searchFrom, "yyyy-MM-dd'T'HH:mm:ss");
+
     setIsLoadingLater(true);
     try {
       const params = new URLSearchParams({
         fromStation: searchedFrom,
         toStation: searchedTo,
-        scrollRequestForwardContext: scrollContextForward,
+        dateTime: dateTimeStr,
       });
 
       searchedViaStations.forEach((via) => {
-        if (via.trim()) {
-          params.append("viaStation", via);
-        }
+        if (via.trim()) params.append("viaStation", via);
       });
+      if (searchMode === "arrival") params.append("searchForArrival", "true");
+      if (addChangeTime > 0) params.append("addChangeTime", addChangeTime.toString());
+      if (accessible) params.append("wheelChairAccessible", "ACCESSIBLE");
 
       const response = await fetch(`/api/trips?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch later trips");
-      
+
       const data = await response.json();
       if (data.trips && data.trips.length > 0) {
-        setLaterTrips(prev => [...prev, ...data.trips]);
-        setScrollContextForward(data.scrollRequestForwardContext || null);
+        // Filter out trips already in the list (deduplicate by departure time)
+        const existingTimes = new Set(allTrips.map((t: any) => t.legs?.[0]?.origin?.plannedDateTime));
+        const newLater = data.trips.filter((t: any) => {
+          const dep = t.legs?.[0]?.origin?.plannedDateTime;
+          return dep && !existingTimes.has(dep);
+        });
+
+        if (newLater.length > 0) {
+          setLaterTrips(prev => [...prev, ...newLater]);
+        }
+        setScrollContextForward(data.scrollRequestForwardContext || (newLater.length > 0 ? "more" : null));
+      } else {
+        setScrollContextForward(null);
       }
     } catch (error) {
       console.error("Error loading later trips:", error);
@@ -257,7 +305,7 @@ export default function JourneyPlanner() {
     } finally {
       setIsLoadingLater(false);
     }
-  }, [scrollContextForward, isLoadingLater, searchedFrom, searchedTo, searchedViaStations, toast]);
+  }, [isLoadingLater, searchedFrom, searchedTo, searchedViaStations, earlierTrips, tripsData, laterTrips, searchMode, addChangeTime, accessible, toast]);
 
   const { data: disruptionsData } = useQuery<any>({
     queryKey: ["/api/disruptions"],
