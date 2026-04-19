@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import PageContainer from "@/components/PageContainer";
 import { useQuery } from "@tanstack/react-query";
+import StationSearch from "@/components/StationSearch";
 
 const FAVORITE_STATIONS_KEY = "travnl-favorite-stations";
 
@@ -42,16 +43,20 @@ function persistFavorites(codes: string[]) {
 export default function SettingsPage() {
   const { mode, theme, setMode } = useTheme();
   const [favorites, setFavorites] = useState<string[]>(() => loadFavorites());
+  const [addValue, setAddValue] = useState("");
+  const [addKey, setAddKey] = useState(0);
 
   const { data: stationsData } = useQuery<{ payload: Station[] }>({
     queryKey: ["/api/stations"],
   });
 
+  const stations: Station[] = stationsData?.payload ?? [];
+
   const stationMap = new Map<string, string>();
-  if (stationsData?.payload) {
-    for (const s of stationsData.payload) {
-      stationMap.set(s.code.toUpperCase(), s.namen.lang);
-    }
+  const stationByName = new Map<string, Station>();
+  for (const s of stations) {
+    stationMap.set(s.code.toUpperCase(), s.namen.lang);
+    stationByName.set(s.namen.lang, s);
   }
 
   function getStationName(code: string): string {
@@ -79,6 +84,17 @@ export default function SettingsPage() {
 
   function remove(idx: number) {
     update(favorites.filter((_, i) => i !== idx));
+  }
+
+  function handleAddStation(value: string) {
+    const matched = stationByName.get(value);
+    if (matched && !favorites.includes(matched.code)) {
+      update([...favorites, matched.code]);
+      setAddKey(k => k + 1);
+      setAddValue("");
+    } else {
+      setAddValue(value);
+    }
   }
 
   return (
@@ -153,10 +169,10 @@ export default function SettingsPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {favorites.length === 0 ? (
               <p className="text-sm text-muted-foreground" data-testid="text-no-favorites">
-                Geen favoriete stations opgeslagen. Gebruik de ster in de zoekbalk om stations toe te voegen.
+                Nog geen favoriete stations opgeslagen.
               </p>
             ) : (
               <div className="space-y-1" data-testid="list-favorite-stations">
@@ -205,6 +221,17 @@ export default function SettingsPage() {
                 ))}
               </div>
             )}
+            <div className="pt-2 border-t border-border" data-testid="section-add-favorite">
+              <StationSearch
+                key={addKey}
+                label="Station toevoegen"
+                value={addValue}
+                onChange={handleAddStation}
+                placeholder="Zoek een station..."
+                testId="input-add-favorite-station"
+                showClearButton={true}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
