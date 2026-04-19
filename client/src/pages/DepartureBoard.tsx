@@ -301,11 +301,11 @@ export default function DepartureBoard() {
             </TabsList>
           </Tabs>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
             <Button 
-              className="flex-1 min-w-[200px] sm:min-w-0" 
+              className="flex-1" 
               size="lg"
-              disabled={!station.trim() || isLoading}
+              disabled={!station.trim() || isLoading || station.trim() === searchedStation}
               onClick={handleSearch}
               data-testid="button-search"
             >
@@ -379,7 +379,7 @@ export default function DepartureBoard() {
       {!isLoading && activeTab === "departures" && departures.length > 0 && (
         <ScrollArea className="flex-1">
           <div className="md:px-4 pb-6 space-y-3">
-            <Card className="divide-y">
+            <Card className="overflow-hidden">
               {departures.map((departure, idx) => {
                 const delay = calculateDelay(departure.plannedDateTime, departure.actualDateTime);
                 return (
@@ -422,7 +422,7 @@ export default function DepartureBoard() {
       {!isLoading && activeTab === "arrivals" && arrivals.length > 0 && (
         <ScrollArea className="flex-1">
           <div className="md:px-4 pb-6 space-y-3">
-            <Card className="divide-y">
+            <Card className="overflow-hidden">
               {arrivals.map((arrival, idx) => {
                 const delay = calculateDelay(arrival.plannedDateTime, arrival.actualDateTime);
                 return (

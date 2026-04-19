@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
 
 interface RollingStockBadgeProps {
   trainNumber: string;
@@ -29,17 +28,11 @@ export default function RollingStockBadge({ trainNumber }: RollingStockBadgeProp
   if (!types.length) return null;
 
   return (
-    <>
-      {types.map((type) => (
-        <Badge
-          key={type}
-          variant="outline"
-          className="text-xs px-1.5 py-0 h-5 font-medium text-muted-foreground border-muted-foreground/30"
-          data-testid={`badge-rolling-stock-${type.toLowerCase()}`}
-        >
-          {type}
-        </Badge>
-      ))}
-    </>
+    <span
+      className="text-xs text-muted-foreground font-medium shrink-0 truncate max-w-[120px] sm:max-w-none"
+      data-testid="text-rolling-stock"
+    >
+      {types.join(" | ")}
+    </span>
   );
 }
