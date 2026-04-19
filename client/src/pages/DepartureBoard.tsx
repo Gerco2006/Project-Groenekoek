@@ -75,6 +75,7 @@ export default function DepartureBoard() {
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
   const [activeTab, setActiveTab] = useState<"departures" | "arrivals">("departures");
   const [searchOpen, setSearchOpen] = useState(true);
+  const [maxJourneys, setMaxJourneys] = useState(10);
   const { toast } = useToast();
   const searchString = useSearch();
   const [, setLocation] = useLocation();
@@ -94,10 +95,10 @@ export default function DepartureBoard() {
   }, [searchString, setLocation]);
 
   const { data: departuresData, isLoading: isDeparturesLoading, refetch: refetchDepartures, error: departuresError } = useQuery<any>({
-    queryKey: ["/api/departures", searchedStation],
+    queryKey: ["/api/departures", searchedStation, maxJourneys],
     enabled: !!searchedStation,
     queryFn: async () => {
-      const response = await fetch(`/api/departures?station=${encodeURIComponent(searchedStation)}`);
+      const response = await fetch(`/api/departures?station=${encodeURIComponent(searchedStation)}&maxJourneys=${maxJourneys}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to fetch departures");
@@ -107,10 +108,10 @@ export default function DepartureBoard() {
   });
 
   const { data: arrivalsData, isLoading: isArrivalsLoading, refetch: refetchArrivals, error: arrivalsError } = useQuery<any>({
-    queryKey: ["/api/arrivals", searchedStation],
+    queryKey: ["/api/arrivals", searchedStation, maxJourneys],
     enabled: !!searchedStation,
     queryFn: async () => {
-      const response = await fetch(`/api/arrivals?station=${encodeURIComponent(searchedStation)}`);
+      const response = await fetch(`/api/arrivals?station=${encodeURIComponent(searchedStation)}&maxJourneys=${maxJourneys}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to fetch arrivals");
@@ -194,6 +195,7 @@ export default function DepartureBoard() {
       });
       return;
     }
+    setMaxJourneys(10);
     setSearchedStation(station);
     setSelectedTrain(null);
     hasAutoSelectedRef.current = false;
