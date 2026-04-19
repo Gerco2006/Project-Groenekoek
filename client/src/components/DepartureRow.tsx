@@ -36,7 +36,7 @@ export default function DepartureRow({
       >
         <div className="w-full min-w-0">
           {/* Mobile layout */}
-          <div className="grid sm:hidden grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+          <div className="grid sm:hidden grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
             {/* Time — spans 2 rows */}
             <div className="row-span-2 flex items-center text-xl font-bold min-w-[56px]">
               <div>
@@ -47,11 +47,13 @@ export default function DepartureRow({
               </div>
             </div>
 
-            {/* Row 1: badges + platform */}
-            <div className="flex items-center gap-1.5 justify-between min-w-0 overflow-hidden">
-              <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
-                <TrainBadge type={trainType} number={trainNumber} />
-                <RollingStockBadge trainNumber={trainNumber} />
+            {/* Row 1: TrainBadge + RollingStock (scrollable) + Platform */}
+            <div className="flex items-center gap-1.5 justify-between min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                <div className="shrink-0">
+                  <TrainBadge type={trainType} number={trainNumber} />
+                </div>
+                <RollingStockBadge trainNumber={trainNumber} className="flex-1 min-w-0" />
               </div>
               <div className="bg-primary/10 text-primary px-2 py-1 rounded-lg font-bold text-xs text-center shrink-0 ml-1">
                 Spoor {platform}
@@ -59,7 +61,7 @@ export default function DepartureRow({
             </div>
 
             {/* Row 2: destination */}
-            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+            <div className="flex items-center gap-2 min-w-0">
               <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
               <span className="text-sm font-medium truncate">{destination}</span>
             </div>

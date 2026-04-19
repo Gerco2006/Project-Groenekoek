@@ -199,6 +199,7 @@ export default function DepartureBoard() {
     setSearchedStation(station);
     setSelectedTrain(null);
     hasAutoSelectedRef.current = false;
+    if (isMobile) setSearchOpen(false);
   };
 
   useEffect(() => {
@@ -310,7 +311,7 @@ export default function DepartureBoard() {
               data-testid="button-search"
             >
               <Search className="w-4 h-4 mr-2 shrink-0" />
-              <span className="truncate">{isLoading ? "Laden..." : activeTab === "departures" ? "Zoek vertrektijden" : "Zoek aankomsten"}</span>
+              <span className="truncate">{isLoading ? "Laden..." : "Zoek"}</span>
             </Button>
             <Button 
               variant="outline" 
