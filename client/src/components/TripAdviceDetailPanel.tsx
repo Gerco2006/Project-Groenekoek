@@ -1,15 +1,9 @@
 import { Suspense, lazy } from "react";
-import { X, Clock, ArrowRight, Train, MapPin, AlertCircle, Star, Users } from "lucide-react";
+import { X, Clock, Train, MapPin, AlertCircle, Star, Users, ChevronLeft } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useBackButtonClose } from "@/hooks/use-back-button";
 import type { TripLeg } from "@shared/schema";
@@ -320,50 +314,42 @@ export default function TripAdviceDetailPanel({
   );
 
   if (isMobile) {
+    if (!open) return null;
     return (
-      <Drawer open={open} onOpenChange={(isOpen) => !isOpen && onClose()} shouldScaleBackground={false}>
-        <DrawerContent 
-          className="max-h-[85vh] flex flex-col"
-          data-testid="drawer-trip-detail"
-        >
-          <DrawerHeader className="border-b shrink-0 px-3 py-2.5">
-            <DrawerTitle className="flex items-center justify-between gap-1.5">
-              <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                <Train className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-xs truncate" style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>{legs[0]?.from} → {legs[legs.length - 1]?.to}</span>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                {onSaveTrip && (
-                  <Button
-                    variant={isTripSaved ? "default" : "ghost"}
-                    size="icon"
-                    onClick={onSaveTrip}
-                    data-testid="button-save-trip-mobile"
-                  >
-                    <Star className={`w-4 h-4 ${isTripSaved ? 'fill-current' : ''}`} />
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onClose}
-                  className="shrink-0"
-                  data-testid="button-close-mobile-detail"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </DrawerTitle>
-          </DrawerHeader>
-          <div className="flex-1 overflow-y-auto">
-            {content}
+      <div
+        className="fixed inset-0 z-50 bg-background flex flex-col"
+        data-testid="fullscreen-trip-advice-detail"
+      >
+        {/* Header */}
+        <div className="flex items-center gap-1 px-1 py-2 border-b shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            data-testid="button-back-trip-advice"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </Button>
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            <Train className="w-4 h-4 text-primary shrink-0" />
+            <span className="text-sm font-medium truncate">{legs[0]?.from} → {legs[legs.length - 1]?.to}</span>
           </div>
-        </DrawerContent>
-      </Drawer>
+          {onSaveTrip && (
+            <Button
+              variant={isTripSaved ? "default" : "ghost"}
+              size="icon"
+              onClick={onSaveTrip}
+              data-testid="button-save-trip-mobile"
+            >
+              <Star className={`w-4 h-4 ${isTripSaved ? 'fill-current' : ''}`} />
+            </Button>
+          )}
+        </div>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto">
+          {content}
+        </div>
+      </div>
     );
   }
 
