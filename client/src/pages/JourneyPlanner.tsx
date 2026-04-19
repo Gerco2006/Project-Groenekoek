@@ -63,6 +63,7 @@ export default function JourneyPlanner() {
   const [searchMode, setSearchMode] = useState<"departure" | "arrival">("departure");
   const [selectedTripIndex, setSelectedTripIndex] = useState<number | null>(null);
   const [manuallySelectedTrip, setManuallySelectedTrip] = useState<SelectedTrip | null>(null);
+  const [manuallySelectedTripId, setManuallySelectedTripId] = useState<string | null>(null);
   const [selectedTrain, setSelectedTrain] = useState<SelectedTrain | null>(null);
   const [selectedDisruption, setSelectedDisruption] = useState<{ id: string; type: string; title: string } | null>(null);
   const [detailMode, setDetailMode] = useState<'trip' | 'train' | 'disruption' | null>(null);
@@ -358,6 +359,7 @@ export default function JourneyPlanner() {
     setSearchedViaStations(viaStations.filter(v => v.trim() !== ""));
     setSelectedTripIndex(null);
     setManuallySelectedTrip(null);
+    setManuallySelectedTripId(null);
     setSelectedTrain(null);
     setDetailMode(null);
     hasAutoSelectedRef.current = false;
@@ -398,6 +400,7 @@ export default function JourneyPlanner() {
       setSearchedViaStations(route.viaStations);
       setSelectedTripIndex(null);
       setManuallySelectedTrip(null);
+      setManuallySelectedTripId(null);
       setSelectedTrain(null);
       setDetailMode(null);
       hasAutoSelectedRef.current = false;
@@ -442,14 +445,11 @@ export default function JourneyPlanner() {
   };
 
   const handleLoadSavedTrip = (trip: SavedTrip, liveTrip?: any) => {
-    console.log('[DEBUG] handleLoadSavedTrip called', { trip, liveTrip, hasLiveTrip: !!liveTrip });
-    
     // If we have live trip data from the API, use it
     if (liveTrip) {
-      console.log('[DEBUG] Using live trip data');
       const transformedTrip = transformTrip(liveTrip);
-      console.log('[DEBUG] Transformed trip:', transformedTrip);
       setManuallySelectedTrip(transformedTrip);
+      setManuallySelectedTripId(trip.id);
       setSelectedTripIndex(null);
       setSelectedTrain(null);
       setDetailMode('trip');
@@ -462,13 +462,9 @@ export default function JourneyPlanner() {
     }
     
     // Fallback: use stored data (for old format or when API fails)
-    console.log('[DEBUG] Using fallback stored data');
     const depTime = trip.plannedDepartureTime || trip.departureTime || '';
     const arrTime = trip.plannedArrivalTime || trip.arrivalTime || '';
-    
-    // For old format trips, legs might be stored directly
     const legs = trip.legs || [];
-    console.log('[DEBUG] Fallback legs:', legs.length, 'legs');
     
     const tripData: SelectedTrip = {
       departureTime: formatTime(depTime),
@@ -486,8 +482,8 @@ export default function JourneyPlanner() {
       trainTypes: trip.trainTypes,
     };
     
-    console.log('[DEBUG] Setting tripData:', tripData);
     setManuallySelectedTrip(tripData);
+    setManuallySelectedTripId(trip.id);
     setSelectedTripIndex(null);
     setSelectedTrain(null);
     setDetailMode('trip');
@@ -643,22 +639,15 @@ export default function JourneyPlanner() {
   }, [isMobile, trips, manuallySelectedTrip]);
 
   useEffect(() => {
-    if (manuallySelectedTrip && detailMode === 'trip') {
-      const tripStillExists = config.savedTrips.some(
-        (saved) => {
-          const savedDep = saved.plannedDepartureTime || saved.departureTime;
-          const savedArr = saved.plannedArrivalTime || saved.arrivalTime;
-          return savedDep === manuallySelectedTrip.rawDepartureTime &&
-                 savedArr === manuallySelectedTrip.rawArrivalTime;
-        }
-      );
-
+    if (manuallySelectedTripId && detailMode === 'trip') {
+      const tripStillExists = config.savedTrips.some(saved => saved.id === manuallySelectedTripId);
       if (!tripStillExists) {
         setManuallySelectedTrip(null);
+        setManuallySelectedTripId(null);
         setDetailMode(null);
       }
     }
-  }, [config.savedTrips, manuallySelectedTrip, detailMode]);
+  }, [config.savedTrips, manuallySelectedTripId, detailMode]);
   
   const selectedTrip = selectedTripIndex !== null ? trips[selectedTripIndex] : manuallySelectedTrip;
 
@@ -952,6 +941,7 @@ export default function JourneyPlanner() {
                 onClick={() => {
                   setSelectedTripIndex(idx);
                   setManuallySelectedTrip(null);
+                  setManuallySelectedTripId(null);
                   setDetailMode('trip');
                 }}
                 isSelected={selectedTripIndex === idx}
@@ -1037,6 +1027,7 @@ export default function JourneyPlanner() {
               onClose={() => {
                 setSelectedTripIndex(null);
                 setManuallySelectedTrip(null);
+                setManuallySelectedTripId(null);
                 setDetailMode(null);
               }}
               onTrainClick={(leg) => {
