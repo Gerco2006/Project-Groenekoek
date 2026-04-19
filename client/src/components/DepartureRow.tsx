@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import TrainBadge from "./TrainBadge";
+import RollingStockBadge from "./RollingStockBadge";
 
 interface DepartureRowProps {
   time: string;
@@ -45,9 +46,12 @@ export default function DepartureRow({
             </div>
           </div>
 
-          {/* Row 1: Train badge + Platform */}
+          {/* Row 1: Train badge + rolling stock + Platform */}
           <div className="flex items-center gap-2 justify-between">
-            <TrainBadge type={trainType} number={trainNumber} />
+            <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+              <TrainBadge type={trainType} number={trainNumber} />
+              <RollingStockBadge trainNumber={trainNumber} />
+            </div>
             <div className="bg-primary/10 text-primary px-2 py-1 rounded-lg font-bold text-xs text-center shrink-0">
               Spoor {platform}
             </div>
@@ -71,7 +75,10 @@ export default function DepartureRow({
             )}
           </div>
 
-          <TrainBadge type={trainType} number={trainNumber} />
+          <div className="flex items-center gap-1.5">
+            <TrainBadge type={trainType} number={trainNumber} />
+            <RollingStockBadge trainNumber={trainNumber} />
+          </div>
 
           <div className="flex-1 flex items-center gap-2 min-w-0">
             <Icon className="w-4 h-4 text-muted-foreground shrink-0" />

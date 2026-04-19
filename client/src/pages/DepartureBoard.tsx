@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
-import { RefreshCw, Search, AlertTriangle, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { RefreshCw, Search, AlertTriangle, ChevronRight, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -94,7 +94,7 @@ export default function DepartureBoard() {
     }
   }, [searchString, setLocation]);
 
-  const { data: departuresData, isLoading: isDeparturesLoading, refetch: refetchDepartures, error: departuresError } = useQuery<any>({
+  const { data: departuresData, isLoading: isDeparturesLoading, isFetching: isDeparturesFetching, refetch: refetchDepartures, error: departuresError } = useQuery<any>({
     queryKey: ["/api/departures", searchedStation, maxJourneys],
     enabled: !!searchedStation,
     queryFn: async () => {
@@ -107,7 +107,7 @@ export default function DepartureBoard() {
     },
   });
 
-  const { data: arrivalsData, isLoading: isArrivalsLoading, refetch: refetchArrivals, error: arrivalsError } = useQuery<any>({
+  const { data: arrivalsData, isLoading: isArrivalsLoading, isFetching: isArrivalsFetching, refetch: refetchArrivals, error: arrivalsError } = useQuery<any>({
     queryKey: ["/api/arrivals", searchedStation, maxJourneys],
     enabled: !!searchedStation,
     queryFn: async () => {
@@ -378,7 +378,7 @@ export default function DepartureBoard() {
 
       {!isLoading && activeTab === "departures" && departures.length > 0 && (
         <ScrollArea className="flex-1">
-          <div className="md:px-4 pb-6">
+          <div className="md:px-4 pb-6 space-y-3">
             <Card className="divide-y">
               {departures.map((departure, idx) => {
                 const delay = calculateDelay(departure.plannedDateTime, departure.actualDateTime);
@@ -402,13 +402,26 @@ export default function DepartureBoard() {
                 );
               })}
             </Card>
+            <Button
+              variant="outline"
+              className="w-full"
+              disabled={isDeparturesFetching}
+              onClick={() => setMaxJourneys(n => n + 10)}
+              data-testid="button-load-more-departures"
+            >
+              {isDeparturesFetching ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Laden...</>
+              ) : (
+                "Meer treinen laden"
+              )}
+            </Button>
           </div>
         </ScrollArea>
       )}
 
       {!isLoading && activeTab === "arrivals" && arrivals.length > 0 && (
         <ScrollArea className="flex-1">
-          <div className="md:px-4 pb-6">
+          <div className="md:px-4 pb-6 space-y-3">
             <Card className="divide-y">
               {arrivals.map((arrival, idx) => {
                 const delay = calculateDelay(arrival.plannedDateTime, arrival.actualDateTime);
@@ -432,6 +445,19 @@ export default function DepartureBoard() {
                 );
               })}
             </Card>
+            <Button
+              variant="outline"
+              className="w-full"
+              disabled={isArrivalsFetching}
+              onClick={() => setMaxJourneys(n => n + 10)}
+              data-testid="button-load-more-arrivals"
+            >
+              {isArrivalsFetching ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Laden...</>
+              ) : (
+                "Meer treinen laden"
+              )}
+            </Button>
           </div>
         </ScrollArea>
       )}
