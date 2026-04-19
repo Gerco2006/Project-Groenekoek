@@ -5,8 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Info, Heart, Settings, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Info, Settings, ChevronRight, ScrollText } from "lucide-react";
 import { Link } from "wouter";
 import PageContainer from "@/components/PageContainer";
 
@@ -32,6 +31,25 @@ export default function MorePage() {
                   <div>
                     <CardTitle className="text-lg">Instellingen</CardTitle>
                     <CardDescription>Weergave en app-opties</CardDescription>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/changelog">
+          <Card className="hover-elevate cursor-pointer overflow-hidden transition-all active:scale-[0.98]" data-testid="card-changelog">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <ScrollText className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Changelog</CardTitle>
+                    <CardDescription>Updates en wijzigingen</CardDescription>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground" />

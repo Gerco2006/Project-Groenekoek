@@ -1,6 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { readdirSync, readFileSync, existsSync } from "fs";
+import { join } from "path";
 
 const NS_API_KEY = process.env.NS_API_KEY;
 const NS_BASE_URL = "https://gateway.apiportal.ns.nl/reisinformatie-api/api";
@@ -735,6 +737,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching live trip:", error);
       res.status(500).json({ error: "Failed to fetch live trip data" });
+    }
+  });
+
+  // Changelog endpoint
+  app.get("/api/changelog", (_req, res) => {
+    try {
+      const rootDir = process.cwd();
+      const entries: { name: string; type: "grote-update" | "kleine-update"; content: string }[] = [];
+
+      const folders: { dir: string; type: "grote-update" | "kleine-update" }[] = [
+        { dir: join(rootDir, "changelogs", "grote-update"), type: "grote-update" },
+        { dir: join(rootDir, "changelogs", "kleine-update"), type: "kleine-update" },
+      ];
+
+      for (const { dir, type } of folders) {
+        if (!existsSync(dir)) continue;
+        const files = readdirSync(dir).filter((f) => f.endsWith(".md"));
+        for (const file of files) {
+          const content = readFileSync(join(dir, file), "utf-8");
+          entries.push({ name: file.replace(/\.md$/, ""), type, content });
+        }
+      }
+
+      // Sort descending by filename (assumes version-based naming like v0.7.0)
+      entries.sort((a, b) => b.name.localeCompare(a.name, undefined, { numeric: true, sensitivity: "base" }));
+
+      res.json(entries);
+    } catch (error) {
+      console.error("Error reading changelog files:", error);
+      res.status(500).json({ error: "Failed to read changelog" });
     }
   });
 

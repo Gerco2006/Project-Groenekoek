@@ -13,6 +13,7 @@ import TrainLookup from "@/pages/TrainLookup";
 import Disruptions from "@/pages/Disruptions";
 import MorePage from "@/pages/MorePage";
 import SettingsPage from "@/pages/SettingsPage";
+import ChangelogPage from "@/pages/ChangelogPage";
 import NotFound from "@/pages/not-found";
 import { PageResetProvider, usePageReset } from "@/contexts/PageResetContext";
 
@@ -41,6 +42,9 @@ function Router() {
           </Route>
           <Route path="/instellingen">
             {() => <SettingsPage key={pageKeys["/instellingen"] || 0} />}
+          </Route>
+          <Route path="/changelog">
+            {() => <ChangelogPage key={pageKeys["/changelog"] || 0} />}
           </Route>
           <Route component={NotFound} />
         </Switch>
