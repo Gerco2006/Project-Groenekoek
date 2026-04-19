@@ -236,8 +236,8 @@ export default function TripAdviceDetailPanel({
                           <div className="w-3 h-3 rounded-full bg-muted-foreground/40 shrink-0" />
                         </div>
                         
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between gap-2 min-w-0">
+                        <div className="space-y-0">
+                          <div className="flex items-center justify-between gap-2 min-w-0 pb-2">
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
                                 <span className="text-sm sm:text-base font-semibold">{leg.departure}</span>
@@ -255,8 +255,10 @@ export default function TripAdviceDetailPanel({
                               </Badge>
                             )}
                           </div>
+
+                          <div className="border-t border-border mx-0" />
                           
-                          <div className="flex items-center justify-between gap-2 min-w-0">
+                          <div className="flex items-center justify-between gap-2 min-w-0 pt-2">
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
                                 <span className="text-sm sm:text-base font-semibold">{leg.arrival}</span>
