@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ArrowRight, Train, Users } from "lucide-react";
+import { Clock, ArrowRight, Train, Users, AlertCircle } from "lucide-react";
 import TrainBadge from "./TrainBadge";
 import type { TripLeg } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
@@ -27,6 +27,7 @@ interface TripListItemButtonProps {
   onClick?: () => void;
   isSelected?: boolean;
   delayMinutes?: number;
+  status?: string;
 }
 
 interface LiveDelayInfo {
@@ -42,7 +43,9 @@ export default function TripListItemButton({
   legs,
   onClick,
   isSelected = false,
+  status,
 }: TripListItemButtonProps) {
+  const isCancelled = status === 'CANCELLED' || legs.some(leg => leg.cancelled);
   const uniqueTrainTypes = Array.from(new Set(legs.map(leg => leg.trainType)));
   const firstLeg = legs[0];
   const lastLeg = legs[legs.length - 1];
@@ -134,7 +137,11 @@ export default function TripListItemButton({
     <Button
       variant="ghost"
       className={`w-full h-auto p-4 hover-elevate flex-col items-stretch ${
-        isSelected ? "bg-primary/10 border-primary border-2" : "bg-card"
+        isSelected
+          ? "bg-primary/10 border-primary border-2"
+          : isCancelled
+          ? "bg-muted border-2 border-destructive"
+          : "bg-card"
       }`}
       onClick={onClick}
       data-testid="button-trip"
@@ -146,7 +153,13 @@ export default function TripListItemButton({
           ))}
         </div>
         <div className="flex gap-1.5 flex-wrap shrink-0">
-          {averageCrowding && (
+          {isCancelled && (
+            <Badge variant="destructive" className="gap-1 text-xs">
+              <AlertCircle className="w-3 h-3" />
+              Vervalt
+            </Badge>
+          )}
+          {averageCrowding && !isCancelled && (
             <Badge variant="outline" className={`gap-1 text-xs ${crowdingColors[averageCrowding as keyof typeof crowdingColors]}`}>
               <Users className="w-3 h-3" />
               {crowdingLabels[averageCrowding as keyof typeof crowdingLabels]}

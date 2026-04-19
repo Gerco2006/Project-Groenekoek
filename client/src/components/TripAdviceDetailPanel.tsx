@@ -197,7 +197,11 @@ export default function TripAdviceDetailPanel({
               return (
                 <div key={idx} className="space-y-3">
                   <Card 
-                    className="hover-elevate cursor-pointer overflow-hidden"
+                    className={`hover-elevate cursor-pointer overflow-hidden ${
+                      leg.cancelled
+                        ? "bg-muted border-2 border-destructive"
+                        : ""
+                    }`}
                     onClick={() => onTrainClick?.(leg)}
                     data-testid={`card-leg-${idx}`}
                   >
