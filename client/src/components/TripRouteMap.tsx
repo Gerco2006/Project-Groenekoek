@@ -1,4 +1,5 @@
 import { useMemo, useEffect, useRef, useState } from "react";
+import type React from "react";
 import { MapContainer, TileLayer, Polyline, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useTheme } from "@/components/ThemeProvider";
@@ -470,13 +471,18 @@ function MapResizeHandler() {
   return null;
 }
 
-function FitBounds({ stations, recenterTrigger }: { stations: Station[]; recenterTrigger: number }) {
+function FitBounds({ stations, recenterTrigger, isProgrammaticRef }: {
+  stations: Station[];
+  recenterTrigger: number;
+  isProgrammaticRef: React.MutableRefObject<boolean>;
+}) {
   const map = useMap();
   const fittedRef = useRef(false);
   const lastRecenterRef = useRef(0);
   
   useEffect(() => {
     if (stations.length > 0 && !fittedRef.current) {
+      isProgrammaticRef.current = true;
       const bounds = L.latLngBounds(stations.map(s => [s.lat, s.lng] as [number, number]));
       map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
       fittedRef.current = true;
@@ -490,6 +496,7 @@ function FitBounds({ stations, recenterTrigger }: { stations: Station[]; recente
   useEffect(() => {
     if (recenterTrigger > 0 && recenterTrigger !== lastRecenterRef.current && stations.length > 0) {
       lastRecenterRef.current = recenterTrigger;
+      isProgrammaticRef.current = true;
       const bounds = L.latLngBounds(stations.map(s => [s.lat, s.lng] as [number, number]));
       map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12, animate: true });
     }
@@ -498,30 +505,25 @@ function FitBounds({ stations, recenterTrigger }: { stations: Station[]; recente
   return null;
 }
 
-function MapMoveTracker({ onMoved }: { onMoved: (moved: boolean) => void }) {
-  const initialBoundsRef = useRef<L.LatLngBounds | null>(null);
-  
+function MapMoveTracker({ onMoved, isProgrammaticRef }: {
+  onMoved: (moved: boolean) => void;
+  isProgrammaticRef: React.MutableRefObject<boolean>;
+}) {
   useMapEvents({
-    moveend: (e) => {
-      const map = e.target;
-      if (!initialBoundsRef.current) {
-        initialBoundsRef.current = map.getBounds();
-        return;
-      }
-      
-      const currentBounds = map.getBounds();
-      const initialCenter = initialBoundsRef.current.getCenter();
-      const currentCenter = currentBounds.getCenter();
-      
-      const latDiff = Math.abs(currentCenter.lat - initialCenter.lat);
-      const lngDiff = Math.abs(currentCenter.lng - initialCenter.lng);
-      
-      const hasMoved = latDiff > 0.001 || lngDiff > 0.001;
-      onMoved(hasMoved);
-    },
-    zoomend: (e) => {
+    dragstart: () => {
       onMoved(true);
-    }
+    },
+    zoomstart: () => {
+      if (!isProgrammaticRef.current) {
+        onMoved(true);
+      }
+    },
+    zoomend: () => {
+      isProgrammaticRef.current = false;
+    },
+    moveend: () => {
+      isProgrammaticRef.current = false;
+    },
   });
   
   return null;
@@ -535,6 +537,7 @@ export default function TripRouteMap({ legs, compact = false, embedded = false, 
   const [recenterTrigger, setRecenterTrigger] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isProgrammaticMoveRef = useRef(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -553,8 +556,9 @@ export default function TripRouteMap({ legs, compact = false, embedded = false, 
   }
 
   const handleRecenter = () => {
-    setRecenterTrigger(prev => prev + 1);
+    isProgrammaticMoveRef.current = true;
     setHasMoved(false);
+    setRecenterTrigger(prev => prev + 1);
   };
 
   const { data: stationsData, isLoading: stationsLoading } = useQuery<{ payload: any[] }>({
@@ -716,8 +720,8 @@ export default function TripRouteMap({ legs, compact = false, embedded = false, 
           maxZoom={19}
         />
         <MapResizeHandler />
-        <FitBounds stations={stations} recenterTrigger={recenterTrigger} />
-        <MapMoveTracker onMoved={setHasMoved} />
+        <FitBounds stations={stations} recenterTrigger={recenterTrigger} isProgrammaticRef={isProgrammaticMoveRef} />
+        <MapMoveTracker onMoved={setHasMoved} isProgrammaticRef={isProgrammaticMoveRef} />
         
         {routePositions.length > 1 && (
           <Polyline
