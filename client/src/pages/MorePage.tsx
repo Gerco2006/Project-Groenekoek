@@ -93,10 +93,10 @@ export default function MorePage() {
             <CardContent className="pt-6">
               <div className="text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Versie 0.7-Alpha.2
+                  Versie 0.7.1 (Alpha 2)
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Gemaakt met React, TypeScript en de NS API
+                  © 2025 - 2026 Gerco van 't Foort | Gemaakt met React, TypeScript en de NS API
                 </p>
               </div>
             </CardContent>

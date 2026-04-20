@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { readdirSync, readFileSync, existsSync } from "fs";
 import { join } from "path";
+import dotenv from "dotenv";
+dotenv.config();
 
 const NS_API_KEY = process.env.NS_API_KEY;
 const NS_BASE_URL = "https://gateway.apiportal.ns.nl/reisinformatie-api/api";

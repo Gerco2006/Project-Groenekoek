@@ -23,8 +23,7 @@ export default function SavedRoutesWidget({
           <h3 className="font-semibold text-lg">Favoriete Routes</h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          Je hebt nog geen routes opgeslagen. Zoek een route en klik op "Route
-          opslaan" om deze toe te voegen.
+          Je hebt nog geen routes opgeslagen. Plan een route en klik op de ster om deze toe te voegen.
         </p>
       </Card>
     );

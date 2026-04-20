@@ -242,7 +242,7 @@ export default function SavedTripsWidget({ trips, onTripClick, onTripRemove }: S
         ))}
       </div>
       <p className="text-[10px] text-muted-foreground mt-2 text-center">
-        Live vertraging • wordt elke minuut bijgewerkt
+        Wordt elke minuut bijgewerkt
       </p>
     </Card>
   );
