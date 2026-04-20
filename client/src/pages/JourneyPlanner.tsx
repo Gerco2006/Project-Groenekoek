@@ -208,6 +208,7 @@ export default function JourneyPlanner() {
       });
       if (addChangeTime > 0) params.append("addChangeTime", addChangeTime.toString());
       if (accessible) params.append("wheelChairAccessible", "ACCESSIBLE");
+      if (searchMode === "arrival") params.append("searchForArrival", "true");
 
       const response = await fetch(`/api/trips?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch earlier trips");
@@ -243,7 +244,7 @@ export default function JourneyPlanner() {
     } finally {
       setIsLoadingEarlier(false);
     }
-  }, [isLoadingEarlier, searchedFrom, searchedTo, searchedViaStations, earlierTrips, tripsData, laterTrips, addChangeTime, accessible, selectedTripIndex, toast]);
+  }, [isLoadingEarlier, searchedFrom, searchedTo, searchedViaStations, earlierTrips, tripsData, laterTrips, addChangeTime, accessible, searchMode, selectedTripIndex, toast]);
 
   const loadLaterTrips = useCallback(async () => {
     if (isLoadingLater || !searchedFrom || !searchedTo) return;
