@@ -14,25 +14,25 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "@assets/image(2)_1776714288663.png",
+      "src": "/icon-192x192.png?v=2",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "@assets/image(2)_1776714288663.png",
+      "src": "/icon-192x192.png?v=2",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "@assets/image(2)_1776714288663.png",
+      "src": "/icon-512x512.png?v=2",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "@assets/image(2)_1776714288663.png",
+      "src": "/icon-512x512.png?v=2",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -46,7 +46,7 @@
       "url": "/",
       "icons": [
         {
-          "src": "@assets/image(2)_1776714288663.png",
+          "src": "/icon-192x192.png?v=2",
           "sizes": "192x192"
         }
       ]
@@ -58,7 +58,7 @@
       "url": "/vertrektijden",
       "icons": [
         {
-          "src": "@assets/image(2)_1776714288663.png",
+          "src": "/icon-192x192.png?v=2",
           "sizes": "192x192"
         }
       ]
@@ -70,7 +70,7 @@
       "url": "/treininfo",
       "icons": [
         {
-          "src": "@assets/image(2)_1776714288663.png",
+          "src": "/icon-192x192.png?v=2",
           "sizes": "192x192"
         }
       ]

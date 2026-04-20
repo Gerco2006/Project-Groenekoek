@@ -21,7 +21,7 @@ export default function MorePage() {
         >
           <CardHeader>
               <div className="flex items-center gap-3">
-                <img src={logoPath} alt="TravNL logo" className="w-5 h-5 rounded-full object-cover" data-testid="img-logo" />
+                <img src={logoPath} alt="TravNL logo" className="w-10 h-10 rounded-full object-cover" data-testid="img-logo" />
               <div>
                 <CardTitle>Over TravNL</CardTitle>
                 <CardDescription>
