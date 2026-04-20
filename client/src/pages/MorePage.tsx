@@ -8,6 +8,7 @@ import {
 import { Info, Settings, ChevronRight, ScrollText } from "lucide-react";
 import { Link } from "wouter";
 import PageContainer from "@/components/PageContainer";
+import logoPath from "@assets/image(2)_1776714288663.png";
 
 export default function MorePage() {
   return (
@@ -19,8 +20,8 @@ export default function MorePage() {
           className="rounded-none border-x-0 border-t-0 md:rounded-md md:border md:mx-4 md:mt-6"
         >
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <Info className="w-5 h-5 text-primary" />
+              <div className="flex items-center gap-3">
+                <img src={logoPath} alt="TravNL logo" className="w-5 h-5 rounded-full object-cover" data-testid="img-logo" />
               <div>
                 <CardTitle>Over TravNL</CardTitle>
                 <CardDescription>

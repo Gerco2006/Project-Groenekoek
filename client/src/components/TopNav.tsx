@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
-import { MapIcon, Clock, Search, MoreHorizontal, Train, AlertTriangle } from "lucide-react";
+import { MapIcon, Clock, Search, MoreHorizontal, AlertTriangle } from "lucide-react";
+import logoPath from "@assets/image(2)_1776714288663.png";
 import { Button } from "@/components/ui/button";
 import { usePageReset } from "@/contexts/PageResetContext";
 
@@ -32,9 +33,7 @@ export default function TopNav() {
             data-testid="link-logo"
             onClick={() => handleNavClick("/")}
           >
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Train className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={logoPath} alt="TravNL logo" className="w-8 h-8 rounded-full object-cover" data-testid="img-logo" />
             <span>TravNL</span>
           </button>
 
