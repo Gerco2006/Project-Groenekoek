@@ -135,7 +135,7 @@ export default function TripAdviceDetailPanel({
       )}
 
         <div className={`${isMobile ? 'w-screen max-w-none px-0 pt-0 pb-4 space-y-6' : 'flex-1 overflow-y-auto'}`}>
-        <div className={`${isMobile ? '' : 'p-4 space-y-6'}`}>
+        <div className={`${isMobile ? 'px-4 space-y-6' : 'p-4 space-y-6'}`}>
           {/* Trip Summary + Route Map unified */}
           <Card className={`overflow-hidden ${isMobile ? 'rounded-t-none rounded-b-md' : ''}`}>
             <div className="p-4 pb-3">
