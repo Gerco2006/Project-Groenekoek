@@ -5,7 +5,7 @@ import { Mail, Heart, Rocket } from "lucide-react";
 // Pas hier de instellingen aan:
 const COMING_SOON_CONFIG = {
   enabled: true,                          // false = gate uitgeschakeld (voor na release)
-  launchDate: new Date("2026-09-01T12:00:00"),  // Doeldatum voor de countdown
+  launchDate: new Date("2026-05-01T07:00:00"),  // Doeldatum voor de countdown
   accessCode: "TRAVNL2025",               // URL-parameter: website.nl/?preview=TRAVNL2025
 };
 // ─────────────────────────────────────────────────────────────────
@@ -110,7 +110,7 @@ function ComingSoonPage() {
               TravNL
             </h1>
             <p className="text-white/50 text-sm mt-1 tracking-wide uppercase">
-              De open-source reisplanner
+              Voor de reiziger die meer wilt
             </p>
           </div>
         </div>
@@ -148,7 +148,7 @@ function ComingSoonPage() {
 
         {/* Kleine voetnoot */}
         <p className="text-white/30 text-xs">
-          © 2025–2026 TravNL · Gemaakt met de NS API
+          © 2025–2026 TravNL door Gerco van 't Foort
         </p>
 
         <div className="w-full grid gap-3 sm:grid-cols-3">
@@ -160,7 +160,7 @@ function ComingSoonPage() {
             data-testid="link-ko-fi"
           >
             <Heart className="h-4 w-4" />
-            Doneer via Ko-fi
+            Doneer
           </a>
           <a
             href="https://bsky.app/profile/aedoesthings.bsky.social"
@@ -170,7 +170,7 @@ function ComingSoonPage() {
             data-testid="link-bluesky"
           >
             <Rocket className="h-4 w-4" />
-            Volg voortgang op Bluesky
+            Volg de voortgang
           </a>
           <a
             href="mailto:business@travnl.nl"
@@ -178,7 +178,7 @@ function ComingSoonPage() {
             data-testid="link-email-business"
           >
             <Mail className="h-4 w-4" />
-            Business email volgt nog
+            Contact
           </a>
         </div>
       </div>
