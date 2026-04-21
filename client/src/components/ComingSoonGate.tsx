@@ -1,4 +1,5 @@
 import { useState, useEffect, type ReactNode } from "react";
+import { Mail, Heart, Rocket } from "lucide-react";
 
 // ─── Configuratie ────────────────────────────────────────────────
 // Pas hier de instellingen aan:
@@ -149,6 +150,37 @@ function ComingSoonPage() {
         <p className="text-white/30 text-xs">
           © 2025–2026 TravNL · Gemaakt met de NS API
         </p>
+
+        <div className="w-full grid gap-3 sm:grid-cols-3">
+          <a
+            href="https://ko-fi.com/gerco"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-3 text-sm text-white"
+            data-testid="link-ko-fi"
+          >
+            <Heart className="h-4 w-4" />
+            Doneer via Ko-fi
+          </a>
+          <a
+            href="https://bsky.app/profile/aedoesthings.bsky.social"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-3 text-sm text-white"
+            data-testid="link-bluesky"
+          >
+            <Rocket className="h-4 w-4" />
+            Volg voortgang op Bluesky
+          </a>
+          <a
+            href="mailto:business@travnl.nl"
+            className="flex items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-3 text-sm text-white"
+            data-testid="link-email-business"
+          >
+            <Mail className="h-4 w-4" />
+            Business email volgt nog
+          </a>
+        </div>
       </div>
     </div>
   );
