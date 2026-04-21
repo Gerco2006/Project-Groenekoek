@@ -11,17 +11,37 @@ const COMING_SOON_CONFIG = {
 
 const STORAGE_KEY = "travnl-preview-access";
 
+function safeLocalStorageGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeLocalStorageSet(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Storage unavailable — session-only access granted via URL code
+  }
+}
+
 function getInitialAccess(): boolean {
   const params = new URLSearchParams(window.location.search);
   const code = params.get("preview");
   if (code === COMING_SOON_CONFIG.accessCode) {
-    localStorage.setItem(STORAGE_KEY, "true");
-    const url = new URL(window.location.href);
-    url.searchParams.delete("preview");
-    window.history.replaceState({}, "", url.toString());
+    safeLocalStorageSet(STORAGE_KEY, "true");
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("preview");
+      window.history.replaceState({}, "", url.toString());
+    } catch {
+      // history API unavailable — keep URL as-is
+    }
     return true;
   }
-  return localStorage.getItem(STORAGE_KEY) === "true";
+  return safeLocalStorageGet(STORAGE_KEY) === "true";
 }
 
 function useCountdown(target: Date) {
