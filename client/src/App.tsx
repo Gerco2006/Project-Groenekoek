@@ -16,6 +16,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import ChangelogPage from "@/pages/ChangelogPage";
 import NotFound from "@/pages/not-found";
 import { PageResetProvider, usePageReset } from "@/contexts/PageResetContext";
+import { ComingSoonGate } from "@/components/ComingSoonGate";
 
 function Router() {
   const { pageKeys } = usePageReset();
@@ -60,10 +61,12 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <Toaster />
-          <PWAInstallPrompt />
-          <PageResetProvider>
-            <Router />
-          </PageResetProvider>
+          <ComingSoonGate>
+            <PWAInstallPrompt />
+            <PageResetProvider>
+              <Router />
+            </PageResetProvider>
+          </ComingSoonGate>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
