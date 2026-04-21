@@ -47,13 +47,13 @@ function useCountdown(target: Date) {
 
 function CountdownBlock({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex flex-col items-center gap-1">
-      <div className="bg-white/10 dark:bg-white/10 backdrop-blur-sm border border-white/20 rounded-md px-4 py-3 min-w-[72px] text-center">
-        <span className="text-3xl sm:text-4xl font-bold text-white tabular-nums">
+    <div className="flex flex-col items-center gap-1 flex-1 sm:flex-none">
+      <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-md px-2 py-2 sm:px-4 sm:py-3 w-full sm:min-w-[72px] text-center">
+        <span className="text-2xl sm:text-4xl font-bold text-white tabular-nums">
           {String(value).padStart(2, "0")}
         </span>
       </div>
-      <span className="text-xs text-white/60 uppercase tracking-widest">{label}</span>
+      <span className="text-[10px] sm:text-xs text-white/60 uppercase tracking-widest">{label}</span>
     </div>
   );
 }
@@ -108,19 +108,19 @@ function ComingSoonPage() {
         {/* Countdown of klaar-boodschap */}
         {done ? (
           <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg px-6 py-4 text-blue-300 font-semibold text-lg">
-            TravNL is nu beschikbaar!
+            Beschikbaar!
           </div>
         ) : (
           <div
-            className="flex items-start gap-3 sm:gap-4"
+            className="flex items-start gap-1.5 sm:gap-4 w-full max-w-xs sm:max-w-none sm:w-auto"
             data-testid="container-countdown"
           >
             <CountdownBlock value={days} label="dagen" />
-            <span className="text-white/40 text-3xl font-light mt-3">:</span>
+            <span className="text-white/40 text-xl sm:text-3xl font-light mt-2 sm:mt-3 shrink-0">:</span>
             <CountdownBlock value={hours} label="uur" />
-            <span className="text-white/40 text-3xl font-light mt-3">:</span>
+            <span className="text-white/40 text-xl sm:text-3xl font-light mt-2 sm:mt-3 shrink-0">:</span>
             <CountdownBlock value={minutes} label="min" />
-            <span className="text-white/40 text-3xl font-light mt-3">:</span>
+            <span className="text-white/40 text-xl sm:text-3xl font-light mt-2 sm:mt-3 shrink-0">:</span>
             <CountdownBlock value={seconds} label="sec" />
           </div>
         )}
