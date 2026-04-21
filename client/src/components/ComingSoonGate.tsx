@@ -157,9 +157,12 @@ function ComingSoonPage() {
 export function ComingSoonGate({ children }: { children: ReactNode }) {
   const [hasAccess] = useState<boolean>(getInitialAccess);
 
-  if (!COMING_SOON_CONFIG.enabled || hasAccess) {
-    return <>{children}</>;
-  }
+  const showGate = COMING_SOON_CONFIG.enabled && !hasAccess;
 
-  return <ComingSoonPage />;
+  return (
+    <>
+      {children}
+      {showGate && <ComingSoonPage />}
+    </>
+  );
 }
