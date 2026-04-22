@@ -6,23 +6,23 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2, ChevronLeft, Mail, ShieldCheck } from "lucide-react";
 import { Link } from "wouter";
 import PageContainer from "@/components/PageContainer";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 
 interface LegalDoc {
   doc: string;
   content: string;
 }
 
-const markdownComponents = {
-  h1: ({ children }: any) => <h1 className="text-xl font-bold mt-0 mb-3">{children}</h1>,
-  h2: ({ children }: any) => <h2 className="text-lg font-semibold mt-5 mb-2">{children}</h2>,
-  h3: ({ children }: any) => <h3 className="text-base font-semibold mt-4 mb-1">{children}</h3>,
-  p: ({ children }: any) => <p className="mb-3">{children}</p>,
-  ul: ({ children }: any) => <ul className="list-disc ml-5 space-y-1 my-2">{children}</ul>,
-  ol: ({ children }: any) => <ol className="list-decimal ml-5 space-y-1 my-2">{children}</ol>,
-  li: ({ children }: any) => <li>{children}</li>,
-  strong: ({ children }: any) => <strong className="font-semibold">{children}</strong>,
-  em: ({ children }: any) => <em className="italic">{children}</em>,
+const markdownComponents: Components = {
+  h1: ({ children }) => <h1 className="text-xl font-bold mt-0 mb-3">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-lg font-semibold mt-5 mb-2">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-base font-semibold mt-4 mb-1">{children}</h3>,
+  p: ({ children }) => <p className="mb-3">{children}</p>,
+  ul: ({ children }) => <ul className="list-disc ml-5 space-y-1 my-2">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal ml-5 space-y-1 my-2">{children}</ol>,
+  li: ({ children }) => <li>{children}</li>,
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+  em: ({ children }) => <em className="italic">{children}</em>,
   hr: () => <hr className="my-4 border-border" />,
 };
 
