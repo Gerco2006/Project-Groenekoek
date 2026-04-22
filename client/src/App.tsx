@@ -14,6 +14,7 @@ import Disruptions from "@/pages/Disruptions";
 import MorePage from "@/pages/MorePage";
 import SettingsPage from "@/pages/SettingsPage";
 import ChangelogPage from "@/pages/ChangelogPage";
+import LegalPage from "@/pages/LegalPage";
 import NotFound from "@/pages/not-found";
 import { PageResetProvider, usePageReset } from "@/contexts/PageResetContext";
 import { ComingSoonGate } from "@/components/ComingSoonGate";
@@ -46,6 +47,9 @@ function Router() {
           </Route>
           <Route path="/changelog">
             {() => <ChangelogPage key={pageKeys["/changelog"] || 0} />}
+          </Route>
+          <Route path="/juridisch">
+            {() => <LegalPage key={pageKeys["/juridisch"] || 0} />}
           </Route>
           <Route component={NotFound} />
         </Switch>

@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Info, Settings, ChevronRight, ScrollText } from "lucide-react";
+import { Info, Settings, ChevronRight, ScrollText, ShieldCheck } from "lucide-react";
 import { Link } from "wouter";
 import PageContainer from "@/components/PageContainer";
 import logoPath from "@assets/image(2)_1776714288663.png";
@@ -82,6 +82,28 @@ export default function MorePage() {
                     <div>
                       <CardTitle className="text-lg">Changelog</CardTitle>
                       <CardDescription>Updates en wijzigingen</CardDescription>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link href="/juridisch">
+            <Card
+              className="hover-elevate cursor-pointer overflow-hidden transition-all active:scale-[0.98]"
+              data-testid="card-juridisch"
+            >
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Juridisch & Support</CardTitle>
+                      <CardDescription>Privacy, voorwaarden en contact</CardDescription>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-muted-foreground" />
