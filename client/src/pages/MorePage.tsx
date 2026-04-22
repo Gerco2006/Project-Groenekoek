@@ -5,7 +5,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Settings, ChevronRight, ScrollText, ShieldCheck } from "lucide-react";
+import { Settings, ChevronRight, ScrollText, ShieldCheck, Heart, ExternalLink } from "lucide-react";
+import { SiBluesky, SiKofi } from "react-icons/si";
 import { Link } from "wouter";
 import PageContainer from "@/components/PageContainer";
 import logoPath from "@assets/image(2)_1776714288663.png";
@@ -98,6 +99,52 @@ export default function MorePage() {
                 <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
               </div>
             </Link>
+          </Card>
+
+          <Card data-testid="card-steun-travnl">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Heart className="w-4 h-4 text-primary" />
+                Steun TravNL
+              </CardTitle>
+              <CardDescription>
+                Vind je TravNL handig? Help de ontwikkeling verder.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <a
+                href="https://ko-fi.com/gerco"
+                target="_blank"
+                rel="noreferrer"
+                data-testid="link-ko-fi"
+                className="flex items-center justify-between px-4 py-3 rounded-md border bg-muted/40 hover-elevate cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <SiKofi className="w-5 h-5 text-[#FF5E5B]" />
+                  <div>
+                    <p className="font-semibold text-sm leading-tight">Doneer via Ko-fi</p>
+                    <p className="text-xs text-muted-foreground">Trakteer de maker op een koffie</p>
+                  </div>
+                </div>
+                <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+              </a>
+              <a
+                href="https://bsky.app/profile/aedoesthings.bsky.social"
+                target="_blank"
+                rel="noreferrer"
+                data-testid="link-bluesky"
+                className="flex items-center justify-between px-4 py-3 rounded-md border bg-muted/40 hover-elevate cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <SiBluesky className="w-5 h-5 text-[#0085ff]" />
+                  <div>
+                    <p className="font-semibold text-sm leading-tight">Volg op Bluesky</p>
+                    <p className="text-xs text-muted-foreground">Blijf op de hoogte van updates</p>
+                  </div>
+                </div>
+                <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+              </a>
+            </CardContent>
           </Card>
 
           <Card>
