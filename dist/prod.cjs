@@ -1,0 +1,809 @@
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+
+// server/prod.ts
+var import_express = __toESM(require("express"), 1);
+
+// server/routes.ts
+var import_http = require("http");
+var import_fs = require("fs");
+var import_path = require("path");
+var import_dotenv = __toESM(require("dotenv"), 1);
+import_dotenv.default.config();
+var NS_API_KEY = process.env.NS_API_KEY;
+var NS_BASE_URL = "https://gateway.apiportal.ns.nl/reisinformatie-api/api";
+var NS_DISRUPTIONS_BASE_URL = "https://gateway.apiportal.ns.nl/disruptions";
+var NS_VIRTUAL_TRAIN_URL = "https://gateway.apiportal.ns.nl/virtual-train-api";
+var rollingStockCache = /* @__PURE__ */ new Map();
+function parseCarriageCount(type) {
+  if (!type) return null;
+  const match = type.match(/-?(\d+)$/);
+  if (match) {
+    const n = parseInt(match[1]);
+    if (n >= 1 && n <= 20) return n;
+  }
+  return null;
+}
+async function fetchRollingStock(trainNumber) {
+  if (!trainNumber) return { types: [], numberOfCarriages: null };
+  const cached = rollingStockCache.get(trainNumber);
+  if (cached && cached.expires > Date.now()) return { types: cached.types, numberOfCarriages: cached.numberOfCarriages };
+  let types = [];
+  let numberOfCarriages = null;
+  try {
+    const vtResponse = await fetch(
+      `${NS_VIRTUAL_TRAIN_URL}/v1/trein/${trainNumber}`,
+      { headers: { "Ocp-Apim-Subscription-Key": NS_API_KEY || "" } }
+    );
+    if (vtResponse.ok) {
+      const data = await vtResponse.json();
+      const parts = data.materieeldelen || [];
+      if (parts.length > 0) {
+        types = Array.from(new Set(parts.map((d) => d.type).filter(Boolean)));
+        const total = parts.reduce((sum, part) => {
+          if (Array.isArray(part.bakken) && part.bakken.length > 0) return sum + part.bakken.length;
+          return sum + (parseCarriageCount(part.type) ?? 1);
+        }, 0);
+        numberOfCarriages = total > 0 ? total : null;
+      }
+    }
+  } catch {
+  }
+  if (numberOfCarriages === null) {
+    try {
+      const journeyData = await fetchNS("/v2/journey", { train: trainNumber });
+      const payload = journeyData?.payload ?? journeyData;
+      const stock = payload?.plannedStock ?? payload?.actualStock;
+      if (stock) {
+        const trainParts = stock.trainParts || [];
+        if (trainParts.length > 0) {
+          const total = trainParts.reduce((sum, part) => {
+            return sum + (parseCarriageCount(part.trainType) ?? 1);
+          }, 0);
+          numberOfCarriages = total > 0 ? total : null;
+          if (!types.length && stock.trainType) types = [stock.trainType];
+        } else if (stock.numberOfParts) {
+          numberOfCarriages = stock.numberOfParts;
+          if (!types.length && stock.trainType) types = [stock.trainType];
+        }
+      }
+    } catch {
+    }
+  }
+  rollingStockCache.set(trainNumber, { types, numberOfCarriages, expires: Date.now() + 5 * 60 * 1e3 });
+  return { types, numberOfCarriages };
+}
+async function fetchRollingStockTypes(trainNumber) {
+  return (await fetchRollingStock(trainNumber)).types;
+}
+async function enrichWithRollingStock(items, numberField) {
+  const results = await Promise.all(
+    items.map(async (item) => {
+      const types = await fetchRollingStockTypes(item.product?.[numberField] || "");
+      return { ...item, rollingStockTypes: types };
+    })
+  );
+  return results;
+}
+async function fetchNS(endpoint, params = {}) {
+  const url = new URL(`${NS_BASE_URL}${endpoint}`);
+  Object.entries(params).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((v) => {
+        if (v) url.searchParams.append(key, v);
+      });
+    } else if (value) {
+      url.searchParams.append(key, value);
+    }
+  });
+  const response = await fetch(url.toString(), {
+    headers: {
+      "Ocp-Apim-Subscription-Key": NS_API_KEY || ""
+    }
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`NS API error: ${response.status} - ${error}`);
+  }
+  return response.json();
+}
+async function fetchNSDisruptions(endpoint, params = {}) {
+  const url = new URL(`${NS_DISRUPTIONS_BASE_URL}${endpoint}`);
+  Object.entries(params).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((v) => {
+        if (v) url.searchParams.append(key, v);
+      });
+    } else if (value) {
+      url.searchParams.append(key, value);
+    }
+  });
+  const response = await fetch(url.toString(), {
+    headers: {
+      "Ocp-Apim-Subscription-Key": NS_API_KEY || ""
+    }
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`NS Disruptions API error: ${response.status} - ${error}`);
+  }
+  return response.json();
+}
+async function fetchNSVirtualTrain(endpoint, params = {}) {
+  const url = new URL(`${NS_VIRTUAL_TRAIN_URL}${endpoint}`);
+  Object.entries(params).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((v) => {
+        if (v) url.searchParams.append(key, v);
+      });
+    } else if (value) {
+      url.searchParams.append(key, value);
+    }
+  });
+  const response = await fetch(url.toString(), {
+    headers: {
+      "Ocp-Apim-Subscription-Key": NS_API_KEY || ""
+    }
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`NS Virtual Train API error: ${response.status} - ${error}`);
+  }
+  return response.json();
+}
+var stationsCache = null;
+var stationsCacheTime = 0;
+var STATIONS_CACHE_TTL = 36e5;
+var spoorkaartCache = null;
+var spoorkaartCacheTime = 0;
+var SPOORKAART_CACHE_TTL = 864e5;
+var NS_SPOORKAART_URL = "https://gateway.apiportal.ns.nl/spoorkaart-api/api/v1";
+async function fetchNSSpoorkaart(endpoint) {
+  const url = `${NS_SPOORKAART_URL}${endpoint}`;
+  const response = await fetch(url, {
+    headers: {
+      "Ocp-Apim-Subscription-Key": NS_API_KEY || ""
+    }
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`NS Spoorkaart API error: ${response.status} - ${error}`);
+  }
+  return response.json();
+}
+async function getStationCode(stationInput) {
+  if (!stationInput) return stationInput;
+  const trimmedInput = stationInput.trim();
+  if (!trimmedInput) return null;
+  const now = Date.now();
+  if (!stationsCache || now - stationsCacheTime > STATIONS_CACHE_TTL) {
+    try {
+      const data = await fetchNS("/v2/stations", {});
+      stationsCache = data.payload || [];
+      stationsCacheTime = now;
+    } catch (error) {
+      console.error("Failed to fetch stations for code lookup:", error);
+      throw new Error("Station lookup service unavailable");
+    }
+  }
+  const matchedStation = stationsCache.find(
+    (s) => s.code?.toLowerCase() === trimmedInput.toLowerCase() || s.namen?.lang?.toLowerCase() === trimmedInput.toLowerCase() || s.namen?.middel?.toLowerCase() === trimmedInput.toLowerCase() || s.namen?.kort?.toLowerCase() === trimmedInput.toLowerCase()
+  );
+  if (!matchedStation) {
+    console.warn(`Station not found: ${trimmedInput}`);
+    return null;
+  }
+  return matchedStation.code;
+}
+async function getStationCoordinates(stationNameOrUic) {
+  if (!stationNameOrUic) return null;
+  const trimmedInput = stationNameOrUic.trim();
+  if (!trimmedInput) return null;
+  const now = Date.now();
+  if (!stationsCache || now - stationsCacheTime > STATIONS_CACHE_TTL) {
+    try {
+      const data = await fetchNS("/v2/stations", {});
+      stationsCache = data.payload || [];
+      stationsCacheTime = now;
+    } catch (error) {
+      console.error("Failed to fetch stations for coordinates lookup:", error);
+      return null;
+    }
+  }
+  const matchedStation = stationsCache.find(
+    (s) => s.UICCode === trimmedInput || s.code?.toLowerCase() === trimmedInput.toLowerCase() || s.namen?.lang?.toLowerCase() === trimmedInput.toLowerCase() || s.namen?.middel?.toLowerCase() === trimmedInput.toLowerCase() || s.namen?.kort?.toLowerCase() === trimmedInput.toLowerCase()
+  );
+  if (!matchedStation || !matchedStation.lat || !matchedStation.lng) {
+    return null;
+  }
+  return { lat: matchedStation.lat, lng: matchedStation.lng };
+}
+async function registerRoutes(app2) {
+  app2.get("/api/departures", async (req, res) => {
+    try {
+      const { station, maxJourneys = "10", lang = "nl" } = req.query;
+      if (!station) {
+        return res.status(400).json({ error: "Station parameter is required" });
+      }
+      const stationCode = await getStationCode(station);
+      if (!stationCode) {
+        return res.status(400).json({ error: `Station not found: ${station}` });
+      }
+      const data = await fetchNS("/v2/departures", {
+        station: stationCode,
+        maxJourneys,
+        lang
+      });
+      const departures = data?.payload?.departures || [];
+      const enriched = await enrichWithRollingStock(departures, "number");
+      res.json({ ...data, payload: { ...data.payload, departures: enriched } });
+    } catch (error) {
+      console.error("Error fetching departures:", error);
+      res.status(500).json({ error: "Failed to fetch departures" });
+    }
+  });
+  app2.get("/api/arrivals", async (req, res) => {
+    try {
+      const { station, uicCode, dateTime, maxJourneys = "10", lang = "nl" } = req.query;
+      if (!station && !uicCode) {
+        return res.status(400).json({ error: "Station or uicCode parameter is required" });
+      }
+      const params = {
+        maxJourneys,
+        lang
+      };
+      if (station) {
+        const stationCode = await getStationCode(station);
+        if (!stationCode) {
+          return res.status(400).json({ error: `Station not found: ${station}` });
+        }
+        params.station = stationCode;
+      }
+      if (uicCode) params.uicCode = uicCode;
+      if (dateTime) params.dateTime = dateTime;
+      const data = await fetchNS("/v2/arrivals", params);
+      const arrivals = data?.payload?.arrivals || [];
+      const enriched = await enrichWithRollingStock(arrivals, "number");
+      res.json({ ...data, payload: { ...data.payload, arrivals: enriched } });
+    } catch (error) {
+      console.error("Error fetching arrivals:", error);
+      res.status(500).json({ error: "Failed to fetch arrivals" });
+    }
+  });
+  app2.get("/api/trips", async (req, res) => {
+    try {
+      const {
+        fromStation,
+        toStation,
+        dateTime,
+        searchForArrival,
+        viaStation,
+        lang = "nl",
+        addChangeTime,
+        wheelChairAccessible,
+        scrollRequestForwardContext,
+        scrollRequestBackwardContext
+      } = req.query;
+      if (!fromStation || !toStation) {
+        return res.status(400).json({ error: "fromStation and toStation parameters are required" });
+      }
+      const fromCode = await getStationCode(fromStation);
+      if (!fromCode) {
+        return res.status(400).json({ error: `From station not found: ${fromStation}` });
+      }
+      const toCode = await getStationCode(toStation);
+      if (!toCode) {
+        return res.status(400).json({ error: `To station not found: ${toStation}` });
+      }
+      const viaCodes = [];
+      if (viaStation) {
+        const viaArray = Array.isArray(viaStation) ? viaStation : [viaStation];
+        for (const via of viaArray) {
+          const viaCode = await getStationCode(via);
+          if (!viaCode) {
+            return res.status(400).json({ error: `Via station not found: ${via}` });
+          }
+          viaCodes.push(viaCode);
+        }
+      }
+      const params = {
+        fromStation: fromCode,
+        toStation: toCode,
+        lang
+      };
+      if (dateTime) {
+        params.dateTime = dateTime;
+      }
+      if (searchForArrival === "true") {
+        params.searchForArrival = "true";
+      }
+      if (viaCodes.length > 0) {
+        params.viaStation = viaCodes.length === 1 ? viaCodes[0] : viaCodes;
+      }
+      if (addChangeTime && parseInt(addChangeTime) > 0) {
+        params.addChangeTime = addChangeTime;
+      }
+      if (wheelChairAccessible) {
+        params.wheelChairAccessible = wheelChairAccessible;
+      }
+      if (scrollRequestForwardContext) {
+        params.scrollRequestForwardContext = scrollRequestForwardContext;
+      }
+      if (scrollRequestBackwardContext) {
+        params.scrollRequestBackwardContext = scrollRequestBackwardContext;
+      }
+      const data = await fetchNS("/v3/trips", params);
+      if (data.trips && data.trips[0] && data.trips[0].legs && data.trips[0].legs[0]) {
+        const firstLeg = data.trips[0].legs[0];
+        console.log("[TravNL Debug] NS API trips response - first leg origin fields:", {
+          plannedDateTime: firstLeg.origin?.plannedDateTime,
+          actualDateTime: firstLeg.origin?.actualDateTime,
+          allOriginKeys: Object.keys(firstLeg.origin || {})
+        });
+        console.log("[TravNL Debug] NS API trips response - first leg destination fields:", {
+          plannedDateTime: firstLeg.destination?.plannedDateTime,
+          actualDateTime: firstLeg.destination?.actualDateTime,
+          allDestinationKeys: Object.keys(firstLeg.destination || {})
+        });
+      }
+      if (data.trips) {
+        for (const trip of data.trips) {
+          if (trip.legs) {
+            for (const leg of trip.legs) {
+              const originName = leg.origin?.name;
+              const destName = leg.destination?.name;
+              if (originName) {
+                const originCoords = await getStationCoordinates(originName);
+                if (originCoords) {
+                  leg.origin.lat = originCoords.lat;
+                  leg.origin.lng = originCoords.lng;
+                }
+              }
+              if (destName) {
+                const destCoords = await getStationCoordinates(destName);
+                if (destCoords) {
+                  leg.destination.lat = destCoords.lat;
+                  leg.destination.lng = destCoords.lng;
+                }
+              }
+              if (leg.product?.number) {
+                const stock = await fetchRollingStock(leg.product.number);
+                if (stock.numberOfCarriages !== null) {
+                  leg.numberOfCarriages = stock.numberOfCarriages;
+                }
+              }
+            }
+          }
+        }
+      }
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching trips:", error);
+      res.status(500).json({ error: "Failed to fetch trips" });
+    }
+  });
+  app2.get("/api/journey-by-material", async (req, res) => {
+    try {
+      const { material } = req.query;
+      if (!material) {
+        return res.status(400).json({ error: "Material number parameter is required" });
+      }
+      const virtualTrainResponse = await fetch(
+        `https://gateway.apiportal.ns.nl/virtual-train-api/v1/ritnummer/${material}`,
+        {
+          headers: {
+            "Ocp-Apim-Subscription-Key": NS_API_KEY || ""
+          }
+        }
+      );
+      if (!virtualTrainResponse.ok) {
+        if (virtualTrainResponse.status === 404) {
+          return res.status(404).json({ error: "Material number not found" });
+        }
+        throw new Error(`Virtual Train API returned ${virtualTrainResponse.status}`);
+      }
+      const ritnummer = (await virtualTrainResponse.text()).trim();
+      const journeyData = await fetchNS("/v2/journey", { train: ritnummer });
+      res.json({
+        ritnummer,
+        journeyData
+      });
+    } catch (error) {
+      console.error("Error fetching journey by material number:", error);
+      res.status(500).json({ error: "Failed to fetch journey details using material number" });
+    }
+  });
+  app2.get("/api/journey", async (req, res) => {
+    try {
+      const { id, train, dateTime } = req.query;
+      if (!id && !train) {
+        return res.status(400).json({ error: "Either id or train parameter is required" });
+      }
+      const params = {};
+      if (id) params.id = id;
+      if (train) params.train = train;
+      if (dateTime) params.dateTime = dateTime;
+      const data = await fetchNS("/v2/journey", params);
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching journey:", error);
+      res.status(500).json({ error: "Failed to fetch journey details" });
+    }
+  });
+  app2.get("/api/train-composition/:ritnummer", async (req, res) => {
+    try {
+      const { ritnummer } = req.params;
+      const { features, dateTime } = req.query;
+      if (!ritnummer) {
+        return res.status(400).json({ error: "Journey number parameter is required" });
+      }
+      let url = `https://gateway.apiportal.ns.nl/virtual-train-api/v1/trein/${ritnummer}`;
+      const params = new URLSearchParams();
+      if (features) params.append("features", features);
+      if (dateTime) params.append("dateTime", dateTime);
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      const response = await fetch(url, {
+        headers: {
+          "Ocp-Apim-Subscription-Key": NS_API_KEY || ""
+        }
+      });
+      if (!response.ok) {
+        if (response.status === 404) {
+          return res.status(404).json({ error: "Train composition not found" });
+        }
+        throw new Error(`Virtual Train API returned ${response.status}`);
+      }
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching train composition:", error);
+      res.status(500).json({ error: "Failed to fetch train composition" });
+    }
+  });
+  app2.get("/api/train-crowding/:ritnummer", async (req, res) => {
+    try {
+      const { ritnummer } = req.params;
+      const { departureTime } = req.query;
+      if (!ritnummer) {
+        return res.status(400).json({ error: "Journey number parameter is required" });
+      }
+      let url = `https://gateway.apiportal.ns.nl/virtual-train-api/v1/prognose/${ritnummer}`;
+      const params = new URLSearchParams();
+      if (departureTime) {
+        const date = departureTime.split("T")[0];
+        params.append("date", date);
+      }
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      const response = await fetch(url, {
+        headers: {
+          "Ocp-Apim-Subscription-Key": NS_API_KEY || ""
+        }
+      });
+      if (!response.ok) {
+        if (response.status === 404) {
+          return res.status(404).json({ error: "Train crowding data not found" });
+        }
+        throw new Error(`Virtual Train API returned ${response.status}`);
+      }
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching train crowding:", error);
+      res.status(500).json({ error: "Failed to fetch train crowding data" });
+    }
+  });
+  app2.get("/api/stations", async (req, res) => {
+    try {
+      const data = await fetchNS("/v2/stations");
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching stations:", error);
+      res.status(500).json({ error: "Failed to fetch stations" });
+    }
+  });
+  app2.get("/api/disruptions", async (req, res) => {
+    try {
+      const { isActive, type } = req.query;
+      const params = {};
+      if (isActive !== void 0) params.isActive = isActive;
+      if (type) params.type = type;
+      const data = await fetchNSDisruptions("/v3", params);
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching disruptions:", error);
+      res.status(500).json({ error: "Failed to fetch disruptions" });
+    }
+  });
+  app2.get("/api/disruptions/station/:stationCode", async (req, res) => {
+    try {
+      const { stationCode } = req.params;
+      if (!stationCode) {
+        return res.status(400).json({ error: "Station code is required" });
+      }
+      const actualStationCode = await getStationCode(stationCode);
+      if (!actualStationCode) {
+        return res.status(400).json({ error: `Station not found: ${stationCode}` });
+      }
+      const data = await fetchNSDisruptions(`/v3/station/${actualStationCode}`);
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching station disruptions:", error);
+      res.status(500).json({ error: "Failed to fetch station disruptions" });
+    }
+  });
+  app2.get("/api/disruptions/:type/:id", async (req, res) => {
+    try {
+      const { type, id } = req.params;
+      if (!type || !id) {
+        return res.status(400).json({ error: "Type and ID are required" });
+      }
+      const data = await fetchNSDisruptions(`/v3/${type}/${id}`);
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching disruption details:", error);
+      res.status(500).json({ error: "Failed to fetch disruption details" });
+    }
+  });
+  app2.get("/api/trains-map", async (req, res) => {
+    try {
+      const {
+        lat = "52.1",
+        lng = "5.1",
+        radius = "150000",
+        limit = "500",
+        features = "materieel"
+      } = req.query;
+      const params = {
+        lat,
+        lng,
+        radius,
+        limit,
+        features
+      };
+      const data = await fetchNSVirtualTrain("/vehicle", params);
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching trains map data:", error);
+      res.status(500).json({ error: "Failed to fetch trains map data" });
+    }
+  });
+  app2.get("/api/spoorkaart", async (req, res) => {
+    try {
+      const now = Date.now();
+      if (spoorkaartCache && now - spoorkaartCacheTime < SPOORKAART_CACHE_TTL) {
+        return res.json(spoorkaartCache);
+      }
+      const data = await fetchNSSpoorkaart("/spoorkaart");
+      spoorkaartCache = data;
+      spoorkaartCacheTime = now;
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching spoorkaart data:", error);
+      res.status(500).json({ error: "Failed to fetch railway track data" });
+    }
+  });
+  app2.get("/api/trip/live", async (req, res) => {
+    try {
+      const { ctxRecon, fromCode, toCode, plannedDeparture } = req.query;
+      if (!ctxRecon && (!fromCode || !toCode || !plannedDeparture)) {
+        return res.status(400).json({
+          error: "Either ctxRecon or fromCode+toCode+plannedDeparture is required"
+        });
+      }
+      if (ctxRecon) {
+        try {
+          const data = await fetchNS("/v3/trips", {
+            ctxRecon
+          });
+          if (data.trips && data.trips.length > 0) {
+            const trip = data.trips[0];
+            if (trip.legs) {
+              for (const leg of trip.legs) {
+                const originName = leg.origin?.name;
+                const destName = leg.destination?.name;
+                if (originName) {
+                  const originCoords = await getStationCoordinates(originName);
+                  if (originCoords) {
+                    leg.origin.lat = originCoords.lat;
+                    leg.origin.lng = originCoords.lng;
+                  }
+                }
+                if (destName) {
+                  const destCoords = await getStationCoordinates(destName);
+                  if (destCoords) {
+                    leg.destination.lat = destCoords.lat;
+                    leg.destination.lng = destCoords.lng;
+                  }
+                }
+                if (leg.product?.number) {
+                  const stock = await fetchRollingStock(leg.product.number);
+                  if (stock.numberOfCarriages !== null) leg.numberOfCarriages = stock.numberOfCarriages;
+                }
+              }
+            }
+            return res.json({ success: true, trip, source: "ctxRecon" });
+          }
+        } catch (err) {
+          console.log("ctxRecon lookup failed, trying fallback search");
+        }
+      }
+      if (fromCode && toCode && plannedDeparture) {
+        const fromStationCode = await getStationCode(fromCode);
+        const toStationCode = await getStationCode(toCode);
+        if (!fromStationCode || !toStationCode) {
+          return res.json({ success: false, error: "Station not found" });
+        }
+        const data = await fetchNS("/v3/trips", {
+          fromStation: fromStationCode,
+          toStation: toStationCode,
+          dateTime: plannedDeparture
+        });
+        if (data.trips && data.trips.length > 0) {
+          const targetTime = new Date(plannedDeparture).getTime();
+          let bestTrip = data.trips[0];
+          let bestDiff = Infinity;
+          for (const trip of data.trips) {
+            const tripDep = trip.legs?.[0]?.origin?.plannedDateTime;
+            if (tripDep) {
+              const diff = Math.abs(new Date(tripDep).getTime() - targetTime);
+              if (diff < bestDiff) {
+                bestDiff = diff;
+                bestTrip = trip;
+              }
+            }
+          }
+          if (bestTrip.legs) {
+            for (const leg of bestTrip.legs) {
+              const originName = leg.origin?.name;
+              const destName = leg.destination?.name;
+              if (originName) {
+                const originCoords = await getStationCoordinates(originName);
+                if (originCoords) {
+                  leg.origin.lat = originCoords.lat;
+                  leg.origin.lng = originCoords.lng;
+                }
+              }
+              if (destName) {
+                const destCoords = await getStationCoordinates(destName);
+                if (destCoords) {
+                  leg.destination.lat = destCoords.lat;
+                  leg.destination.lng = destCoords.lng;
+                }
+              }
+              if (leg.product?.number) {
+                const stock = await fetchRollingStock(leg.product.number);
+                if (stock.numberOfCarriages !== null) leg.numberOfCarriages = stock.numberOfCarriages;
+              }
+            }
+          }
+          return res.json({ success: true, trip: bestTrip, source: "search" });
+        }
+      }
+      res.json({ success: false, error: "Trip not found or no longer available" });
+    } catch (error) {
+      console.error("Error fetching live trip:", error);
+      res.status(500).json({ error: "Failed to fetch live trip data" });
+    }
+  });
+  app2.get("/api/changelog", (_req, res) => {
+    try {
+      const rootDir = process.cwd();
+      const entries = [];
+      const folders = [
+        { dir: (0, import_path.join)(rootDir, "changelogs", "grote-update"), type: "grote-update" },
+        { dir: (0, import_path.join)(rootDir, "changelogs", "kleine-update"), type: "kleine-update" }
+      ];
+      for (const { dir, type } of folders) {
+        if (!(0, import_fs.existsSync)(dir)) continue;
+        const files = (0, import_fs.readdirSync)(dir).filter((f) => f.endsWith(".md"));
+        for (const file of files) {
+          const content = (0, import_fs.readFileSync)((0, import_path.join)(dir, file), "utf-8");
+          entries.push({ name: file.replace(/\.md$/, ""), type, content });
+        }
+      }
+      entries.sort((a, b) => b.name.localeCompare(a.name, void 0, { numeric: true, sensitivity: "base" }));
+      res.json(entries);
+    } catch (error) {
+      console.error("Error reading changelog files:", error);
+      res.status(500).json({ error: "Failed to read changelog" });
+    }
+  });
+  const httpServer = (0, import_http.createServer)(app2);
+  return httpServer;
+}
+
+// server/prod.ts
+var import_fs2 = __toESM(require("fs"), 1);
+var import_path2 = __toESM(require("path"), 1);
+var import_dotenv2 = __toESM(require("dotenv"), 1);
+import_dotenv2.default.config();
+function log(message, source = "express") {
+  const formattedTime = (/* @__PURE__ */ new Date()).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
+var app = (0, import_express.default)();
+app.use(
+  import_express.default.json({
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    }
+  })
+);
+app.use(import_express.default.urlencoded({ extended: false }));
+app.use((req, res, next) => {
+  const start = Date.now();
+  const reqPath = req.path;
+  let capturedJsonResponse = void 0;
+  const originalResJson = res.json;
+  res.json = function(bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (reqPath.startsWith("/api")) {
+      let logLine = `${req.method} ${reqPath} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      }
+      if (logLine.length > 80) {
+        logLine = logLine.slice(0, 79) + "\u2026";
+      }
+      log(logLine);
+    }
+  });
+  next();
+});
+(async () => {
+  const server = await registerRoutes(app);
+  app.use((err, _req, res, _next) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
+    throw err;
+  });
+  const distPath = import_path2.default.join(process.cwd(), "dist", "public");
+  if (!import_fs2.default.existsSync(distPath)) {
+    throw new Error(
+      `Build directory not found: ${distPath}. Run the build command first.`
+    );
+  }
+  app.use(import_express.default.static(distPath));
+  app.use("*", (_req, res) => {
+    res.sendFile(import_path2.default.join(distPath, "index.html"));
+  });
+  const port = parseInt(process.env.PORT || "5000", 10);
+  server.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
+    log(`serving on port ${port}`);
+  });
+})();
