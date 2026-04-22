@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Info, Settings, ChevronRight, ScrollText, ShieldCheck } from "lucide-react";
+import { Settings, ChevronRight, ScrollText, ShieldCheck } from "lucide-react";
 import { Link } from "wouter";
 import PageContainer from "@/components/PageContainer";
 import logoPath from "@assets/image(2)_1776714288663.png";
@@ -49,68 +49,56 @@ export default function MorePage() {
 
         {/* Rest van de pagina — met zijmarges op mobiel */}
         <div className="px-4 md:px-4 py-6 space-y-6">
-          <Link href="/instellingen">
-            <Card className="hover-elevate cursor-pointer overflow-hidden transition-all active:scale-[0.98]">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Settings className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Instellingen</CardTitle>
-                      <CardDescription>Weergave en app-opties</CardDescription>
-                    </div>
+          <Card className="overflow-hidden">
+            <Link href="/instellingen" data-testid="link-instellingen">
+              <div className="flex items-center justify-between px-4 py-4 hover-elevate cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Settings className="w-5 h-5 text-primary" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-semibold text-base leading-tight">Instellingen</p>
+                    <p className="text-sm text-muted-foreground">Weergave en app-opties</p>
+                  </div>
                 </div>
-              </CardHeader>
-            </Card>
-          </Link>
+                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              </div>
+            </Link>
 
-          <Link href="/changelog">
-            <Card
-              className="hover-elevate cursor-pointer overflow-hidden transition-all active:scale-[0.98]"
-              data-testid="card-changelog"
-            >
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <ScrollText className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Changelog</CardTitle>
-                      <CardDescription>Updates en wijzigingen</CardDescription>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                </div>
-              </CardHeader>
-            </Card>
-          </Link>
+            <div className="border-t mx-4" />
 
-          <Link href="/juridisch">
-            <Card
-              className="hover-elevate cursor-pointer overflow-hidden transition-all active:scale-[0.98]"
-              data-testid="card-juridisch"
-            >
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <ShieldCheck className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Juridisch & Support</CardTitle>
-                      <CardDescription>Privacy, voorwaarden en contact</CardDescription>
-                    </div>
+            <Link href="/changelog" data-testid="card-changelog">
+              <div className="flex items-center justify-between px-4 py-4 hover-elevate cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <ScrollText className="w-5 h-5 text-primary" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-semibold text-base leading-tight">Changelog</p>
+                    <p className="text-sm text-muted-foreground">Updates en wijzigingen</p>
+                  </div>
                 </div>
-              </CardHeader>
-            </Card>
-          </Link>
+                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              </div>
+            </Link>
+
+            <div className="border-t mx-4" />
+
+            <Link href="/juridisch" data-testid="card-juridisch">
+              <div className="flex items-center justify-between px-4 py-4 hover-elevate cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <ShieldCheck className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-base leading-tight">Juridisch & Support</p>
+                    <p className="text-sm text-muted-foreground">Privacy, voorwaarden en contact</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              </div>
+            </Link>
+          </Card>
 
           <Card>
             <CardContent className="pt-6">
