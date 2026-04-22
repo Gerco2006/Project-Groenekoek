@@ -6,8 +6,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Settings, ChevronRight, ScrollText, ShieldCheck, Heart, ExternalLink } from "lucide-react";
-import { SiBluesky, SiKofi } from "react-icons/si";
 import { Link } from "wouter";
+import { SiBluesky, SiPatreon } from "react-icons/si";
 import PageContainer from "@/components/PageContainer";
 import logoPath from "@assets/image(2)_1776714288663.png";
 
@@ -15,7 +15,6 @@ export default function MorePage() {
   return (
     <PageContainer>
       <div className="min-h-screen bg-background">
-        {/* Over TravNL — volledig breed op mobiel, normale card op desktop */}
         <Card
           data-testid="card-about"
           className="rounded-none border-x-0 border-t-0 md:rounded-md md:border md:mx-4 md:mt-6"
@@ -48,7 +47,6 @@ export default function MorePage() {
           </CardContent>
         </Card>
 
-        {/* Rest van de pagina — met zijmarges op mobiel */}
         <div className="px-4 md:px-4 py-6 space-y-6">
           <Card className="overflow-hidden">
             <Link href="/instellingen" data-testid="link-instellingen">
@@ -108,22 +106,22 @@ export default function MorePage() {
                 Steun TravNL
               </CardTitle>
               <CardDescription>
-                Vind je TravNL handig? Help de ontwikkeling verder.
+                Fan van TravNL? Steun of volg ons hier:
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <a
-                href="https://ko-fi.com/gerco"
+                href="https://www.patreon.com/cw/TravNL"
                 target="_blank"
                 rel="noreferrer"
-                data-testid="link-ko-fi"
+                data-testid="link-patreon"
                 className="flex items-center justify-between px-4 py-3 rounded-md border bg-muted/40 hover-elevate cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <SiKofi className="w-5 h-5 text-[#FF5E5B]" />
+                  <SiPatreon className="w-5 h-5 text-[#ff424d]" />
                   <div>
-                    <p className="font-semibold text-sm leading-tight">Doneer via Ko-fi</p>
-                    <p className="text-xs text-muted-foreground">Trakteer de maker op een koffie</p>
+                    <p className="font-semibold text-sm leading-tight">Doneer via Patreon</p>
+                    <p className="text-xs text-muted-foreground">Help TravNL verder groeien</p>
                   </div>
                 </div>
                 <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />

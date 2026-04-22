@@ -173,7 +173,7 @@ function ComingSoonPage() {
             Volg de voortgang
           </a>
           <a
-            href="mailto:business@travnl.nl"
+            href="mailto:info@travnl.nl"
             className="flex items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-3 text-sm text-white"
             data-testid="link-email-business"
           >
