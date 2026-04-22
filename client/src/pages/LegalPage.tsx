@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, ChevronLeft, Mail, ShieldCheck } from "lucide-react";
+import { Loader2, ChevronLeft, Mail } from "lucide-react";
 import { Link } from "wouter";
 import PageContainer from "@/components/PageContainer";
 import ReactMarkdown, { type Components } from "react-markdown";
