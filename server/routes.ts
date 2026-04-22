@@ -37,7 +37,7 @@ async function fetchRollingStock(trainNumber: string): Promise<{ types: string[]
   try {
     const vtResponse = await fetch(
       `${NS_VIRTUAL_TRAIN_URL}/v1/trein/${trainNumber}`,
-      { headers: { "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "" } }
+      { headers: { "Ocp-Apim-Subscription-Key": NS_API_KEY || "" } }
     );
     if (vtResponse.ok) {
       const data = await vtResponse.json();
@@ -477,7 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `https://gateway.apiportal.ns.nl/virtual-train-api/v1/ritnummer/${material}`,
         {
           headers: {
-            "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "",
+            "Ocp-Apim-Subscription-Key": NS_API_KEY || "",
           },
         }
       );
@@ -549,7 +549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const response = await fetch(url, {
         headers: {
-          "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "",
+          "Ocp-Apim-Subscription-Key": NS_API_KEY || "",
         },
       });
 
@@ -593,7 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const response = await fetch(url, {
         headers: {
-          "Ocp-Apim-Subscription-Key": process.env.NS_API_KEY || "",
+          "Ocp-Apim-Subscription-Key": NS_API_KEY || "",
         },
       });
 
