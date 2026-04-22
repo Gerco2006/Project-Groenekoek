@@ -122,7 +122,7 @@ function ComingSoonPage() {
           </h2>
           <p className="text-white/70 text-sm sm:text-base leading-relaxed">
             TravNL lanceert binnenkort in <span className="text-blue-400 font-medium">Beta</span>.
-            We zijn hard bezig met de laatste hand leggen aan de app.
+            De laatste features worden geimplementerd en de app wordt getest zodat je straks de beste reisplanner van Nederland hebt.
           </p>
         </div>
 
@@ -148,7 +148,7 @@ function ComingSoonPage() {
 
         {/* Kleine voetnoot */}
         <p className="text-white/30 text-xs">
-          © 2025–2026 TravNL door Gerco van 't Foort
+          © 2025–2026 TravNL | Gerco van 't Foort
         </p>
 
         <div className="w-full grid gap-3 sm:grid-cols-3">
