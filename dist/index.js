@@ -709,6 +709,24 @@ async function registerRoutes(app2) {
       res.status(500).json({ error: "Failed to read changelog" });
     }
   });
+  app2.get("/api/legal/:doc", (req, res) => {
+    const allowed = ["privacy", "voorwaarden"];
+    const doc = req.params.doc;
+    if (!allowed.includes(doc)) {
+      return res.status(404).json({ error: "Document niet gevonden" });
+    }
+    try {
+      const filePath = join(process.cwd(), "legal", `${doc}.md`);
+      if (!existsSync(filePath)) {
+        return res.status(404).json({ error: "Document niet gevonden" });
+      }
+      const content = readFileSync(filePath, "utf-8");
+      res.json({ doc, content });
+    } catch (error) {
+      console.error("Error reading legal document:", error);
+      res.status(500).json({ error: "Failed to read document" });
+    }
+  });
   const httpServer = createServer(app2);
   return httpServer;
 }
