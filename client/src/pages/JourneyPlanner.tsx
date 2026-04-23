@@ -1022,7 +1022,33 @@ export default function JourneyPlanner() {
       <MasterDetailLayout
         master={masterContent}
         detail={
-          detailMode === 'trip' && selectedTrip ? (
+          detailMode === 'disruption' && selectedDisruption ? (
+            <DisruptionDetailPanel
+              disruptionId={selectedDisruption.id}
+              disruptionType={selectedDisruption.type}
+              open={!!selectedDisruption}
+              onClose={() => {
+                setSelectedDisruption(null);
+                setDetailMode(null);
+              }}
+            />
+          ) : detailMode === 'train' && selectedTrain && !isMobile ? (
+            <TripDetailPanel
+              trainType={selectedTrain.trainType}
+              trainNumber={selectedTrain.trainNumber}
+              from={selectedTrain.from}
+              to={selectedTrain.to}
+              open={!!selectedTrain}
+              onClose={() => {
+                setSelectedTrain(null);
+                setDetailMode(selectedTrip ? 'trip' : null);
+              }}
+              onBack={selectedTripIndex !== null ? () => {
+                setSelectedTrain(null);
+                setDetailMode('trip');
+              } : undefined}
+            />
+          ) : selectedTrip ? (
             <TripAdviceDetailPanel
               {...selectedTrip}
               open={!!selectedTrip}
@@ -1042,32 +1068,6 @@ export default function JourneyPlanner() {
                 selectedTrip.legs[0]?.from,
                 selectedTrip.legs[selectedTrip.legs.length - 1]?.to
               )}
-            />
-          ) : detailMode === 'train' && selectedTrain ? (
-            <TripDetailPanel
-              trainType={selectedTrain.trainType}
-              trainNumber={selectedTrain.trainNumber}
-              from={selectedTrain.from}
-              to={selectedTrain.to}
-              open={!!selectedTrain}
-              onClose={() => {
-                setSelectedTrain(null);
-                setDetailMode(selectedTrip ? 'trip' : null);
-              }}
-              onBack={selectedTripIndex !== null ? () => {
-                setSelectedTrain(null);
-                setDetailMode('trip');
-              } : undefined}
-            />
-          ) : detailMode === 'disruption' && selectedDisruption ? (
-            <DisruptionDetailPanel
-              disruptionId={selectedDisruption.id}
-              disruptionType={selectedDisruption.type}
-              open={!!selectedDisruption}
-              onClose={() => {
-                setSelectedDisruption(null);
-                setDetailMode(null);
-              }}
             />
           ) : null
         }
