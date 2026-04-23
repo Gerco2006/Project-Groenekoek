@@ -77,6 +77,18 @@ app.use((req, res, next) => {
     );
   }
 
+  const legalSourcePath = path.join(process.cwd(), "legal");
+  const legalDistPath = path.join(process.cwd(), "dist", "legal");
+  if (fs.existsSync(legalSourcePath)) {
+    fs.mkdirSync(legalDistPath, { recursive: true });
+    for (const file of ["privacy.md", "voorwaarden.md"]) {
+      const sourceFile = path.join(legalSourcePath, file);
+      if (fs.existsSync(sourceFile)) {
+        fs.copyFileSync(sourceFile, path.join(legalDistPath, file));
+      }
+    }
+  }
+
   app.use(express.static(distPath));
   app.use("*", (_req: Request, res: Response) => {
     res.sendFile(path.join(distPath, "index.html"));

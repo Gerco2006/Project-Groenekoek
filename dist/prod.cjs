@@ -733,6 +733,24 @@ async function registerRoutes(app2) {
       res.status(500).json({ error: "Failed to read changelog" });
     }
   });
+  app2.get("/api/legal/:doc", (req, res) => {
+    const allowed = ["privacy", "voorwaarden"];
+    const doc = req.params.doc;
+    if (!allowed.includes(doc)) {
+      return res.status(404).json({ error: "Document niet gevonden" });
+    }
+    try {
+      const filePath = (0, import_path.join)(process.cwd(), "legal", `${doc}.md`);
+      if (!(0, import_fs.existsSync)(filePath)) {
+        return res.status(404).json({ error: "Document niet gevonden" });
+      }
+      const content = (0, import_fs.readFileSync)(filePath, "utf-8");
+      res.json({ doc, content });
+    } catch (error) {
+      console.error("Error reading legal document:", error);
+      res.status(500).json({ error: "Failed to read document" });
+    }
+  });
   const httpServer = (0, import_http.createServer)(app2);
   return httpServer;
 }
@@ -797,6 +815,17 @@ app.use((req, res, next) => {
     throw new Error(
       `Build directory not found: ${distPath}. Run the build command first.`
     );
+  }
+  const legalSourcePath = import_path2.default.join(process.cwd(), "legal");
+  const legalDistPath = import_path2.default.join(process.cwd(), "dist", "legal");
+  if (import_fs2.default.existsSync(legalSourcePath)) {
+    import_fs2.default.mkdirSync(legalDistPath, { recursive: true });
+    for (const file of ["privacy.md", "voorwaarden.md"]) {
+      const sourceFile = import_path2.default.join(legalSourcePath, file);
+      if (import_fs2.default.existsSync(sourceFile)) {
+        import_fs2.default.copyFileSync(sourceFile, import_path2.default.join(legalDistPath, file));
+      }
+    }
   }
   app.use(import_express.default.static(distPath));
   app.use("*", (_req, res) => {
